@@ -39,7 +39,7 @@
 
 		"TeamName" : {
 			"Type": "String",
-			"Default": "AngelSense",
+			"Default": "Company",
 			"Description": "Project name for naming instance"
 		},
 
