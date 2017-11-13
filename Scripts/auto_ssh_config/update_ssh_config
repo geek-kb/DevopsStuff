@@ -1,0 +1,44 @@
+#!/bin/bash
+# This script updates your local ~/.ssh/config file to reflect IP's of servers in new ASGs
+# In order for this script to work properly, make sure that the user_data script which is running on each machine within each autoscaling group, adds a Tag on each EC2 instance: key=hostname, value=HOSTNAME
+stack_name=$1
+if [[ -z $stack_name ]]; then
+	echo "Please provide AutoScalingGroup name"
+	exit 1
+fi
+options=("Oregon" "Virginia" "Ireland")
+select region in "${options[@]}"; do
+	case "$region" in
+		"Oregon")
+			regioncode="us-west-2"
+			break
+		;;
+		"Virginia")
+			regioncode="us-east-1"
+			break
+		;;
+		"Ireland")
+			regioncode="eu-west-1"
+			break
+		;;
+	esac
+done
+# Display all ASG's in stack
+for asg in $(aws cloudformation describe-stacks --stack-name $stack_name --region $regioncode| grep ServersASG | awk '{print $2}' | tr -d '\"|,'); do 
+	if [[ ! $asg == *"Bastion"* ]]; then
+	  # Finds instance ids of instances in the above asg
+	  for instanceid in $(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names $asg --region $regioncode | grep InstanceId | awk '{print $2}' | tr -d '\"|,'); do 
+	    # Find ips of each instance id
+	    for prip in $(aws ec2 describe-instances --instance-id $instanceid --region $regioncode | grep PrivateIpAddress | grep -v '\[' | awk 'NR==1' | awk '{print $2}' | tr -d '\"|,'); do PriIp=$prip ; done ;
+	    for hn in $(aws ec2 describe-instances --instance-id $instanceid --region $regioncode | grep angelsense-private | grep -v '\[' | awk 'NR==1' | awk '{print $2}' | tr -d '\"|,'); do hostname=$hn ; done ;
+	    shn=$(echo $hostname | awk -F. '{print $1}')
+			if [[ $hostname != *"bastion"* ]]; then
+				echo "Updating IP for server $hostname"
+	    	awk -v shn="$shn" -v privateip="$PriIp" '
+	    	$0 ~ shn "\\.angelsense-private" {p=NR} 
+	    	p && NR==p+2 && /^HostName/ {$0="HostName " privateip; p=0} 1' ~/.ssh/config > $$.tmp && mv $$.tmp ~/.ssh/config
+			fi
+	  	done; 
+		fi
+	done;
+	

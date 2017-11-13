@@ -1,0 +1,9 @@
+#!/bin/bash
+# Place this file in /usr/local/bin and chmod u+x it
+# Use it when you try to connect to a remote ssh server and getting an error of conflicting ssh keys
+# Itai Ganot 2017
+if [[ -z $1 ]]; then
+	echo "Please supply ssh key line number to delete as parameter!"
+	exit 1
+fi
+sed -i.bak -e "$1d" ~/.ssh/known_hosts

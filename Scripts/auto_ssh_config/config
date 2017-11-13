@@ -1,0 +1,89 @@
+Host dev-api1.company.domain
+User someuser
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-api2.company.domain
+User someuser
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-api3.company.domain
+User someuser
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-api4.company.domain
+User someuser
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-analytics1.company.domain
+User someuser
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-analytics2.company.domain
+User someuser
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-batch1.company.domain
+User someuser
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-cassandra1.company.domain
+User ubuntu
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-cassandra2.company.domain
+User ubuntu
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-cassandra3.company.domain
+User ubuntu
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-cassandra4.company.domain
+User ubuntu
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host dev-cassandra5.company.domain
+User ubuntu
+HostName 1.1.1.1
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/privatekey.pem
+ProxyCommand ssh ec2-user@bastion.company.domain -W %h:%p
+
+Host bastion.company.domain
+User ec2-user
+HostName 9.9.9.9
+StrictHostKeyChecking=no
+IdentityFile ~/.ssh/bastion.pem
