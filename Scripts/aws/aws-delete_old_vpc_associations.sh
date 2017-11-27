@@ -1,5 +1,6 @@
 #!/bin/bash -e
 # This shell script is intended to run as a Jenkins job which checks current available VPC's against VPC's associated to the specified Route53 hosted zone.
+# Script by Itai Ganot 2017
 crvpc_arr=()
 asvpc_arr=()
 region="us-west-2"
