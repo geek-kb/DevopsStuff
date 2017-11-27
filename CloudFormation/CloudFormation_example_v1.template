@@ -34,7 +34,7 @@
 			"Type" : "String",
 			"Default" : "us-west-2",
 			"Description" : "Choose the region to deploy the stack to",
-			"AllowedValues" : [ "us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-central-1", "eu-west-2" ]
+			"AllowedValues" : [ "us-east-1", "us-west-2", "eu-west-1" ]
 		},
 
 		"TeamName" : {
@@ -67,11 +67,6 @@
 	},
 
 	"Mappings" : {
-		"ELBMap" : {
-			"Dev" : { "elb" : "dev-elb" },
-			"Stg" : { "elb" : "company-stg" },
-			"Prd" : { "elb" : "api-US-Company" }
-		},
 
 		"AMIMap" : {
 			"us-east-1" : { "64" : "ami-e5bf699f" },
@@ -94,21 +89,22 @@
 		},
 
 		"BastionAmi" : {
+			"eu-west-1" : { "ami" : "ami-69309310" },
 			"us-west-1" : { "ami" : "ami-651cab1f" },
 			"us-west-2" : { "ami" : "ami-2fe82057" }
 		},
 
 		"CassPassword" : {
-			"Dev"  : { "pass" : "CASSPASS", "hash": "CASSPASSHASH" },
-			"Stg"   : { "pass" : "CASSPASS", "hash": "CASSPASSHASH" },
-			"Prd" : { "pass" : "CASSPASS", "hash": "CASSPASSHASH" }
+			"Dev"  : { "pass" : "CASS_PASS", "hash": "CASS_PASS_HASH" },
+			"Stg"   : { "pass" : "CASS_PASS", "hash": "CASS_PASS_HASH" },
+			"Prd" : { "pass" : "CASS_PASS", "hash": "CASS_PASS_HASH" }
 		},
 
 		"ScalingMin" : {
 			"Dev"  : { "Batch" :  1 , "Api" : 2, "Analytics" : 2, "Cassandra" : 1, "Bastion" : 1 },
 			"Load" : { "Batch" :  1 , "Api" : 2, "Analytics" : 2, "Cassandra" : 1, "Bastion" : 1 },
-			"Stg"  : { "Batch" :  1 , "Api" : 4, "Analytics" : 1, "Cassandra" : 1, "Bastion" : 1 },
-			"Prd" : { "Batch" :  1 , "Api" : 4, "Analytics" : 1, "Cassandra" : 1, "Bastion" : 1 }
+			"Stg"  : { "Batch" :  1 , "Api" : 2, "Analytics" : 1, "Cassandra" : 1, "Bastion" : 1 },
+			"Prd" : { "Batch" :  1 , "Api" : 2, "Analytics" : 1, "Cassandra" : 1, "Bastion" : 1 }
 		},
 
 		"ScalingMax" : {
@@ -132,10 +128,10 @@
 		},
 
 		"LiquiBase" : {
-			"Dev"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DBPASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASSDBPASS" },
-			"Load"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DBPASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASSDBPASS" },
-			"Stg"   : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DBPASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASSDBPASS" },
-			"Prd" : { "dbscheme" : "company_prod_us", "dbadminuser" : "prod_admin", "dbpass" : "SzZD4w9WfiYLf63w", "cassandraUser" : "cassandra", "cassandraPassword": "CASSDBPASS" }
+			"Dev"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Load"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Stg"   : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Prd" : { "dbscheme" : "company_prod_us", "dbadminuser" : "prod_admin", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" }
 		},
 
 		"ASRDSUserPassword" : {
@@ -143,6 +139,13 @@
 			"Load" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDSADMINPASS" },
 			"Stg" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDSADMINPASS" },
 			"Prd" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDSADMINPASS" }
+		},
+
+		"DBInstanceClass" : {
+			"Dev" : { "classType" : "db.m1.medium" },
+			"Load" : { "classType" : "db.m1.medium" },
+			"Stg" : { "classType" : "db.m1.medium" },
+			"Prd" : { "classType" : "db.m3.xlarge" }
 		},
 
 		"LoadBalancerProperties" : {
@@ -172,6 +175,42 @@
 			}
 		},
 
+		"VPCPeering" : {
+			"Type" : "AWS::EC2::VPCPeeringConnection",
+			"Properties" : {
+				"PeerVpcId" : "vpc-20e2094b",
+				"VpcId" : { "Ref" : "VPC" }
+			}
+		},
+
+		"VPCHostedZone" : {
+			"Type" : "AWS::Route53::HostedZone",
+			"Properties" : {
+				"HostedZoneTags" : [
+					{ "Key" : "VpcId" , "Value" : { "Ref" : "VPC" } },
+					{ "Key" : "StackName" , "Value" : { "Ref" : "AWS::StackName" } }
+				],
+				"Name" : { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "company", "private" ] ] },
+				"VPCs" : [ {
+					"VPCId" : { "Ref" : "VPC" },
+					"VPCRegion" : { "Ref" : "Region" }
+				} ]
+			}
+		},
+
+		"ApiLoadBalancer" : {
+			"Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+			"Properties": {
+				"Name" : { "Fn::Join" : [ "-" ,[ "Api", { "Ref" : "EnvType" }, { "Ref" : "VPC" } ] ] },
+				"Scheme" : { "Fn::FindInMap" : [ "LoadBalancerProperties", { "Ref" : "EnvType" }, "scheme" ] },
+				"Subnets" : [ { "Ref" : "SubnetOne" }, { "Ref" : "SubnetTwo" }, { "Ref" : "SubnetThree" } ],
+				"LoadBalancerAttributes" : [
+					{ "Key" : "idle_timeout.timeout_seconds", "Value" : "50" } ],
+				"IpAddressType" : "ipv4",
+				"SecurityGroups" : [ { "Ref" : "ELBSG" } ]
+			}
+		},
+
 		"RDSSubnetGroup" : {
 			"Type" : "AWS::RDS::DBSubnetGroup",
 			"Properties" : {
@@ -183,10 +222,10 @@
 		"ASRDSdb" : {
 			"Type" : "AWS::RDS::DBInstance",
 			"Properties" : {
-				"DBInstanceIdentifier" : { "Fn::Join" : [ "-", [ { "Ref" : "TeamName" }, { "Ref" : "EnvType" }, { "Ref" : "BuildNumber" }, "MySql" ] ] },
+				"DBInstanceIdentifier" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvType" }, "mysql", { "Ref" : "BuildNumber" }, { "Ref" : "VPC" } ] ] },
 				"AllocatedStorage" : "20",
 				"DBSnapshotIdentifier" : { "Fn::If" : [ "RDSSnapshotIDset", { "Ref" : "RDSSnapshotID" }, { "Ref" : "AWS::NoValue" } ] },
-				"DBInstanceClass" : "db.m1.medium",
+				"DBInstanceClass" : { "Fn::FindInMap" : [ "DBInstanceClass", { "Ref" : "EnvType" }, "classType" ] },
 				"Engine" : "MySQL",
 				"EngineVersion" : "5.6",
 				"DBSubnetGroupName" : { "Ref" : "RDSSubnetGroup" },
@@ -196,7 +235,7 @@
 				"Port" : "3306",
 				"PubliclyAccessible" : "false",
 				"StorageType" : "gp2",
-				"VPCSecurityGroups" : [ { "Ref" : "CompanySG" }, { "Ref" : "RDSSG" } ],
+				"VPCSecurityGroups" : [ { "Ref" : "ASGPilot" }, { "Ref" : "RDSSG" } ],
 				"PreferredMaintenanceWindow" : "fri:01:00-fri:01:30",
 				"Tags" : [ { "Key" : "workload-type", "Value" : "other" } ]
 			}
@@ -269,6 +308,15 @@
 				"RouteTableId" : { "Ref" : "RouteTable" },
 				"DestinationCidrBlock" : "0.0.0.0/0",
 				"GatewayId" : { "Ref" : "InternetGateway" }
+			}
+		},
+
+		"PrivateRoutePeering" : {
+			"Type" : "AWS::EC2::Route",
+			"Properties" : {
+				"RouteTableId" : { "Ref" : "RouteTable" },
+				"DestinationCidrBlock" : "172.31.0.0/16",
+				"VpcPeeringConnectionId" : { "Ref" : "VPCPeering" }
 			}
 		},
 
@@ -675,7 +723,241 @@
 				}
 			},
 
-			"CompanySG": {
+			"Latency": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB Latency Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "Latency",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"SurgeQueueLength": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB SurgeQueueLength Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "SurgeQueueLength",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"SpilloverCount": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB SpilloverCount Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "SpilloverCount",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"HTTPCodeELB4XX": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB HTTPCode_ELB_4XX Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "HTTPCode_ELB_4XX",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"HTTPCodeELB5XX": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB HTTPCode_ELB_5XX Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "HTTPCode_ELB_5XX",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"HTTPCodeBackend2XX": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB HTTPCode_Backend_2XX Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "HTTPCode_Backend_2XX",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"HTTPCodeBackend3XX": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB HTTPCode_Backend_3XX Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "HTTPCode_Backend_3XX",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"HTTPCodeBackend4XX": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB HTTPCode_Backend_4XX Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "HTTPCode_Backend_4XX",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"HTTPCodeBackend5XX": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB HTTPCode_Backend_5XX Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "HTTPCode_Backend_5XX",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"BackendConnectionErrors": {
+				"Type" : "AWS::CloudWatch::Alarm",
+				"Properties" : {
+					"AlarmDescription" : "Alarm for ELB BackendConnectionErrors Metric",
+					"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+					"EvaluationPeriods": "3",
+					"Statistic": "Minimum",
+					"MetricName": "BackendConnectionErrors",
+					"Namespace": "AWS/ELB",
+					"Period": "60",
+					"Threshold": "90",
+					"Dimensions" : [ {
+						"Name" : "LoadBalancerName",
+						"Value" : { "Ref" : "ApiLoadBalancer" }
+					} ]
+				}
+			},
+
+			"ELBTargetGroup" : {
+				"Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+				"Properties" : {
+					"HealthCheckIntervalSeconds" : "6",
+					"HealthCheckPath" : "/api/v1/version",
+					"HealthCheckProtocol" : "HTTP",
+					"HealthCheckTimeoutSeconds" : "5",
+					"HealthyThresholdCount" : "5",
+					"Matcher" : { "HttpCode" : "200" },
+					"Name" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvType" }, "api", { "Ref" : "VPC" } ] ] },
+					"Port" : "8080",
+					"Protocol" : "HTTP",
+					"TargetGroupAttributes" : [
+						{ "Key" : "stickiness.enabled", "Value" : "false" },
+						{ "Key" : "deregistration_delay.timeout_seconds", "Value" : "60" }
+					],
+					"TargetType" : "instance",
+					"UnhealthyThresholdCount" : "3",
+					"VpcId" : { "Ref" : "VPC" }
+				}
+			},
+
+			"ELBListener443" : {
+				"Type" : "AWS::ElasticLoadBalancingV2::Listener",
+				"Properties" : {
+					"Certificates" : [ {
+						"CertificateArn" : { "Fn::FindInMap" : [ "CertificatesArn", { "Ref" : "EnvType" }, "certificateArn" ] }
+					} ],
+					"DefaultActions" : [ {
+						"TargetGroupArn" : { "Ref" : "ELBTargetGroup" },
+						"Type" : "forward"
+						}
+					],
+					"LoadBalancerArn" : { "Ref" : "ApiLoadBalancer" },
+					"Port" : "443",
+					"Protocol" : "HTTPS",
+					"SslPolicy" : "ELBSecurityPolicy-2016-08"
+				}
+			},
+
+			"ELBListener8080" : {
+				"Type" : "AWS::ElasticLoadBalancingV2::Listener",
+				"Properties" : {
+					"DefaultActions" : [ {
+						"TargetGroupArn" : { "Ref" : "ELBTargetGroup" },
+						"Type" : "forward"
+					}
+				],
+					"LoadBalancerArn" : { "Ref" : "ApiLoadBalancer" },
+					"Port" : "8080",
+					"Protocol" : "HTTP"
+				}
+			},
+
+			"ASGPilot": {
 				"Type": "AWS::EC2::SecurityGroup",
 				"Properties": {
 					"GroupDescription": "AS Pilot - created by CloudFormation",
@@ -688,12 +970,26 @@
 					{ "IpProtocol" : "tcp", "FromPort" : "6379", "ToPort" : "6379", "CidrIp" : "0.0.0.0/0" },
 					{ "IpProtocol" : "tcp", "FromPort" : "4080", "ToPort" : "4080", "CidrIp" : "0.0.0.0/0" },
 					{ "IpProtocol" : "tcp", "FromPort" : "10001", "ToPort" : "10001", "CidrIp" : "0.0.0.0/0" },
+					{ "IpProtocol" : "-1", "CidrIp" : "172.31.0.0/16" },
 					{ "IpProtocol" : "tcp", "FromPort" : "9200", "ToPort" : "9200", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
 					{ "IpProtocol" : "tcp", "FromPort" : "9042", "ToPort" : "9042", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
 					{ "IpProtocol" : "tcp", "FromPort" : "7199", "ToPort" : "7199", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
 					{ "IpProtocol" : "tcp", "FromPort" : "9160", "ToPort" : "9160", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
 					{ "IpProtocol" : "tcp", "FromPort" : "0", "ToPort" : "65535", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
 					{ "IpProtocol" : "icmp", "FromPort" : "8", "ToPort" : "-1", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} }
+					]
+				}
+			},
+
+			"ELBSG" : {
+				"Type": "AWS::EC2::SecurityGroup",
+				"Properties": {
+					"GroupDescription": "ELB SG - created by CloudFormation",
+					"VpcId" : { "Ref" : "VPC" },
+					"SecurityGroupIngress" : [
+					{ "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0" },
+					{ "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "CidrIp" : "0.0.0.0/0" },
+					{ "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0" }
 					]
 				}
 			},
@@ -735,7 +1031,7 @@
 				"InstanceType" : { "Ref" : "InstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
-				"SecurityGroups" : [ { "Ref" : "CompanySG" } ],
+				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
 				"UserData" : {
 				"Fn::Base64" : {
 					"Fn::Join" : ["\n", [
@@ -752,9 +1048,10 @@
 							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
-							{ "Fn::Join": [ "=", [ "regioncode", { "Fn::FindInMap" : [ "RegionCode", { "Ref" : "Region" }, "rc" ] } ] ] },
-							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : ["ASRDSdb","Endpoint.Address"] } ] ] },
-							{ "Fn::Join": [ "=", [ "elbname", { "Fn::FindInMap" : [ "ELBMap", { "Ref" : "EnvType" }, "elb" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "targetgrouparn", { "Ref" : "ELBTargetGroup" } ] ] },
+							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
@@ -779,7 +1076,7 @@
 				"InstanceType" : { "Ref" : "InstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
-				"SecurityGroups" : [ { "Ref" : "CompanySG" } ],
+				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
 				"UserData" : {
 				"Fn::Base64" : {
 					"Fn::Join" : ["\n", [
@@ -796,9 +1093,9 @@
 							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
-							{ "Fn::Join": [ "=", [ "regioncode", { "Fn::FindInMap" : [ "RegionCode", { "Ref" : "Region" }, "rc" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
 							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
-							{ "Fn::Join": [ "=", [ "elbname", { "Fn::FindInMap" : [ "ELBMap", { "Ref" : "EnvType" }, "elb"] } ] ] },
+							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
@@ -823,7 +1120,7 @@
 				"InstanceType" : { "Ref" : "InstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
-				"SecurityGroups" : [ { "Ref" : "CompanySG" } ],
+				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
 				"UserData" : {
 				"Fn::Base64" : {
 					"Fn::Join" : ["\n", [
@@ -841,9 +1138,9 @@
 							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
-							{ "Fn::Join": [ "=", [ "regioncode", { "Fn::FindInMap" : [ "RegionCode", { "Ref" : "Region" }, "rc" ] } ] ] },
-							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : ["ASRDSdb","Endpoint.Address"] } ] ] },
-							{ "Fn::Join": [ "=", [ "elbname", { "Fn::FindInMap" : [ "ELBMap", { "Ref" : "EnvType" }, "elb"] } ] ] },
+							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
@@ -868,7 +1165,7 @@
 				"InstanceType" : { "Ref" : "InstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
-				"SecurityGroups" : [ { "Ref" : "CompanySG" } ],
+				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
 				"UserData" : {
 				"Fn::Base64" : {
 					"Fn::Join" : ["\n", [
@@ -884,8 +1181,8 @@
 							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
-							{ "Fn::Join": [ "=", [ "regioncode", { "Fn::FindInMap" : [ "RegionCode", { "Ref" : "Region" }, "rc" ] } ] ] },
-							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : ["ASRDSdb","Endpoint.Address"] } ] ] },
+							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
 							{ "Fn::Join": [ "=", [ "numberofmachines", { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra"] } ] ] },
 							{ "Fn::Join": [ "=", [ "password", { "Fn::FindInMap" : [ "CassPassword", { "Ref" : "EnvType" }, "pass" ] } ] ] },
@@ -931,7 +1228,7 @@
 							{ "Fn::Join": [ "=", [ "vpcpeeringid", { "Ref" : "VPCPeering" } ] ] },
 							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
 							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
-							{ "Fn::Join": [ "=", [ "elasticip", { "Fn::FindInMap" : [ "BastionEIP", { "Ref" : "Region" }, "eip" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "fqdn", { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "company", "private" ] ] } ] ] },
 							"bash"
 						]]},
 						{ "Fn::Join": [ " \\\n", [
@@ -991,12 +1288,8 @@
 			"Description" : "Subnet Three"
 		},
 		"SecurityGroup" : {
-			"Value" : { "Ref" : "CompanySG" },
-			"Description" : "CompanySG Security Group"
-		},
-		"BastionIP" : {
-			"Value" : { "Fn::FindInMap" : [ "BastionEIP" , { "Ref" : "Region" }, "eip" ] },
-			"Description" : "Elastic IP of Bastion Server"
+			"Value" : { "Ref" : "ASGPilot" },
+			"Description" : "ASGPilot Security Group"
 		},
 		"RDSEndpoint" : {
 			"Value" : { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] },
@@ -1005,6 +1298,18 @@
 		"RDSDBSnapshotID" : {
 			"Value" : { "Ref" : "RDSSnapshotID" },
 			"Description" : "Name of RDS Snapshot ID to restore from"
+		},
+		"VPCPeeringID" : {
+			"Value" : { "Ref" : "VPCPeering" },
+			"Description" : "VPC Peering Connection ID"
+		},
+		"ELBName" : {
+			"Value" : { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] },
+			"Description" : "Name of Api ELB"
+		},
+		"VPCHostedZoneId" : {
+			"Value" : { "Ref" : "VPCHostedZone" },
+			"Description" : "Name of hosted zone created by the stack"
 		}
 	}
 }
