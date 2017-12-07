@@ -17,11 +17,32 @@
 			"Description" : "Select environment type"
 		},
 
-		"InstanceType" :{
+		"ApiInstanceType" : {
+			"Type" : "String",
+			"Default" : "m3.medium",
+			"AllowedValues" : ["m3.medium", "m3.large", "c1.medium", "c3.2xlarge"],
+			"Description" : "Instance Type for Api"
+		},
+
+		"BatchInstanceType" : {
 			"Type" : "String",
 			"Default" : "m3.medium",
 			"AllowedValues" : ["m3.medium", "m3.large", "c1.medium", "c3.2xlarge"],
 			"Description" : "Instance Type for Batch"
+		},
+
+		"AnalyticsInstanceType" : {
+			"Type" : "String",
+			"Default" : "m3.medium",
+			"AllowedValues" : ["m3.medium", "m3.large", "c1.medium", "c3.2xlarge"],
+			"Description" : "Instance Type for Analytics"
+		},
+
+		"CassandraInstanceType" : {
+			"Type" : "String",
+			"Default" : "m3.large",
+			"AllowedValues" : [ "m3.large", "m3.medium", "c1.medium", "c3.2xlarge"],
+			"Description" : "Instance Type for Analytics"
 		},
 
 		"BuildNumber" : {
@@ -41,13 +62,6 @@
 			"Type": "String",
 			"Default": "Company",
 			"Description": "Project name for naming instance"
-		},
-
-		"CassNodes" : {
-			"Type": "String",
-			"Default": "1",
-			"Description": "Project name for naming instance",
-			"AllowedValues" : [ "1", "3" ]
 		},
 
 		"VPCcidr" : {
@@ -101,15 +115,15 @@
 		},
 
 		"ScalingMin" : {
-			"Dev"  : { "Batch" :  1 , "Api" : 2, "Analytics" : 2, "Cassandra" : 1, "Bastion" : 1 },
-			"Load" : { "Batch" :  1 , "Api" : 2, "Analytics" : 2, "Cassandra" : 1, "Bastion" : 1 },
-			"Stg"  : { "Batch" :  1 , "Api" : 2, "Analytics" : 1, "Cassandra" : 1, "Bastion" : 1 },
-			"Prd" : { "Batch" :  1 , "Api" : 2, "Analytics" : 1, "Cassandra" : 1, "Bastion" : 1 }
+			"Dev"  : { "Batch" :  1 , "Api" : 2, "Analytics" : 2, "Cassandra" : 3, "Bastion" : 1 },
+			"Load" : { "Batch" :  1 , "Api" : 2, "Analytics" : 1, "Cassandra" : 3, "Bastion" : 1 },
+			"Stg"  : { "Batch" :  1 , "Api" : 2, "Analytics" : 1, "Cassandra" : 3, "Bastion" : 1 },
+			"Prd" : { "Batch" :  1 , "Api" : 2, "Analytics" : 1, "Cassandra" : 3, "Bastion" : 1 }
 		},
 
 		"ScalingMax" : {
-			"Dev"  : { "Batch" :  1 , "Api" : 4, "Analytics" : 2, "Cassandra" : 1, "Bastion" : 1 },
-			"Load" : { "Batch" :  1 , "Api" : 2, "Analytics" : 2, "Cassandra" : 1, "Bastion" : 1 },
+			"Dev"  : { "Batch" :  1 , "Api" : 4, "Analytics" : 2, "Cassandra" : 3, "Bastion" : 1 },
+			"Load" : { "Batch" :  1 , "Api" : 2, "Analytics" : 2, "Cassandra" : 3, "Bastion" : 1 },
 			"Stg"  : { "Batch" :  1 , "Api" : 4, "Analytics" : 1, "Cassandra" : 3, "Bastion" : 1 },
 			"Prd" : { "Batch" :  1 , "Api" : 4, "Analytics" : 1, "Cassandra" : 3, "Bastion" : 1 }
 		},
@@ -128,17 +142,17 @@
 		},
 
 		"LiquiBase" : {
-			"Dev"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
-			"Load"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
-			"Stg"   : { "dbscheme" : "company_staging", "dbadminuser" : "company_staging", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Dev"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Load"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Stg"   : { "dbscheme" : "company_staging", "dbadminuser" : "company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
 			"Prd" : { "dbscheme" : "company_prod_us", "dbadminuser" : "prod_admin", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" }
 		},
 
 		"ASRDSUserPassword" : {
-			"Dev" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDSADMINPASS" },
-			"Load" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDSADMINPASS" },
-			"Stg" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDSADMINPASS" },
-			"Prd" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDSADMINPASS" }
+			"Dev" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDS_PASS" },
+			"Load" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDS_PASS" },
+			"Stg" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDS_PASS" },
+			"Prd" : { "rdsadminuser" : "admin", "rdsadminpassword" : "RDS_PASS" }
 		},
 
 		"DBInstanceClass" : {
@@ -156,10 +170,16 @@
 		},
 
 		"CertificatesArn" : {
-			"Dev" : { "certificateArn" : "arn:aws:iam::AWSACCOUNTID:server-certificate/wild_company.com_10072019" },
-			"Load" : { "certificateArn" : "arn:aws:iam::AWSACCOUNTID:server-certificate/wild_company.com_10072019" },
-			"Stg" : { "certificateArn" : "arn:aws:iam::AWSACCOUNTID:server-certificate/wild_company.com_10072019" },
-			"Prod" : { "certificateArn" : "arn:aws:iam::AWSACCOUNTID:server-certificate/wild_company.com_10072019" }
+			"Dev" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXX:server-certificate/wild_company.com_10072019" },
+			"Load" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXX:server-certificate/wild_company.com_10072019" },
+			"Stg" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXX:server-certificate/wild_company.com_10072019" },
+			"Prod" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXX:server-certificate/wild_company.com_10072019" }
+		},
+
+		"PeeringVpcId" : {
+			"us-west-2" : { "DefaultVpcId" : "vpc-20e2094b" },
+			"us-west-1" : { "DefaultVpcId" : "vpc-e557d89d" },
+			"eu-west-1" : { "DefaultVpcId" : "vpc-01898666" }
 		}
 	},
 
@@ -178,7 +198,7 @@
 		"VPCPeering" : {
 			"Type" : "AWS::EC2::VPCPeeringConnection",
 			"Properties" : {
-				"PeerVpcId" : "vpc-20e2094b",
+				"PeerVpcId" : { "Fn::FindInMap" : [ "PeeringVpcId", { "Ref" : "Region" }, "DefaultVpcId" ] },
 				"VpcId" : { "Ref" : "VPC" }
 			}
 		},
@@ -228,6 +248,7 @@
 				"DBInstanceClass" : { "Fn::FindInMap" : [ "DBInstanceClass", { "Ref" : "EnvType" }, "classType" ] },
 				"Engine" : "MySQL",
 				"EngineVersion" : "5.6",
+				"DBParameterGroupName" : "enable-triggers",
 				"DBSubnetGroupName" : { "Ref" : "RDSSubnetGroup" },
 				"MasterUsername" : { "Fn::FindInMap" : [ "ASRDSUserPassword", { "Ref" : "EnvType" }, "rdsadminuser" ] },
 				"MasterUserPassword" : { "Fn::FindInMap" : [ "ASRDSUserPassword", { "Ref" : "EnvType" }, "rdsadminpassword" ] },
@@ -1028,7 +1049,7 @@
 				"Type" : "AWS::AutoScaling::LaunchConfiguration",
 				"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
-				"InstanceType" : { "Ref" : "InstanceType" },
+				"InstanceType" : { "Ref" : "ApiInstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
 				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
@@ -1050,6 +1071,7 @@
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
 							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
 							{ "Fn::Join": [ "=", [ "targetgrouparn", { "Ref" : "ELBTargetGroup" } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
@@ -1073,7 +1095,7 @@
 				"Type" : "AWS::AutoScaling::LaunchConfiguration",
 				"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
-				"InstanceType" : { "Ref" : "InstanceType" },
+				"InstanceType" : { "Ref" : "BatchInstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
 				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
@@ -1096,6 +1118,7 @@
 							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
 							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
@@ -1117,7 +1140,7 @@
 				"Type" : "AWS::AutoScaling::LaunchConfiguration",
 				"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
-				"InstanceType" : { "Ref" : "InstanceType" },
+				"InstanceType" : { "Ref" : "AnalyticsInstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
 				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
@@ -1139,6 +1162,7 @@
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
 							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
@@ -1162,7 +1186,7 @@
 				"Type" : "AWS::AutoScaling::LaunchConfiguration",
 				"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "CassAmi", { "Ref" : "Region" }, "64" ]},
-				"InstanceType" : { "Ref" : "InstanceType" },
+				"InstanceType" : { "Ref" : "CassandraInstanceType" },
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
 				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
@@ -1182,6 +1206,7 @@
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
 							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
 							{ "Fn::Join": [ "=", [ "numberofmachines", { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra"] } ] ] },
@@ -1225,6 +1250,9 @@
 							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
+							{ "Fn::Join": [ "=", [ "asgpilotsgid", { "Ref": "ASGPilot" } ] ] },
+							{ "Fn::Join": [ "=", [ "bastionsgid", { "Ref": "BastionSG" } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "vpcpeeringid", { "Ref" : "VPCPeering" } ] ] },
 							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
 							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
