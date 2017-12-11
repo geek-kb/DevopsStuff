@@ -74,4 +74,4 @@ else
 fi
 
 #time pssh -P -i -p $SESSIONS -O ConnectTimeout=$TIMEOUT -h $LISTFILE "$COMMANDS"
-/usr/local/bin/pssh -l user -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no  -i /home/jenkins/.ssh/user.pem" -O ConnectTimeout=$TIMEOUT -h $LISTFILE "$COMMANDS"
+/usr/local/bin/pssh -l user -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no  -i ~/.ssh/user.pem" -O ConnectTimeout=$TIMEOUT -h $LISTFILE "$COMMANDS"
