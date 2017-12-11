@@ -5,8 +5,17 @@ import operator
 aws_account = 'AWS_ACCOUNT_NUMBER'
 source = 'us-west-2'
 destination = 'eu-west-1'
-databases = ['dev-rds-2017-10-02']
 
+def getdbs():
+    rdsclient = boto3.client('rds', source)
+    databases = rdsclient.describe_db_instances()
+    dbarray=[]
+    for database in databases['DBInstances']:
+        dbarray.append(database['DBInstanceIdentifier'])
+
+    return dbarray
+
+databases = getdbs()
 
 def copy_latest_snapshot():
     client = boto3.client('rds', source)
@@ -99,4 +108,4 @@ def lambda_handler(event, context):
 
 
 if __name__ == '__main__':
-
+    lambda_handler(None, None)
