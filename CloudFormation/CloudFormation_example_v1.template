@@ -170,10 +170,10 @@
 		},
 
 		"CertificatesArn" : {
-			"Dev" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXXX:server-certificate/wild_Company.com_10072019" },
-			"Load" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXXX:server-certificate/wild_Company.com_10072019" },
-			"Stg" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXXX:server-certificate/wild_Company.com_10072019" },
-			"Prod" : { "certificateArn" : "arn:aws:iam::XXXXXXXXXXX:server-certificate/wild_Company.com_10072019" }
+			"Dev" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" },
+			"Load" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" },
+			"Stg" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" },
+			"Prod" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" }
 		}
 	},
 
