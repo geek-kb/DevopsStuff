@@ -26,7 +26,7 @@ for r in ${!region_arr[@]}; do
 
   for l in ${!dfshz_arr[@]}; do
     if [[ ! $l -gt "0" ]]; then
-      echo "Now working on Hostedzone: ${dfshz_arr[$i]}..."
+      echo "Now working on Hostedzone: ${dfshz_arr[$i]} of Stack ${dfstacks_arr[$i]}..."
       vpcid=$(aws route53 get-hosted-zone --id ${dfshz_arr[$i]} | grep VPCId | awk '{print $2}' | tr -d '\"\|,')
       aws route53 list-resource-record-sets --hosted-zone-id ${dfshz_arr[$i]} --region ${region_arr[$r]} | jq -c '.ResourceRecordSets[]' | while read -r resourcerecordset; do
         read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
