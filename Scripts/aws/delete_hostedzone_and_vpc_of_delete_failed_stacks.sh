@@ -13,12 +13,12 @@ region_arr=(us-west-2 us-east-1 eu-west-1)
 for r in ${!region_arr[@]}; do
   echo "Now working on region ${region_arr[$r]}..."
   echo "Finding stacks with status DELETE_FAILED..."
-  for stack in $(aws cloudformation list-stacks --stack-status-filter "DELETE_FAILED" --region ${region_arr[$r]} | grep StackName | awk '{print $2}' | tr -d '\"\|,'); do
+  for stack in $(aws cloudformation list-stacks --stack-status-filter "DELETE_FAILED" --region ${region_arr[$r]} | jq -rc '.StackSummaries[].StackName'); do
     dfstacks_arr+=($stack)
     for i in ${!dfstacks_arr[@]}; do
       if [[ ! $i -gt "0" ]]; then
         echo "Getting stack $stack hosted zone id..."
-        stackhostedzoneid=$(aws cloudformation describe-stacks --stack-name $stack --region ${region_arr[$r]} | grep -A1 VPCHostedZoneId | grep OutputValue | awk '{print $2}' | tr -d '\"\|,')
+        stackhostedzoneid=$(aws cloudformation describe-stacks --stack-name $stack --region ${region_arr[$r]} | jq -r '.Stacks[] | .Outputs[] | select(.OutputKey | startswith("VPCHostedZoneId") ) | select(.OutputValue) | .OutputValue')
         dfshz_arr+=($stackhostedzoneid)
       fi
     done
@@ -27,7 +27,7 @@ for r in ${!region_arr[@]}; do
   for l in ${!dfshz_arr[@]}; do
     if [[ ! $l -gt "0" ]]; then
       echo "Now working on Hostedzone: ${dfshz_arr[$i]} of Stack ${dfstacks_arr[$i]}..."
-      vpcid=$(aws route53 get-hosted-zone --id ${dfshz_arr[$i]} | grep VPCId | awk '{print $2}' | tr -d '\"\|,')
+      vpcid=$(aws route53 get-hosted-zone --id ${dfshz_arr[$i]} | jq -r '.VPCs[] | .VPCId' )
       aws route53 list-resource-record-sets --hosted-zone-id ${dfshz_arr[$i]} --region ${region_arr[$r]} | jq -c '.ResourceRecordSets[]' | while read -r resourcerecordset; do
         read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
         if [ $type != "NS" -a $type != "SOA" ]; then
@@ -43,7 +43,7 @@ for r in ${!region_arr[@]}; do
       --id ${dfshz_arr[$i]} \
       --output text --query 'ChangeInfo.Id'
       if [[ $? -eq "0" ]]; then
-        echo "Deleting VPC..."
+        echo "Deleting VPC $vpcid..."
         echo aws ec2 delete-vpc --vpc-id $vpcid --region ${region_arr[$r]}
       fi
     fi
