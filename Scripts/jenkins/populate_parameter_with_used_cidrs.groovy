@@ -11,6 +11,11 @@ def regions = ['us-west-2', 'us-east-1', 'eu-west-1']
                 output << line
             }
         }
-        output.sort().each {
+				output = output.sort { a, b ->
+    		def aparts = a.split('[./]').collect { it as short }
+    		def bparts = b.split('[./]').collect { it as short }
+    		(0..4).collect { aparts[it] <=> bparts[it] }.find() ?: 0
+				}
+        output.each {
             println it
         }
