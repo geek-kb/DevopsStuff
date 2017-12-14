@@ -5,6 +5,7 @@
 # It is required as the default limit of number of VPC's per region is 5. Edit the "region_arr" to include the regions which are relevant for you.
 # For testing purposes, I've added "echo"s before the commands which may be dangerous [lines 33, 41, 46] to avoid doing any changes and allow you to test the script, so don't forget to remove them before running the script.
 # Script by Itai Ganot 2017.
+
 dfstacks_arr=[]
 dfshz_arr=[]
 region_arr=[]
