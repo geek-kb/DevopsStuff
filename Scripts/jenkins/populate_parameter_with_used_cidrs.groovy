@@ -11,6 +11,6 @@ def regions = ['us-west-2', 'us-east-1', 'eu-west-1']
                 output << line
             }
         }
-        (output as SortedSet).each {
+        output.sort().each {
             println it
         }
