@@ -5,47 +5,70 @@
 # It is required as the default limit of number of VPC's per region is 5. Edit the "region_arr" to include the regions which are relevant for you.
 # For testing purposes, I've added "echo"s before the commands which may be dangerous [lines 33, 41, 46] to avoid doing any changes and allow you to test the script, so don't forget to remove them before running the script.
 # Script by Itai Ganot 2017.
-
 dfstacks_arr=[]
 dfshz_arr=[]
 region_arr=[]
 region_arr=(us-west-2 us-east-1 eu-west-1)
-for r in ${!region_arr[@]}; do
-  echo "Now working on region ${region_arr[$r]}..."
-  echo "Finding stacks with status DELETE_FAILED..."
-  for stack in $(aws cloudformation list-stacks --stack-status-filter "DELETE_FAILED" --region ${region_arr[$r]} | jq -rc '.StackSummaries[].StackName'); do
-    dfstacks_arr+=($stack)
-    for i in ${!dfstacks_arr[@]}; do
-      if [[ ! $i -gt "0" ]]; then
-        echo "Getting stack $stack hosted zone id..."
-        stackhostedzoneid=$(aws cloudformation describe-stacks --stack-name $stack --region ${region_arr[$r]} | jq -r '.Stacks[] | .Outputs[] | select(.OutputKey | startswith("VPCHostedZoneId") ) | select(.OutputValue) | .OutputValue')
+RED=`tput setaf 1`
+GREEN=`tput setaf 2`
+YELLOW=`tput setaf 3`
+NOCOLOR=`tput sgr0`
+
+function colnormal {
+	echo -e -n "$YELLOW $* $NOCOLOR\n"
+}
+function colgood {
+	echo -e -n "$GREEN $* $NOCOLOR\n"
+}
+function colbad {
+	echo -e -n "$RED $* $NOCOLOR\n"
+}
+
+#region_arr=(eu-west-1)
+for region in ${region_arr[@]}; do
+	colnormal "-------------- Now working on region $region -----------------"
+  colnormal "Finding stacks with status DELETE_FAILED..."
+  for stack in $(aws cloudformation list-stacks --stack-status-filter "DELETE_FAILED" --region $region | grep StackName | awk '{print $2}' | tr -d '\"\|,'); do
+        colnormal "Getting stack $stack hosted zone id..."
+        stackhostedzoneid=$(aws cloudformation describe-stacks --stack-name $stack --region $region | grep -A1 VPCHostedZoneId | grep OutputValue | awk '{print $2}' | tr -d '\"\|,')
+				colgood "Found StackHostedZoneId: $stackhostedzoneid"
+				echo "--------------------------------------------------------"
         dfshz_arr+=($stackhostedzoneid)
-      fi
     done
   done
 
   for l in ${!dfshz_arr[@]}; do
-    if [[ ! $l -gt "0" ]]; then
-      echo "Now working on Hostedzone: ${dfshz_arr[$i]} of Stack ${dfstacks_arr[$i]}..."
-      vpcid=$(aws route53 get-hosted-zone --id ${dfshz_arr[$i]} | jq -r '.VPCs[] | .VPCId' )
-      aws route53 list-resource-record-sets --hosted-zone-id ${dfshz_arr[$i]} --region ${region_arr[$r]} | jq -c '.ResourceRecordSets[]' | while read -r resourcerecordset; do
-        read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
-        if [ $type != "NS" -a $type != "SOA" ]; then
-          echo aws route53 change-resource-record-sets --region ${region_arr[$r]} \
-          --hosted-zone-id ${dfshz_arr[$i]} \
-          --change-batch '{"Changes":[{"Action":"DELETE","ResourceRecordSet":
-          	'"$resourcerecordset"'
-          }]}' \
-          --output text --query 'ChangeInfo.Id'
-        fi
-      done
-      echo aws route53 delete-hosted-zone --region ${region_arr[$r]} \
-      --id ${dfshz_arr[$i]} \
-      --output text --query 'ChangeInfo.Id'
-      if [[ $? -eq "0" ]]; then
-        echo "Deleting VPC $vpcid..."
-        echo aws ec2 delete-vpc --vpc-id $vpcid --region ${region_arr[$r]}
-      fi
-    fi
-  done
-done
+			if [[ $l -gt "0" ]]; then
+				echo ""
+				colnormal "##############################################################"
+  			colgood "Now working on Hostedzone: ${dfshz_arr[$l]}..."
+				colnormal "##############################################################"
+	      vpcid=$(aws route53 get-hosted-zone --id ${dfshz_arr[$l]} | grep VPCId | awk '{print $2}' | tr -d '\"\|,')
+	      aws route53 list-resource-record-sets --hosted-zone-id ${dfshz_arr[$l]} --region $region | jq -c '.ResourceRecordSets[]' | while read -r resourcerecordset; do
+	        read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
+	        if [ $type != "NS" -a $type != "SOA" ]; then
+	          echo aws route53 change-resource-record-sets --region $region \
+	          --hosted-zone-id $l \
+	          --change-batch '{"Changes":[{"Action":"DELETE","ResourceRecordSet":
+	          	'"$resourcerecordset"'
+	          }]}' \
+	          --output text --query 'ChangeInfo.Id'
+	        fi
+	      done
+	      
+				echo aws route53 delete-hosted-zone --region $region \
+	      --id ${dfshz_arr[$l]} \
+	      --output text --query 'ChangeInfo.Id'
+	      if [[ $? -eq "0" ]]; then
+	        colnormal "Deleting VPC $vpcid of HostedZone ${dfshz_arr[$l]} ..."
+	        echo aws ec2 delete-vpc --vpc-id $vpcid --region $region
+					if [[ $? -eq "0" ]]; then
+						colgood "VPC deleted succssfully!"
+						colgood "------------------ End of region $region ---------------------"
+						echo "--------------------------------------------------------------"
+					else
+						colbad "Unable to delete VPC $vpcid in region $region! "
+					fi		
+	      fi
+			fi
+	done
