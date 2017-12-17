@@ -60,7 +60,7 @@ for region in ${region_arr[@]}; do
 	      --id ${dfshz_arr[$l]} \
 	      --output text --query 'ChangeInfo.Id'
 	      if [[ $? -eq "0" ]]; then
-	        colnormal "Deleting VPC $vpcid of HostedZone ${dfshz_arr[$l]} ..."
+	        colgood "Deleting VPC $vpcid of HostedZone ${dfshz_arr[$l]} ..."
 	        echo aws ec2 delete-vpc --vpc-id $vpcid --region $region
 					if [[ $? -eq "0" ]]; then
 						colgood "VPC deleted succssfully!"
