@@ -1,6 +1,6 @@
 {
 "AWSTemplateFormatVersion" : "2010-09-09",
-"Description" : "Company - Formation of Server Machines @ Ireland (eu-west-1)",
+"Description" : "Company - Formation of Server Machines @ Oregon (us-west-2)",
 
 	"Parameters" : {
 		"UserScriptVersion" : {
@@ -13,7 +13,7 @@
 		"EnvType" : {
 			"Type" : "String",
 			"Default" : "Dev",
-			"AllowedValues" : ["Stg", "Load", "Prd", "Dev"],
+			"AllowedValues" : [ "Stg", "Load", "Prd", "Dev" ],
 			"Description" : "Select environment type"
 		},
 
@@ -53,9 +53,9 @@
 
 		"Region" : {
 			"Type" : "String",
-			"Default" : "eu-west-1",
+			"Default" : "us-west-2",
 			"Description" : "Choose the region to deploy the stack to",
-			"AllowedValues" : [ "us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-central-1", "eu-west-2" ]
+			"AllowedValues" : [ "us-east-1", "us-west-2", "eu-west-1" ]
 		},
 
 		"TeamName" : {
@@ -70,13 +70,13 @@
 		},
 
 		"RDSSnapshotID" : {
-				"Type" : "String",
-				"Description": "Insert Snapshot ID to restore from"
+			"Type" : "String",
+			"Description": "Insert Snapshot ID to restore from"
 		}
 	},
 
 	"Conditions": {
-		"RDSSnapshotIDset" : { "Fn::Not" : [ { "Fn::Equals" : [ "", { "Ref": "RDSSnapshotID" } ] } ] },
+		"RDSSnapshotIDset" : { "Fn::Not" : [ { "Fn::Equals" : [ "", { "Ref" : "RDSSnapshotID" } ] } ] },
 		"VPCcidrset" : { "Fn::Not" : [ { "Fn::Equals" : [ "", { "Ref" : "VPCcidr" } ] } ] }
 	},
 
@@ -93,18 +93,14 @@
 		},
 
 		"CassAmi" : {
-			"us-east-1" : { "64" : "ami-8af157ea" },
-			"us-east-2" : { "64" : "ami-8af157ea" },
-			"us-west-1" : { "64" : "ami-8af157ea" },
-			"us-west-2" : { "64" : "ami-8af157ea" },
-			"eu-west-1" : { "64" : "ami-061ccf7f" },
-			"eu-central-1" : { "64" : "ami-8af157ea" },
-			"eu-west-2" : { "64" : "ami-e59d8f81" }
+			"us-east-1" : { "64" : "ami-c41d61be" },
+			"us-west-2" : { "64" : "ami-d057f4a8" },
+			"eu-west-1" : { "64" : "ami-3bd05042" }
 		},
 
 		"BastionAmi" : {
 			"eu-west-1" : { "ami" : "ami-69309310" },
-			"us-east-1" : { "ami" : "ami-651cab1f" },
+			"us-west-1" : { "ami" : "ami-651cab1f" },
 			"us-west-2" : { "ami" : "ami-2fe82057" }
 		},
 
@@ -129,10 +125,10 @@
 		},
 
 		"KeyPairMap" : {
-			"Dev"  : { "kp" : "Company" },
-			"Load"  : { "kp" : "Company" },
-			"Stg"   : { "kp" : "Company" },
-			"Prd" : { "kp" : "Company" }
+			"Dev"  : { "kp" : "company" },
+			"Load"  : { "kp" : "company" },
+			"Stg"   : { "kp" : "company" },
+			"Prd" : { "kp" : "company" }
 		},
 
 		"BastionKeyPair" : {
@@ -142,10 +138,10 @@
 		},
 
 		"LiquiBase" : {
-			"Dev"  : { "dbscheme" : "Company_staging", "dbadminuser" : "Company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
-			"Load"  : { "dbscheme" : "Company_staging", "dbadminuser" : "Company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
-			"Stg"   : { "dbscheme" : "Company_staging", "dbadminuser" : "Company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
-			"Prd" : { "dbscheme" : "Company_prod_us", "dbadminuser" : "prod_admin", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" }
+			"Dev"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Load"  : { "dbscheme" : "company_staging", "dbadminuser" : "company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Stg"   : { "dbscheme" : "company_staging", "dbadminuser" : "company_stagi", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" },
+			"Prd" : { "dbscheme" : "company_prod_us", "dbadminuser" : "prod_admin", "dbpass" : "DB_PASS", "cassandraUser" : "cassandra", "cassandraPassword": "CASS_PASS" }
 		},
 
 		"ASRDSUserPassword" : {
@@ -170,10 +166,23 @@
 		},
 
 		"CertificatesArn" : {
-			"Dev" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" },
-			"Load" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" },
-			"Stg" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" },
-			"Prod" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_Company.com_10072019" }
+			"Dev" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_company.com_10072019" },
+			"Load" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_company.com_10072019" },
+			"Stg" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_company.com_10072019" },
+			"Prd" : { "certificateArn" : "arn:aws:iam::AWS_ACCOUNT_ID:server-certificate/wild_company.com_10072019" }
+		},
+
+		"RDSAllocatedStorage" : {
+			"Dev" : { "AllocatedStorage" : "20" },
+			"Load" : { "AllocatedStorage" : "20" },
+			"Stg" : { "AllocatedStorage" : "20" },
+			"Prd" : { "AllocatedStorage" : "500" }
+		},
+
+		"PeeringVpcId" : {
+			"us-west-2" : { "DefaultVpcId" : "vpc-20e2094b" },
+			"us-west-1" : { "DefaultVpcId" : "vpc-e557d89d" },
+			"eu-west-1" : { "DefaultVpcId" : "vpc-01898666" }
 		}
 	},
 
@@ -189,6 +198,14 @@
 			}
 		},
 
+		"VPCPeering" : {
+			"Type" : "AWS::EC2::VPCPeeringConnection",
+			"Properties" : {
+				"PeerVpcId" : { "Fn::FindInMap" : [ "PeeringVpcId", { "Ref" : "Region" }, "DefaultVpcId" ] },
+				"VpcId" : { "Ref" : "VPC" }
+			}
+		},
+
 		"VPCHostedZone" : {
 			"Type" : "AWS::Route53::HostedZone",
 			"Properties" : {
@@ -196,7 +213,7 @@
 					{ "Key" : "VpcId" , "Value" : { "Ref" : "VPC" } },
 					{ "Key" : "StackName" , "Value" : { "Ref" : "AWS::StackName" } }
 				],
-				"Name" : { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "Company", "private" ] ] },
+				"Name" : { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "company", "private" ] ] },
 				"VPCs" : [ {
 					"VPCId" : { "Ref" : "VPC" },
 					"VPCRegion" : { "Ref" : "Region" }
@@ -229,7 +246,7 @@
 			"Type" : "AWS::RDS::DBInstance",
 			"Properties" : {
 				"DBInstanceIdentifier" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvType" }, "mysql", { "Ref" : "BuildNumber" }, { "Ref" : "VPC" } ] ] },
-				"AllocatedStorage" : "20",
+				"AllocatedStorage" : { "Fn::FindInMap" : [ "RDSAllocatedStorage", { "Ref" : "EnvType" }, "AllocatedStorage" ] },
 				"DBSnapshotIdentifier" : { "Fn::If" : [ "RDSSnapshotIDset", { "Ref" : "RDSSnapshotID" }, { "Ref" : "AWS::NoValue" } ] },
 				"DBInstanceClass" : { "Fn::FindInMap" : [ "DBInstanceClass", { "Ref" : "EnvType" }, "classType" ] },
 				"Engine" : "MySQL",
@@ -318,6 +335,15 @@
 			}
 		},
 
+		"PrivateRoutePeering" : {
+			"Type" : "AWS::EC2::Route",
+			"Properties" : {
+				"RouteTableId" : { "Ref" : "RouteTable" },
+				"DestinationCidrBlock" : "172.31.0.0/16",
+				"VpcPeeringConnectionId" : { "Ref" : "VPCPeering" }
+			}
+		},
+
 		"InternetGateway" : {
 			"Type" : "AWS::EC2::InternetGateway"
 		},
@@ -330,11 +356,10 @@
 			}
 		},
 
-
 		"ApiServersASG" : {
 			"Type" : "AWS::AutoScaling::AutoScalingGroup",
 			"Properties" : {
-				"VPCZoneIdentifier" : [ {	"Ref" : "SubnetOne" }, { "Ref" : "SubnetTwo" }, { "Ref" : "SubnetThree" } ],
+				"VPCZoneIdentifier" : [ {	"Ref" : "SubnetThree" }, { "Ref" : "SubnetOne" }, { "Ref" : "SubnetTwo" } ],
 				"LaunchConfigurationName" : { "Ref" : "ApiServerLaunchConfiguration" },
 				"MinSize" : { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Api"] },
 				"MaxSize" : { "Fn::FindInMap" : [ "ScalingMax", { "Ref" : "EnvType" }, "Api"] },
@@ -351,16 +376,15 @@
 					{ "Key" : "Team", "Value" : "Company", "PropagateAtLaunch" : "true" }
 				]
 			},
-
-			"CreationPolicy": {
-				"AutoScalingCreationPolicy" : {
-  				"MinSuccessfulInstancesPercent" : "100"
-				},
-				"ResourceSignal": {
-					"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Api" ] },
-					"Timeout": "PT10M"
+				"CreationPolicy": {
+					"AutoScalingCreationPolicy" : {
+    				"MinSuccessfulInstancesPercent" : "100"
+					},
+					"ResourceSignal": {
+						"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Api" ] },
+						"Timeout": "PT10M"
+					}
 				}
-			}
 		},
 
 		"BatchServersASG" : {
@@ -383,103 +407,103 @@
 					{ "Key" : "Team", "Value" : "Company", "PropagateAtLaunch" : "true" }
 					]
 				},
-			"CreationPolicy" : {
-				"AutoScalingCreationPolicy" : {
-  				"MinSuccessfulInstancesPercent" : "100"
-				},
-				"ResourceSignal" : {
-					"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Batch" ] },
-					"Timeout": "PT10M"
-				}
-			}
-		},
-
-		"AnalyticsServersASG" : {
-			"Type" : "AWS::AutoScaling::AutoScalingGroup",
-			"Properties" : {
-				"VPCZoneIdentifier" : [ {	"Ref" : "SubnetTwo" }, { "Ref" : "SubnetOne"}, { "Ref" : "SubnetThree" } ],
-				"LaunchConfigurationName" : { "Ref" : "AnalyticsServerLaunchConfiguration" },
-				"MinSize" : { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Analytics"] },
-				"MaxSize" : { "Fn::FindInMap" : [ "ScalingMax", { "Ref" : "EnvType" }, "Analytics"] },
-				"TerminationPolicies" : [ "NewestInstance" ],
-				"MetricsCollection": [
-					{
-						"Granularity": "1Minute",
-						"Metrics": []
+				"CreationPolicy" : {
+					"AutoScalingCreationPolicy" : {
+    				"MinSuccessfulInstancesPercent" : "100"
+					},
+					"ResourceSignal" : {
+						"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Batch" ] },
+						"Timeout": "PT10M"
 					}
-				],
-				"Tags" : [
-					{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "TeamName" }, { "Ref" : "EnvType" }, "Analytics", { "Ref" : "BuildNumber" }  ]] }, "PropagateAtLaunch" : "true" },
-					{ "Key" : "Environment", "Value" : "Analytics", "PropagateAtLaunch" : "true" },
+				}
+			},
+
+				"AnalyticsServersASG" : {
+					"Type" : "AWS::AutoScaling::AutoScalingGroup",
+					"Properties" : {
+						"VPCZoneIdentifier" : [ {	"Ref" : "SubnetTwo" }, { "Ref" : "SubnetOne"} , { "Ref" : "SubnetThree" } ],
+						"LaunchConfigurationName" : { "Ref" : "AnalyticsServerLaunchConfiguration" },
+						"MinSize" : { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Analytics" ] },
+						"MaxSize" : { "Fn::FindInMap" : [ "ScalingMax", { "Ref" : "EnvType" }, "Analytics" ] },
+						"TerminationPolicies" : [ "NewestInstance" ],
+						"MetricsCollection": [
+							{
+								"Granularity": "1Minute",
+								"Metrics": []
+							}
+						],
+						"Tags" : [
+							{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "TeamName" }, { "Ref" : "EnvType" }, "Analytics", { "Ref" : "BuildNumber" }  ]] }, "PropagateAtLaunch" : "true" },
+							{ "Key" : "Environment", "Value" : "Analytics", "PropagateAtLaunch" : "true" },
+							{ "Key" : "EnvironmentType", "Value" : { "Ref" : "EnvType" }, "PropagateAtLaunch" : "true" },
+							{ "Key" : "Team", "Value" : "Company", "PropagateAtLaunch" : "true" }
+						]
+					},
+				"CreationPolicy": {
+					"AutoScalingCreationPolicy" : {
+						"MinSuccessfulInstancesPercent" : "100"
+					},
+					"ResourceSignal": {
+						"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Analytics" ] },
+						"Timeout": "PT10M"
+					}
+				}
+			},
+
+			"CassandraServersASG" : {
+				"Type" : "AWS::AutoScaling::AutoScalingGroup",
+				"Properties" : {
+					"VPCZoneIdentifier" : [ {	"Ref" : "SubnetTwo" }, { "Ref" : "SubnetOne"} , { "Ref" : "SubnetThree" } ],
+					"LaunchConfigurationName" : { "Ref" : "CassandraLaunchConfiguration" },
+					"MinSize" : { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra"] },
+					"MaxSize" : { "Fn::FindInMap" : [ "ScalingMax", { "Ref" : "EnvType" }, "Cassandra"] },
+					"TerminationPolicies" : [ "NewestInstance" ],
+					"MetricsCollection": [
+						{
+							"Granularity": "1Minute",
+							"Metrics": []
+						}
+					],
+					"Tags" : [
+					{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "TeamName" },{ "Ref" : "EnvType" }, "Cassandra", { "Ref" : "BuildNumber" }  ]] }, "PropagateAtLaunch" : "true" },
+					{ "Key" : "Environment", "Value" : "Cassandra", "PropagateAtLaunch" : "true" },
 					{ "Key" : "EnvironmentType", "Value" : { "Ref" : "EnvType" }, "PropagateAtLaunch" : "true" },
 					{ "Key" : "Team", "Value" : "Company", "PropagateAtLaunch" : "true" }
-				]
-			},
-		"CreationPolicy": {
-			"AutoScalingCreationPolicy" : {
-				"MinSuccessfulInstancesPercent" : "100"
-			},
-			"ResourceSignal": {
-				"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Analytics" ] },
-				"Timeout": "PT10M"
-			}
-		}
-	},
-
-		"CassandraServersASG" : {
-			"Type" : "AWS::AutoScaling::AutoScalingGroup",
-			"Properties" : {
-				"VPCZoneIdentifier" : [ {	"Ref" : "SubnetTwo" }, { "Ref" : "SubnetOne"} ,{ "Ref" : "SubnetThree" } ],
-				"LaunchConfigurationName" : { "Ref" : "CassandraLaunchConfiguration" },
-				"MinSize" : { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra"] },
-				"MaxSize" : { "Fn::FindInMap" : [ "ScalingMax", { "Ref" : "EnvType" }, "Cassandra"] },
-				"TerminationPolicies" : [ "NewestInstance" ],
-				"MetricsCollection": [
-					{
-						"Granularity": "1Minute",
-						"Metrics": []
-					}
-				],
-				"Tags" : [
-				{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "TeamName" },{ "Ref" : "EnvType" }, "Cassandra", { "Ref" : "BuildNumber" }  ]] }, "PropagateAtLaunch" : "true" },
-				{ "Key" : "Environment", "Value" : "Cassandra", "PropagateAtLaunch" : "true" },
-				{ "Key" : "EnvironmentType", "Value" : { "Ref" : "EnvType" }, "PropagateAtLaunch" : "true" },
-				{ "Key" : "Team", "Value" : "Company", "PropagateAtLaunch" : "true" }
-				]
-			},
-			"CreationPolicy": {
-				"AutoScalingCreationPolicy" : {
-					"MinSuccessfulInstancesPercent" : "100"
+					]
 				},
-				"ResourceSignal": {
-					"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra" ] },
-					"Timeout": "PT10M"
-				}
-			}
-		},
-
-		"BastionServersASG" : {
-			"Type" : "AWS::AutoScaling::AutoScalingGroup",
-			"DependsOn" : "CassandraServersASG",
-			"Properties" : {
-				"VPCZoneIdentifier" : [ {	"Ref" : "SubnetTwo" }, { "Ref" : "SubnetOne"} , { "Ref" : "SubnetThree" } ],
-				"LaunchConfigurationName" : { "Ref" : "BastionServerLaunchConfiguration" },
-				"MinSize" : { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Bastion"] },
-				"MaxSize" : { "Fn::FindInMap" : [ "ScalingMax", { "Ref" : "EnvType" }, "Bastion"] },
-				"TerminationPolicies" : [ "NewestInstance" ],
-				"MetricsCollection": [
-					{
-						"Granularity": "1Minute",
-						"Metrics": []
+				"CreationPolicy": {
+					"AutoScalingCreationPolicy" : {
+						"MinSuccessfulInstancesPercent" : "100"
+					},
+					"ResourceSignal": {
+						"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra" ] },
+						"Timeout": "PT10M"
 					}
-				],
-				"Tags" : [
-					{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "TeamName" }, { "Ref" : "EnvType" }, "Bastion", { "Ref" : "BuildNumber" }  ]] }, "PropagateAtLaunch" : "true" },
-					{ "Key" : "Environment", "Value" : "Bastion", "PropagateAtLaunch" : "true" },
-					{ "Key" : "EnvironmentType", "Value" : { "Ref" : "EnvType" }, "PropagateAtLaunch" : "true" },
-					{ "Key" : "Team", "Value" : "Company", "PropagateAtLaunch" : "true" }
-				]
+				}
 			},
+
+			"BastionServersASG" : {
+				"Type" : "AWS::AutoScaling::AutoScalingGroup",
+				"DependsOn" : "CassandraServersASG",
+				"Properties" : {
+					"VPCZoneIdentifier" : [ {	"Ref" : "SubnetTwo" }, { "Ref" : "SubnetOne"} , { "Ref" : "SubnetThree" } ],
+					"LaunchConfigurationName" : { "Ref" : "BastionServerLaunchConfiguration" },
+					"MinSize" : { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Bastion"] },
+					"MaxSize" : { "Fn::FindInMap" : [ "ScalingMax", { "Ref" : "EnvType" }, "Bastion"] },
+					"TerminationPolicies" : [ "NewestInstance" ],
+					"MetricsCollection": [
+						{
+							"Granularity": "1Minute",
+							"Metrics": []
+						}
+					],
+					"Tags" : [
+						{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "TeamName" }, { "Ref" : "EnvType" }, "Bastion", { "Ref" : "BuildNumber" }  ]] }, "PropagateAtLaunch" : "true" },
+						{ "Key" : "Environment", "Value" : "Bastion", "PropagateAtLaunch" : "true" },
+						{ "Key" : "EnvironmentType", "Value" : { "Ref" : "EnvType" }, "PropagateAtLaunch" : "true" },
+						{ "Key" : "Team", "Value" : "Company", "PropagateAtLaunch" : "true" }
+					]
+				},
 			"CreationPolicy": {
 				"AutoScalingCreationPolicy" : {
 					"MinSuccessfulInstancesPercent" : "0"
@@ -491,237 +515,237 @@
 			}
 		},
 
-		"ApiScaleUpPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
-			"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "ApiServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "1"
-			}
-		},
-
-		"ApiScaleDownPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
-			"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "ApiServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "-1"
-			}
-		},
-
-		"BatchScaleUpPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
+			"ApiScaleUpPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
 				"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "BatchServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "1"
-			}
-		},
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "ApiServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "1"
+				}
+			},
 
-		"BatchScaleDownPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
-			"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "BatchServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "-1"
-			}
-		},
-
-		"AnalyticsScaleUpPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
+			"ApiScaleDownPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
 				"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "AnalyticsServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "1"
-			}
-		},
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "ApiServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "-1"
+				}
+			},
 
-		"AnalyticsScaleDownPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
-			"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "AnalyticsServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "-1"
-			}
-		},
+			"BatchScaleUpPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
+				"Properties" : {
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "BatchServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "1"
+				}
+			},
 
-		"CassandraScaleUpPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
-			"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "CassandraServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "2"
-			}
-		},
+			"BatchScaleDownPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
+				"Properties" : {
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "BatchServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "-1"
+				}
+			},
 
-		"CassandraScaleDownPolicy" : {
-			"Type" : "AWS::AutoScaling::ScalingPolicy",
-			"Properties" : {
-				"AdjustmentType" : "ChangeInCapacity",
-				"AutoScalingGroupName" : { "Ref" : "CassandraServersASG" },
-				"Cooldown" : "1",
-				"ScalingAdjustment" : "-2"
-			}
-		},
+			"AnalyticsScaleUpPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
+				"Properties" : {
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "AnalyticsServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "1"
+				}
+			},
 
-		"ApiCPUAlarmHigh": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "2",
-				"Statistic": "Average",
-				"Threshold": "5",
-				"AlarmDescription": "Scale up if CPU is higher than 5 for 2x 5 minutes",
-				"Period": "300",
-				"AlarmActions": [ { "Ref" : "ApiScaleUpPolicy"} ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
+			"AnalyticsScaleDownPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
+				"Properties" : {
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "AnalyticsServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "-1"
+				}
+			},
+
+			"CassandraScaleUpPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
+					"Properties" : {
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "CassandraServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "2"
+				}
+			},
+
+			"CassandraScaleDownPolicy" : {
+				"Type" : "AWS::AutoScaling::ScalingPolicy",
+					"Properties" : {
+					"AdjustmentType" : "ChangeInCapacity",
+					"AutoScalingGroupName" : { "Ref" : "CassandraServersASG" },
+					"Cooldown" : "1",
+					"ScalingAdjustment" : "-2"
+				}
+			},
+
+			"ApiCPUAlarmHigh": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "2",
+					"Statistic": "Average",
+					"Threshold": "5",
+					"AlarmDescription": "Scale up if CPU is higher than 5 for 2x 5 minutes",
+					"Period": "300",
+					"AlarmActions": [ { "Ref" : "ApiScaleUpPolicy"} ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
+							"Name": "AutoScalingGroupName",
+							"Value": { "Ref": "ApiServersASG" }
+						} ],
+					"ComparisonOperator": "GreaterThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
+
+			"BatchCPUAlarmHigh": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "1",
+					"Statistic": "Average",
+					"Threshold": "2.3",
+					"AlarmDescription": "Scale up if CPU is higher than 2.3 for 5 minutes",
+					"Period": "300",
+					"AlarmActions": [ { "Ref" : "BatchScaleUpPolicy"} ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
+						"Name": "AutoScalingGroupName",
+						"Value": { "Ref" : "BatchServersASG" }
+					} ],
+					"ComparisonOperator": "GreaterThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
+
+			"AnalyticsCPUAlarmHigh": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "1",
+					"Statistic": "Average",
+					"Threshold": "2.3",
+					"AlarmDescription": "Scale up if CPU is higher than 2.3 for 5 minutes",
+					"Period": "300",
+					"AlarmActions": [ { "Ref": "AnalyticsScaleUpPolicy" } ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
+						"Name": "AutoScalingGroupName",
+						"Value": { "Ref" : "AnalyticsServersASG"}
+					} ],
+					"ComparisonOperator": "GreaterThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
+
+			"CassandraCPUAlarmHigh": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "2",
+					"Statistic": "Average",
+					"Threshold": "5",
+					"AlarmDescription": "Scale up if CPU is higher than 5 for 2x 5 minutes",
+					"Period": "300",
+					"AlarmActions": [ { "Ref": "CassandraScaleUpPolicy" } ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
+						"Name": "AutoScalingGroupName",
+						"Value": { "Ref" : "CassandraServersASG"}
+					} ],
+					"ComparisonOperator": "GreaterThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
+
+			"ApiCPUAlarmNormal": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "2",
+					"Statistic": "Average",
+					"Threshold": "3",
+					"AlarmDescription": "Scale down if CPU goes below 3 for 2x 5 mins",
+					"Period": "300",
+					"AlarmActions": [ { "Ref" : "ApiScaleDownPolicy"} ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
 					"Name": "AutoScalingGroupName",
 					"Value": { "Ref": "ApiServersASG" }
-				} ],
-				"ComparisonOperator": "GreaterThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
+					} ],
+					"ComparisonOperator": "LessThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
 
-		"BatchCPUAlarmHigh": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "1",
-				"Statistic": "Average",
-				"Threshold": "2.3",
-				"AlarmDescription": "Scale up if CPU is higher than 2.3 for 5 minutes",
-				"Period": "300",
-				"AlarmActions": [ { "Ref" : "BatchScaleUpPolicy"} ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
-					"Name": "AutoScalingGroupName",
-					"Value": { "Ref" : "BatchServersASG" }
-				} ],
-				"ComparisonOperator": "GreaterThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
+			"BatchCPUAlarmNormal": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "1",
+					"Statistic": "Average",
+					"Threshold": "2.2",
+					"AlarmDescription": "Scale down if CPU goes below 2.2",
+					"Period": "300",
+					"AlarmActions": [ { "Ref" : "BatchScaleDownPolicy"} ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
+						"Name": "AutoScalingGroupName",
+						"Value": { "Ref" : "BatchServersASG" }
+					} ],
+					"ComparisonOperator": "LessThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
 
-		"AnalyticsCPUAlarmHigh": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "1",
-				"Statistic": "Average",
-				"Threshold": "2.3",
-				"AlarmDescription": "Scale up if CPU is higher than 2.3 for 5 minutes",
-				"Period": "300",
-				"AlarmActions": [ { "Ref": "AnalyticsScaleUpPolicy" } ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
-					"Name": "AutoScalingGroupName",
-					"Value": { "Ref" : "AnalyticsServersASG"}
-				} ],
-				"ComparisonOperator": "GreaterThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
+			"AnalyticsCPUAlarmNormal": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "1",
+					"Statistic": "Average",
+					"Threshold": "2.2",
+					"AlarmDescription": "Scale down if CPU goes below 2.2",
+					"Period": "300",
+					"AlarmActions": [ { "Ref": "AnalyticsScaleDownPolicy" } ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
+						"Name": "AutoScalingGroupName",
+						"Value": { "Ref" : "AnalyticsServersASG" }
+					} ],
+					"ComparisonOperator": "LessThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
 
-		"CassandraCPUAlarmHigh": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "2",
-				"Statistic": "Average",
-				"Threshold": "5",
-				"AlarmDescription": "Scale up if CPU is higher than 5 for 2x 5 minutes",
-				"Period": "300",
-				"AlarmActions": [ { "Ref": "CassandraScaleUpPolicy" } ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
-					"Name": "AutoScalingGroupName",
-					"Value": { "Ref" : "CassandraServersASG"}
-				} ],
-				"ComparisonOperator": "GreaterThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
-
-		"ApiCPUAlarmNormal": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "2",
-				"Statistic": "Average",
-				"Threshold": "3",
-				"AlarmDescription": "Scale down if CPU goes below 3 for 2x 5 minutes",
-				"Period": "300",
-				"AlarmActions": [ { "Ref" : "ApiScaleDownPolicy"} ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
-					"Name": "AutoScalingGroupName",
-					"Value": { "Ref": "ApiServersASG" }
-				} ],
-				"ComparisonOperator": "LessThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
-
-		"BatchCPUAlarmNormal": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "1",
-				"Statistic": "Average",
-				"Threshold": "2.2",
-				"AlarmDescription": "Scale down if CPU goes below 2.2",
-				"Period": "300",
-				"AlarmActions": [ { "Ref" : "BatchScaleDownPolicy"} ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
-					"Name": "AutoScalingGroupName",
-					"Value": { "Ref" : "BatchServersASG" }
-				} ],
-				"ComparisonOperator": "LessThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
-
-		"AnalyticsCPUAlarmNormal": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "1",
-				"Statistic": "Average",
-				"Threshold": "2.2",
-				"AlarmDescription": "Scale down if CPU goes below 2.2",
-				"Period": "300",
-				"AlarmActions": [ { "Ref": "AnalyticsScaleDownPolicy" } ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
-					"Name": "AutoScalingGroupName",
-					"Value": { "Ref" : "AnalyticsServersASG" }
-				} ],
-				"ComparisonOperator": "LessThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
-
-		"CassandraCPUAlarmNormal": {
-			"Type": "AWS::CloudWatch::Alarm",
-			"Properties": {
-				"EvaluationPeriods": "2",
-				"Statistic": "Average",
-				"Threshold": "3",
-				"AlarmDescription": "Scale down if CPU goes below 3 for 2x 5 minutes",
-				"Period": "300",
-				"AlarmActions": [ { "Ref": "CassandraScaleDownPolicy" } ],
-				"Namespace": "AWS/EC2",
-				"Dimensions": [ {
-					"Name": "AutoScalingGroupName",
-					"Value": { "Ref" : "CassandraServersASG"}
-				} ],
-				"ComparisonOperator": "GreaterThanOrEqualToThreshold",
-				"MetricName": "CPUUtilization"
-			}
-		},
+			"CassandraCPUAlarmNormal": {
+				"Type": "AWS::CloudWatch::Alarm",
+				"Properties": {
+					"EvaluationPeriods": "2",
+					"Statistic": "Average",
+					"Threshold": "3",
+					"AlarmDescription": "Scale down if CPU goes below 3 for 2x 5 minutes",
+					"Period": "300",
+					"AlarmActions": [ { "Ref": "CassandraScaleDownPolicy" } ],
+					"Namespace": "AWS/EC2",
+					"Dimensions": [ {
+						"Name": "AutoScalingGroupName",
+						"Value": { "Ref" : "CassandraServersASG"}
+					} ],
+					"ComparisonOperator": "GreaterThanOrEqualToThreshold",
+					"MetricName": "CPUUtilization"
+				}
+			},
 
 			"Latency": {
 				"Type" : "AWS::CloudWatch::Alarm",
@@ -956,12 +980,13 @@
 					"Protocol" : "HTTP"
 				}
 			},
-		"ASGPilot": {
-			"Type": "AWS::EC2::SecurityGroup",
-			"Properties": {
-				"GroupDescription": "AS Pilot - created by CloudFormation",
-				"VpcId" : { "Ref" : "VPC" },
-				"SecurityGroupIngress" : [
+
+			"ASGPilot": {
+				"Type": "AWS::EC2::SecurityGroup",
+				"Properties": {
+					"GroupDescription": "AS Pilot - created by CloudFormation",
+					"VpcId" : { "Ref" : "VPC" },
+					"SecurityGroupIngress" : [
 					{ "IpProtocol" : "tcp", "FromPort" : "4100", "ToPort" : "4100", "CidrIp" : "0.0.0.0/0" },
 					{ "IpProtocol" : "tcp", "FromPort" : "9001", "ToPort" : "9001", "CidrIp" : "0.0.0.0/0" },
 					{ "IpProtocol" : "tcp", "FromPort" : "9004", "ToPort" : "9004", "CidrIp" : "0.0.0.0/0" },
@@ -976,11 +1001,11 @@
 					{ "IpProtocol" : "tcp", "FromPort" : "9160", "ToPort" : "9160", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
 					{ "IpProtocol" : "tcp", "FromPort" : "0", "ToPort" : "65535", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
 					{ "IpProtocol" : "icmp", "FromPort" : "8", "ToPort" : "-1", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} }
-				]
-			}
-		},
+					]
+				}
+			},
 
-		"ELBSG" : {
+			"ELBSG" : {
 				"Type": "AWS::EC2::SecurityGroup",
 				"Properties": {
 					"GroupDescription": "ELB SG - created by CloudFormation",
@@ -993,26 +1018,23 @@
 				}
 			},
 
-		"BastionSG": {
-			"Type": "AWS::EC2::SecurityGroup",
-			"Properties": {
-				"GroupDescription": "BastionSG - created by CloudFormation",
-				"VpcId" : { "Ref" : "VPC" },
-				"SecurityGroupIngress" : [
-					{ "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
-					{ "IpProtocol" : "-1", "CidrIp" : "172.31.0.0/16" },
-					{ "IpProtocol" : "-1", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ] } }
-				],
-				"SecurityGroupEgress" : [
-					{ "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0" },
-					{ "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0" },
-					{ "IpProtocol" : "-1", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ] } },
-					{ "IpProtocol" : "-1", "CidrIp" : "172.31.0.0/16" }
-				]
-			}
-		},
+			"BastionSG": {
+				"Type": "AWS::EC2::SecurityGroup",
+				"Properties": {
+					"GroupDescription": "BastionSG - created by CloudFormation",
+					"VpcId" : { "Ref" : "VPC" },
+					"SecurityGroupIngress" : [
+						{ "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" }
+					],
+					"SecurityGroupEgress" : [
+						{ "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0" },
+						{ "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0" },
+						{ "IpProtocol" : "-1", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ] } }
+					]
+				}
+			},
 
-		"RDSSG": {
+			"RDSSG": {
 				"Type": "AWS::EC2::SecurityGroup",
 				"Properties": {
 					"GroupDescription": "RDSSG - created by CloudFormation",
@@ -1026,148 +1048,154 @@
 				}
 			},
 
-		"ApiServerLaunchConfiguration" : {
-			"Type" : "AWS::AutoScaling::LaunchConfiguration",
-			"Properties" : {
-			"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
-			"InstanceType" : { "Ref" : "ApiInstanceType" },
-			"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
-			"AssociatePublicIpAddress" : "true",
-			"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
-			"UserData" : {
-			"Fn::Base64" : {
-				"Fn::Join" : ["\n", [
-					"#!/bin/bash -x",
-					"exec >& /var/log/cloud-output.log",
-					"mkdir -p /usr/local/Company",
-					{ "Fn::Join": [ " \\\n", [
-						"curl -s --retry 30",
-						{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/Company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
-						"| type=server",
-						{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
-						{ "Fn::Join": [ "=", [ "envname", "Api" ] ] },
-						{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
-						{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
-						{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
-						{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
-						{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
-						{ "Fn::Join": [ "=", [ "targetgrouparn", { "Ref" : "ELBTargetGroup" } ] ] },
-						{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "cassandraUser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraUser" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "cassandraPassword", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraPassword" ] } ] ] },
-						"bash"
-				]]},
-					{ "Fn::Join": [ " \\\n", [
-						"/opt/aws/bin/cfn-signal -e $? ",
-						"  --stack ", { "Ref": "AWS::StackName" },
-						"  --resource ApiServersASG " ,
-						"  --region ", { "Ref" : "AWS::Region" }
-					]]}
-				]]}}
-		}
-	},
+			"ApiServerLaunchConfiguration" : {
+				"Type" : "AWS::AutoScaling::LaunchConfiguration",
+				"Properties" : {
+				"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
+				"InstanceType" : { "Ref" : "ApiInstanceType" },
+				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
+				"AssociatePublicIpAddress" : "true",
+				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
+				"UserData" : {
+				"Fn::Base64" : {
+					"Fn::Join" : ["\n", [
+						"#!/bin/bash -x",
+						"exec >& /var/log/cloud-output.log",
+						"mkdir -p /usr/local/company",
+						{ "Fn::Join": [ " \\\n", [
+							"curl -s --retry 30",
+							{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
+							"| type=server",
+							{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
+							{ "Fn::Join": [ "=", [ "envname", "Api" ] ] },
+							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
+							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
+							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
+							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
+							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "targetgrouparn", { "Ref" : "ELBTargetGroup" } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "cassandraUser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraUser" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "cassandraPassword", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraPassword" ] } ] ] },
+							"bash"
+						]]},
+						{ "Fn::Join": [ " \\\n", [
+							"/opt/aws/bin/cfn-signal -e $? ",
+							"  --stack ", { "Ref": "AWS::StackName" },
+							"  --resource ApiServersASG " ,
+							"  --region ", { "Ref" : "AWS::Region" }
+						]]}
+					]]}}
+			}
+		},
 
-		"BatchServerLaunchConfiguration" : {
-			"Type" : "AWS::AutoScaling::LaunchConfiguration",
-			"Properties" : {
-			"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
-			"InstanceType" : { "Ref" : "BatchInstanceType" },
-			"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
-			"AssociatePublicIpAddress" : "true",
-			"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
-			"UserData" : {
-			"Fn::Base64" : {
-				"Fn::Join" : ["\n", [
-					"#!/bin/bash -x",
-					"exec >& /var/log/cloud-output.log",
-					"mkdir -p /usr/local/Company",
-					{ "Fn::Join": [ " \\\n", [
-						"curl -s --retry 30",
-						{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/Company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
-						"| type=server",
-						{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
-						{ "Fn::Join": [ "=", [ "envname", "Batch" ] ] },
-						{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
-						{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
-						{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
-						{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
-						{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
-						{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "cassandraUser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraUser" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "cassandraPassword", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraPassword" ] } ] ] },
-						"bash"
-				]]},
-					{ "Fn::Join": [ " \\\n", [
-						"/opt/aws/bin/cfn-signal -e $? ",
-						"  --stack ", { "Ref": "AWS::StackName" },
-						"  --resource BatchServersASG " ,
-						"  --region ", { "Ref" : "AWS::Region" }
-					]]}
-				]]}}
-		}
-	},
+			"BatchServerLaunchConfiguration" : {
+				"Type" : "AWS::AutoScaling::LaunchConfiguration",
+				"Properties" : {
+				"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
+				"InstanceType" : { "Ref" : "BatchInstanceType" },
+				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
+				"AssociatePublicIpAddress" : "true",
+				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
+				"UserData" : {
+				"Fn::Base64" : {
+					"Fn::Join" : ["\n", [
+						"#!/bin/bash -x",
+						"exec >& /var/log/cloud-output.log",
+						"mkdir -p /usr/local/company",
+						{ "Fn::Join": [ " \\\n", [
+							"curl -s --retry 30",
+							{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
+							"| type=server",
+							{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
+							{ "Fn::Join": [ "=", [ "envname", "Batch" ] ] },
+							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
+							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
+							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
+							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
+							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "cassandraUser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraUser" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "cassandraPassword", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraPassword" ] } ] ] },
+							"bash"
+						]]},
+						{ "Fn::Join": [ " \\\n", [
+							"/opt/aws/bin/cfn-signal -e $? ",
+							"  --stack ", { "Ref": "AWS::StackName" },
+							"  --resource BatchServersASG " ,
+							"  --region ", { "Ref" : "AWS::Region" }
+						]]}
+					]]}}
+			}
+		},
 
-		"AnalyticsServerLaunchConfiguration" : {
-			"Type" : "AWS::AutoScaling::LaunchConfiguration",
-			"Properties" : {
-			"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
-			"InstanceType" : { "Ref" : "AnalyticsInstanceType" },
-			"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
-			"AssociatePublicIpAddress" : "true",
-			"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
-			"UserData" : {
-			"Fn::Base64" : {
-				"Fn::Join" : ["\n", [
-					"#!/bin/bash -x",
-					"exec >& /var/log/cloud-output.log",
-					"mkdir -p /usr/local/Company",
-					{ "Fn::Join": [ " \\\n", [
-						"curl -s --retry 30",
-						{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/Company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
-						"| type=server",
-						{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
-						{ "Fn::Join": [ "=", [ "envname", "Analytics" ] ] },
-						{ "Fn::Join": [ "=", [ "stackname", { "Ref" : "AWS::StackName" } ] ] },
-						{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
-						{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
-						{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
-						{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
-						{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
-						{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "cassandraUser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraUser" ] } ] ] },
-						{ "Fn::Join": [ "=", [ "cassandraPassword", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraPassword" ] } ] ] },
-						"bash"
-				]]},
-					{ "Fn::Join": [ " \\\n", [
-						"/opt/aws/bin/cfn-signal -e $? ",
-						"  --stack ", { "Ref": "AWS::StackName" },
-						"  --resource AnalyticsServersASG" ,
-						"  --region ", { "Ref" : "AWS::Region" }
-					]]}
-				]]}}
-		}
-	},
+			"AnalyticsServerLaunchConfiguration" : {
+				"Type" : "AWS::AutoScaling::LaunchConfiguration",
+				"Properties" : {
+				"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "64" ]},
+				"InstanceType" : { "Ref" : "AnalyticsInstanceType" },
+				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
+				"AssociatePublicIpAddress" : "true",
+				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
+				"UserData" : {
+				"Fn::Base64" : {
+					"Fn::Join" : ["\n", [
+						"#!/bin/bash -x",
+						"exec >& /var/log/cloud-output.log",
+						"mkdir -p /usr/local/company",
+						{ "Fn::Join": [ " \\\n", [
+							"curl -s --retry 30",
+							{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
+							"| type=server",
+							{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
+							{ "Fn::Join": [ "=", [ "envname", "Analytics" ] ] },
+							{ "Fn::Join": [ "=", [ "stackname", { "Ref" : "AWS::StackName" } ] ] },
+							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
+							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
+							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
+							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
+							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
+							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "mysql_server", { "Fn::GetAtt" : [ "ASRDSdb", "Endpoint.Address" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "elbname", { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbscheme", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbscheme" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbadminuser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbadminuser" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "dbpass", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "dbpass" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "cassandraUser", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraUser" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "cassandraPassword", { "Fn::FindInMap" : [ "LiquiBase", { "Ref" : "EnvType" }, "cassandraPassword" ] } ] ] },
+							"bash"
+						]]},
+						{ "Fn::Join": [ " \\\n", [
+							"/opt/aws/bin/cfn-signal -e $? ",
+							"  --stack ", { "Ref": "AWS::StackName" },
+							"  --resource AnalyticsServersASG" ,
+							"  --region ", { "Ref" : "AWS::Region" }
+						]]}
+					]]}}
+			}
+		},
 
-		"CassandraLaunchConfiguration" : {
-			 "Type" : "AWS::AutoScaling::LaunchConfiguration",
-			 "Properties" : {
+			"CassandraLaunchConfiguration" : {
+				"Type" : "AWS::AutoScaling::LaunchConfiguration",
+				"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "CassAmi", { "Ref" : "Region" }, "64" ]},
 				"InstanceType" : { "Ref" : "CassandraInstanceType" },
+				"BlockDeviceMappings" : [
+					{
+					"DeviceName" : "/dev/sdf",
+					"Ebs" : { "VolumeSize" : "500" }
+					}
+				],
 				"KeyName" : { "Fn::FindInMap" : [ "KeyPairMap", { "Ref" : "EnvType" }, "kp" ]},
 				"AssociatePublicIpAddress" : "true",
 				"SecurityGroups" : [ { "Ref" : "ASGPilot" } ],
@@ -1178,7 +1206,7 @@
 						"exec >& /var/log/cloud-output.log",
 						{ "Fn::Join": [ " \\\n", [
 							"curl -s --retry 30",
-							{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/Company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
+							{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
 							"| type=Cassandra",
 							{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
 							{ "Fn::Join": [ "=", [ "envname", "Cassandra" ] ] },
@@ -1193,24 +1221,24 @@
 							{ "Fn::Join": [ "=", [ "numberofmachines", { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra"] } ] ] },
 							{ "Fn::Join": [ "=", [ "password", { "Fn::FindInMap" : [ "CassPassword", { "Ref" : "EnvType" }, "pass" ] } ] ] },
 							"bash"
-					]]},
-					{ "Fn::Join": [ "", [
-						"#!/bin/bash\n",
-						"sudo apt-get update\n",
-						"sudo apt-get install -y python-pip python-setuptools ruby2.0\n",
-						"sudo /opt/bitnami/python/bin/easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
-						"/opt/bitnami/python/bin/cfn-signal -e $? ",
-						"  --stack ", { "Ref": "AWS::StackName" },
-						"  --resource CassandraServersASG" ,
-						"  --region ", { "Ref" : "AWS::Region" }
-						]]}
+						]]},
+						{ "Fn::Join": [ "", [
+							"#!/bin/bash\n",
+							"sudo apt-get update\n",
+							"sudo apt-get install -y python-pip python-setuptools ruby2.0\n",
+							"sudo /opt/bitnami/python/bin/easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+							"/opt/bitnami/python/bin/cfn-signal -e $? ",
+							"  --stack ", { "Ref": "AWS::StackName" },
+							"  --resource CassandraServersASG" ,
+							"  --region ", { "Ref" : "AWS::Region" }
+							]]}
 					]]}}
-			}
-		},
+				}
+			},
 
-		"BastionServerLaunchConfiguration" : {
-			"Type" : "AWS::AutoScaling::LaunchConfiguration",
-			"Properties" : {
+			"BastionServerLaunchConfiguration" : {
+				"Type" : "AWS::AutoScaling::LaunchConfiguration",
+				"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "BastionAmi", { "Ref" : "Region" }, "ami" ]},
 				"InstanceType" : "t2.micro",
 				"KeyName" : { "Fn::FindInMap" : [ "BastionKeyPair", { "Ref" : "Region" }, "bkp" ]},
@@ -1223,22 +1251,21 @@
 						"exec >& /var/log/cloud-output.log",
 						{ "Fn::Join": [ " \\\n", [
 							"curl -s --retry 30",
-							{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/Company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
+							{"Fn::Join" : [ "", [ "https://s3-us-west-2.amazonaws.com/company-ci-files/userdata/userdata_script_v",{ "Ref" : "UserScriptVersion" },".sh" ]]},
 							"| type=Bastion",
 							{ "Fn::Join": [ "=", [ "envtype", { "Ref" : "EnvType" } ] ] },
 							{ "Fn::Join": [ "=", [ "envname", "Bastion" ] ] },
 							{ "Fn::Join": [ "=", [ "stackname", { "Ref" : "AWS::StackName" } ] ] },
 							{ "Fn::Join": [ "=", [ "teamname", { "Ref": "TeamName" } ] ] },
 							{ "Fn::Join": [ "=", [ "vpcid", { "Ref": "VPC" } ] ] },
-							{ "Fn::Join": [ "=", [ "vpccidr", { "Fn::GetAtt" : [ "VPC", "CidrBlock" ] } ] ] },
 							{ "Fn::Join": [ "=", [ "region", { "Ref": "Region" } ] ] },
 							{ "Fn::Join": [ "=", [ "asgpilotsgid", { "Ref": "ASGPilot" } ] ] },
 							{ "Fn::Join": [ "=", [ "bastionsgid", { "Ref": "BastionSG" } ] ] },
-							{ "Fn::Join": [ "=", [ "vpcroutetable", { "Ref": "RouteTable" } ] ] },
 							{ "Fn::Join": [ "=", [ "analyticsnodes", { "Fn::FindInMap" : [ "ScalingMin" , { "Ref" : "EnvType" }, "Analytics" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "vpcpeeringid", { "Ref" : "VPCPeering" } ] ] },
 							{ "Fn::Join": [ "=", [ "hostedzoneid", { "Ref" : "VPCHostedZone" } ] ] },
 							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
-							{ "Fn::Join": [ "=", [ "fqdn", { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "Company", "private" ] ] } ] ] },
+							{ "Fn::Join": [ "=", [ "fqdn", { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "company", "private" ] ] } ] ] },
 							"bash"
 						]]},
 						{ "Fn::Join": [ " \\\n", [
@@ -1248,16 +1275,16 @@
 							"  --region ", { "Ref" : "AWS::Region" }
 						]]}
 					]]}}
-			}
-		},
+				}
+			},
 
-		"ServerProfile" : {
-			"Type" : "AWS::IAM::InstanceProfile",
-			"Properties" : {
-			 "Path" : "/",
-			 "Roles" : ["BackendServer"]
+			"ServerProfile" : {
+				"Type" : "AWS::IAM::InstanceProfile",
+				"Properties" : {
+					"Path" : "/",
+					"Roles" : ["BackendServer"]
+				}
 			}
-		}
 	},
 
 	"Outputs" : {
@@ -1308,6 +1335,10 @@
 		"RDSDBSnapshotID" : {
 			"Value" : { "Ref" : "RDSSnapshotID" },
 			"Description" : "Name of RDS Snapshot ID to restore from"
+		},
+		"VPCPeeringID" : {
+			"Value" : { "Ref" : "VPCPeering" },
+			"Description" : "VPC Peering Connection ID"
 		},
 		"ELBName" : {
 			"Value" : { "Fn::GetAtt" : [ "ApiLoadBalancer", "LoadBalancerName" ] },
