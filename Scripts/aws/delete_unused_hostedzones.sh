@@ -1,6 +1,21 @@
 #!/bin/bash
 # This script runs through all used regions, identifies the stacks which are currently in use and flags them as protected, for all the rest of the stacks, it catches their HostedZoneId and then cleans all hosts from the zoneid and then deletes the zoneid itself.
 
+RED=`tput setaf 1`
+GREEN=`tput setaf 2`
+YELLOW=`tput setaf 3`
+NOCOLOR=`tput sgr0`
+
+function colnormal {
+  echo -e -n "$YELLOW $* $NOCOLOR\n"
+}
+function colgood {
+  echo -e -n "$GREEN $* $NOCOLOR\n"
+}
+function colbad {
+  echo -e -n "$RED $* $NOCOLOR\n"
+}
+
 OregonprotectedZones=[]
 OrRegion="us-west-2"
 IrelandprotectedZones=[]
@@ -47,21 +62,22 @@ for i in ${!VirginiaprotectedZones[@]}; do
 	fi
 done
 
-echo "Protected zones:"
+colnormal "Protected zones:"
 for i in ${!AllProtected[@]}; do
 	if [[ $i -ne 0 ]]; then
-		echo "${AllProtected[$i]}"
+		colgood "${AllProtected[$i]}"
 	fi
 done
 
-for hostedzone in $(aws route53 list-hosted-zones | jq -c '.HostedZones[]' | grep -v "angelsense\.com\|angelsense\.co\.il\|angelsense-private" | awk -F/ '{print $3}' | awk -F"\"" '{print $1}'); do
+for hostedzone in $(aws route53 list-hosted-zones | jq -c '.HostedZones[]' | grep -v "vpc-ce8e99a8\|angelsense\.co\|angelsense\.com\|angelsense\.co\.il\|angelsense-private" | awk -F/ '{print $3}' | awk -F"\"" '{print $1}'); do
 	if [[ ! "${AllProtected[@]}" == *"$hostedzone"* ]]; then
-		echo "Hostedzone $hostedzone is not protected"
-		echo "Removing all resource records in hostedzone $hostedzone and deleting zone..."
+		colbad "Hostedzone $hostedzone is not protected"
+		HostedZoneVpcId=$(aws route53 get-hosted-zone --id $hostedzone | jq -r '.VPCs[] | select(.VPCId) |.VPCId')
+		colnormal "Removing all resource records in hostedzone $hostedzone and deleting zone..."
 		aws route53 list-resource-record-sets --hosted-zone-id $hostedzone | jq -c '.ResourceRecordSets[]' | while read -r resourcerecordset; do
 			read -r name type <<<$(echo $(jq -r '.Name,.Type' <<<"$resourcerecordset"))
 			if [ $type != "NS" -a $type != "SOA" ]; then
-			aws route53 change-resource-record-sets \
+			echo aws route53 change-resource-record-sets \
 			  --hosted-zone-id $hostedzone \
 			  --change-batch '{"Changes":[{"Action":"DELETE","ResourceRecordSet":
 					'"$resourcerecordset"'
@@ -69,11 +85,12 @@ for hostedzone in $(aws route53 list-hosted-zones | jq -c '.HostedZones[]' | gre
 			  --output text --query 'ChangeInfo.Id'
 			fi
 		done
-	aws route53 delete-hosted-zone \
+	echo aws route53 delete-hosted-zone \
   --id $hostedzone \
   --output text --query 'ChangeInfo.Id'
-
+	colnormal "Deleting related vpc $HostedZoneVpcId..."
+	echo aws ec2 delete-vpc --vpc-id $HostedZoneVpcId 
 	else
-		echo "Hostedzone $hostedzone is protected"
+		colgood "Hostedzone $hostedzone is protected"
 	fi
 done
