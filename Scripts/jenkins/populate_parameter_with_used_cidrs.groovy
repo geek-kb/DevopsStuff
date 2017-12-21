@@ -8,7 +8,7 @@ def regions = ['us-west-2', 'us-east-1', 'eu-west-1']
             def p = ['/usr/local/bin/aws', 'ec2', 'describe-vpcs', '--region', region].execute() | 'grep -w CidrBlock'.execute() | ['awk', '{print $2}'].execute() | ['tr', '-d', '"\\"\\|,\\|\\{\\|\\\\["'].execute() | 'uniq'.execute()
             p.waitFor()
             p.text.eachLine { line ->
-                output << line
+								if (!(line =~ /^172\./)) output << line
             }
         }
 				output = output.sort { a, b ->
