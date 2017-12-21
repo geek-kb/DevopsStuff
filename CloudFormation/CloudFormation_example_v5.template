@@ -100,7 +100,7 @@
 
 		"BastionAmi" : {
 			"eu-west-1" : { "ami" : "ami-69309310" },
-			"us-west-1" : { "ami" : "ami-651cab1f" },
+			"us-east-1" : { "ami" : "ami-651cab1f" },
 			"us-west-2" : { "ami" : "ami-2fe82057" }
 		},
 
@@ -191,7 +191,7 @@
 			"Type" : "AWS::EC2::VPC",
 			"Description" : "Choose which VPC the security groups should be deployed to",
 			"Properties" : {
-				"CidrBlock" : { "Fn::Join" : [ "", [ "172.", { "Ref" : "VPCcidr" }, ".0.0/16" ] ] },
+				"CidrBlock" : { "Fn::Join" : [ "", [ "10.", { "Ref" : "VPCcidr" }, ".0.0/16" ] ] },
 				"EnableDnsSupport" : "true",
 				"EnableDnsHostnames" : "true",
 				"InstanceTenancy" : "default"
@@ -293,7 +293,7 @@
 			"Type" : "AWS::EC2::Subnet",
 			"Properties" : {
 				"AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ] },
-				"CidrBlock" : { "Fn::Join" : [ "", [ "172.", { "Ref" : "VPCcidr" }, ".0.0/20" ] ] },
+				"CidrBlock" : { "Fn::Join" : [ "", [ "10.", { "Ref" : "VPCcidr" }, ".0.0/20" ] ] },
 				"MapPublicIpOnLaunch" : "true",
 				"VpcId" : { "Ref" : "VPC" }
 			}
@@ -303,7 +303,7 @@
 			"Type" : "AWS::EC2::Subnet",
 			"Properties" : {
 				"AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ] },
-				"CidrBlock" : { "Fn::Join" : [ "", [ "172.", { "Ref" : "VPCcidr" }, ".16.0/20" ] ] },
+				"CidrBlock" : { "Fn::Join" : [ "", [ "10.", { "Ref" : "VPCcidr" }, ".16.0/20" ] ] },
 				"MapPublicIpOnLaunch" : "true",
 				"VpcId" : { "Ref" : "VPC" }
 			}
@@ -313,7 +313,7 @@
 			"Type" : "AWS::EC2::Subnet",
 			"Properties" : {
 				"AvailabilityZone" : { "Fn::Select" : [ "2", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ] },
-				"CidrBlock" : { "Fn::Join" : [ "", [ "172.", { "Ref" : "VPCcidr" }, ".32.0/20" ] ] },
+				"CidrBlock" : { "Fn::Join" : [ "", [ "10.", { "Ref" : "VPCcidr" }, ".32.0/20" ] ] },
 				"MapPublicIpOnLaunch" : "true",
 				"VpcId" : { "Ref" : "VPC" }
 			}
@@ -506,7 +506,7 @@
 				},
 			"CreationPolicy": {
 				"AutoScalingCreationPolicy" : {
-					"MinSuccessfulInstancesPercent" : "0"
+					"MinSuccessfulInstancesPercent" : "100"
 				},
 				"ResourceSignal": {
 					"Count": { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Bastion" ] },
@@ -1220,6 +1220,7 @@
 							{ "Fn::Join": [ "=", [ "buildnumber", { "Ref" : "BuildNumber" } ] ] },
 							{ "Fn::Join": [ "=", [ "numberofmachines", { "Fn::FindInMap" : [ "ScalingMin", { "Ref" : "EnvType" }, "Cassandra"] } ] ] },
 							{ "Fn::Join": [ "=", [ "password", { "Fn::FindInMap" : [ "CassPassword", { "Ref" : "EnvType" }, "pass" ] } ] ] },
+							{ "Fn::Join": [ "=", [ "fqdn", { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "company", "private" ] ] } ] ] },
 							"bash"
 						]]},
 						{ "Fn::Join": [ "", [
@@ -1347,6 +1348,10 @@
 		"VPCHostedZoneId" : {
 			"Value" : { "Ref" : "VPCHostedZone" },
 			"Description" : "Name of hosted zone created by the stack"
+		},
+		"StackFQDN" : {
+			"Value" : { "Fn::Join": { "Fn::Join" : [ ".", [ { "Ref" : "VPC" }, { "Ref" : "Region" }, "company", "private" ] ] } },
+			"Description" : "Stack Fully Qualified Domain Name"
 		}
 	}
 }
