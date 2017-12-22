@@ -1,4 +1,7 @@
 #!/bin/bash -xe
+# This Jenkins job is a configured as a Parameterized Build with the following given parameters: Version (coming from nexus), region (chosen by user), StackName (Inserted by user) .
+# Both region and stack name are supplied to avoid issues incase there are different stacks on different regions with the same name.
+# Script by Itai Ganot 2017.
 
 logfile="${WORKSPACE}/deploy/jenkins_deploy.log"
 
@@ -33,7 +36,6 @@ for instanceid in $(aws autoscaling describe-auto-scaling-groups --auto-scaling-
 done
 
 servers_count=$(echo ${#servers[@]})
-
 
 log "###################### Begin #############################################"
 log "We're going to deploy version ${Version_VERSION} on $servers_count servers in Auto Scaling Group: $asgname..."
