@@ -61,4 +61,3 @@ else
 	echo "Unable to upload version file to S3 bucket!"
     exit 1
 fi
-
