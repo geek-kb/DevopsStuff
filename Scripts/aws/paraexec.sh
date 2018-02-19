@@ -18,17 +18,16 @@ if [[ ! $? -eq "0" ]]; then
     case $OS in
     Ubuntu)
 	sudo apt install pssh -y
-	PSSHBIN=$(which parallel-ssh)
     ;;
     CentOS)
 	sudo yum install pssh -y
-	PSSHBIN=$(which parallel-ssh)
     ;;
     *)
 	echo "Unknown operating system and parallel-ssh is not installed, please install manually"
 	exit 1
     ;;
     esac
+    PSSHBIN=$(which parallel-ssh)
 fi
 
 function usage {
