@@ -19,9 +19,11 @@ if [[ ! $? -eq "0" ]]; then
     case OS in
     Ubuntu)
 	sudo apt install pssh -y
+	PSSHBIN=$(which parallel-ssh)
     ;;
     CentOS)
 	sudo yum install pssh -y
+	PSSHBIN=$(which parallel-ssh)
     ;;
     *)
 	echo "Unknown operating system and parallel-ssh is not installed, please install manually"
@@ -76,13 +78,13 @@ fi
 
 if [[ -z $USER ]]; then
 	echo "User not supplied, using current user"
-	/usr/bin/parallel-ssh -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no" -O ConnectTimeout=$TIMEOUT -h $LIST "${COMMANDS}"
+	$PSSHBIN -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no" -O ConnectTimeout=$TIMEOUT -h $LIST "${COMMANDS}"
 elif [[ ! -z $USER ]] && [[ ! -z $RUSER ]]; then
 	echo "Connecting as root, running as user $USER"
-	/usr/bin/parallel-ssh $RUSERSWITCH -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no" -O ConnectTimeout=$TIMEOUT -h $LIST "su - $USER -c \"${COMMANDS}\""
+	$PSSHBIN $RUSERSWITCH -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no" -O ConnectTimeout=$TIMEOUT -h $LIST "su - $USER -c \"${COMMANDS}\""
 elif [[ ! -z $USER ]] && [[ -z $RUSER ]]; then
 	echo "Connecting to remote machine with user: $USER and executing commands"
-	/usr/bin/parallel-ssh $USERSWITCH -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no" -O ConnectTimeout=$TIMEOUT -h $LIST ${RUSERCMD} "${COMMANDS}"
+	$PSSHBIN $USERSWITCH -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no" -O ConnectTimeout=$TIMEOUT -h $LIST ${RUSERCMD} "${COMMANDS}"
 fi
 
 unset USER
