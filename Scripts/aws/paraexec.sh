@@ -84,3 +84,5 @@ elif [[ ! -z $USER ]] && [[ -z $RUSER ]]; then
 	echo "Connecting to remote machine with user: $USER and executing commands"
 	/usr/bin/parallel-ssh $USERSWITCH -i -p $SESSIONS -t 100000000 -x "-oStrictHostKeyChecking=no" -O ConnectTimeout=$TIMEOUT -h $LIST ${RUSERCMD} "${COMMANDS}"
 fi
+
+unset USER
