@@ -15,7 +15,7 @@ fi
 
 PSSHBIN=$(which parallel-ssh)
 if [[ ! $? -eq "0" ]]; then
-    case OS in
+    case $OS in
     Ubuntu)
 	sudo apt install pssh -y
 	PSSHBIN=$(which parallel-ssh)
