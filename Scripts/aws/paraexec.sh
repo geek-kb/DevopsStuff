@@ -7,6 +7,7 @@
 TIMEOUT="5"
 SESSIONS="8"
 
+OSTYPE=$(cat /etc/*release | awk 'NR==1')
 if [[ $OSTYPE =~ "DIST" ]]; then
     OS="Ubuntu"
 else
