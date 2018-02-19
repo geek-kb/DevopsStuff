@@ -72,6 +72,7 @@ done
 if [[ -z $LIST ]] || [[ -z $COMMANDS ]]; then
 	echo "Error - not enough arguments have been supplied"
 	usage
+	exit 1
 fi
 
 if [[ -z $USER ]]; then
