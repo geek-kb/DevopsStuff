@@ -1,6 +1,5 @@
 #!/bin/bash
-# This script wraps the parallel-ssh command and enables it to accept a file.
-# which contains a list of hostnames/ip's and a command and then runs the command on all the hostnames in the list.
+# This script wraps the parallel-ssh command and enables it to accept a file which contains a list of hostnames/ip's and a command and then runs the command on all the hostnames in the list.
 # It also allows to control which user to use when connecting to remote machines and which user the commands should be run from.
 # Script by Itai Ganot 2018, lel@lel.bz
 
