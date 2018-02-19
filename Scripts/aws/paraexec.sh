@@ -33,8 +33,8 @@ fi
 function usage {
 echo "Usage: $(basename $0) [OPTIONS] [COMMAND/s]"
 echo "Examples:"
-echo "$(basename $0) -l server.list -c uname -a"
-echo "$(basename $0) -l server.list -r -u itaig -c uname -a"
+echo "$(basename $0) -l server.list -c uname -a  --> run the command on all servers in the list"
+echo "$(basename $0) -l server.list -r -u itaig -c uname -a --> connect to the remote machines using root, run command as supplied user"
 echo ""
 echo "Options:"
 echo "   -l                     :     Provide list containing hostnames/ips"
