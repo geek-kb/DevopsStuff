@@ -18,10 +18,10 @@ PSSHBIN=$(which parallel-ssh)
 if [[ ! $? -eq "0" ]]; then
     case OS in
     Ubuntu)
-	sudo apt install pssh
+	sudo apt install pssh -y
     ;;
     CentOS)
-	sudo yum install pssh
+	sudo yum install pssh -y
     ;;
     *)
 	echo "Unknown operating system and parallel-ssh is not installed, please install manually"
