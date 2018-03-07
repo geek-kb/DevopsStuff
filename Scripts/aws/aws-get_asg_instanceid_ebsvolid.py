@@ -78,3 +78,4 @@ if args.file:
     print("Data saved to file {0}".format(file))
 else:
     get_instanceid_volumeid()
+
