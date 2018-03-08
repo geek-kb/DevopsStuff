@@ -17,10 +17,6 @@ parser.add_argument('--file', action='store_true', help='Save output to file in 
 parser.add_argument('--region', help='Specify region (us-west-2 is default)', default='us-west-2')
 args = parser.parse_args()
 
-#if not args.environment or not args.key:
-#    print("Not enough arguments supplied!")
-#    exit(1)
-
 aws_region = args.region
 timestr = time.strftime("%d%m%Y_%H%M%S")
 asg_search_pattern = args.key
