@@ -11,15 +11,15 @@ import time
 import argparse
 
 parser = argparse.ArgumentParser(description='Get InstanceIds and VolumeIds')
-parser.add_argument('--environment')
-parser.add_argument('--key', help='key to look for in asg names')
-parser.add_argument('--file', action='store_true', help='save output to file in current working directory')
-parser.add_argument('--region', help='specify region (us-west-2 is default)', default='us-west-2')
+parser.add_argument('--environment', help='Enter environment name to query', required=True)
+parser.add_argument('--key', help='Key to look for in asg names', required=True)
+parser.add_argument('--file', action='store_true', help='Save output to file in current working directory')
+parser.add_argument('--region', help='Specify region (us-west-2 is default)', default='us-west-2')
 args = parser.parse_args()
 
-if not args.environment or not args.key:
-    print("Not enough arguments supplied!")
-    exit(1)
+#if not args.environment or not args.key:
+#    print("Not enough arguments supplied!")
+#    exit(1)
 
 aws_region = args.region
 timestr = time.strftime("%d%m%Y_%H%M%S")
@@ -68,7 +68,10 @@ def get_instanceid_volumeid():
                 volume_list.append(volume['Ebs']['VolumeId'])
 
             newdict = dict(zip(device_list, volume_list))
-            print('InstanceId: {0} | VolumeIds: {1}'.format(instance['InstanceId'], newdict))
+            print("""InstanceId:
+{0}
+VolumeIds:
+{1}""".format(instance['InstanceId'], newdict))
     print("############################ END OF BLOCK ############################")
 
 if args.file:
@@ -78,4 +81,3 @@ if args.file:
     print("Data saved to file {0}".format(file))
 else:
     get_instanceid_volumeid()
-
