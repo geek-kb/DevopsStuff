@@ -36,19 +36,20 @@ ecinst_list = []
 device_list = []
 volume_list = []
 
-for asg in as_response['AutoScalingGroups']:
-    if args.environment == "ci" and args.environment in asg['AutoScalingGroupName']:
-        if re.search("cinew", asg['AutoScalingGroupName']) is None and re.search(args.key, asg['AutoScalingGroupName']):
-            asg_list.append(asg['AutoScalingGroupName'])
-    else:
-        if args.environment in asg['AutoScalingGroupName'] and re.search(args.key, asg['AutoScalingGroupName']):
-            asg_list.append(asg['AutoScalingGroupName'])
+def get_asgs():
+    for asg in as_response['AutoScalingGroups']:
+        if args.environment == "ci" and args.environment in asg['AutoScalingGroupName']:
+            if re.search("cinew", asg['AutoScalingGroupName']) is None and re.search(args.key, asg['AutoScalingGroupName']):
+                asg_list.append(asg['AutoScalingGroupName'])
+        else:
+            if args.environment in asg['AutoScalingGroupName'] and re.search(args.key, asg['AutoScalingGroupName']):
+                asg_list.append(asg['AutoScalingGroupName'])
+
 file = args.environment + "_" + timestr + ".txt"
 
 def get_instanceid_volumeid():
     for asg_name in asg_list:
-        print("###############################################################################")
-        print("AutoScalingGroupName: ",asg_name)
+        print("###############- AutoScalingGroupName: {0} -###############".format(asg_name))
         asi_response = as_client.describe_auto_scaling_groups(
         AutoScalingGroupNames=[
             asg_name,
@@ -68,7 +69,8 @@ def get_instanceid_volumeid():
                 volume_list.append(volume['Ebs']['VolumeId'])
 
             newdict = dict(zip(device_list, volume_list))
-            print("""InstanceId:
+            print("""_
+InstanceId:
 {0}
 VolumeIds:
 {1}""".format(instance['InstanceId'], newdict))
@@ -77,7 +79,9 @@ VolumeIds:
 if args.file:
     with open(file, 'w+') as f:
         with redirect_stdout(f):
+            get_asgs()
             get_instanceid_volumeid()
     print("Data saved to file {0}".format(file))
 else:
+    get_asgs()
     get_instanceid_volumeid()
