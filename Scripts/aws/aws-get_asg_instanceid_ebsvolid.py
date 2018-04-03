@@ -17,10 +17,6 @@ parser.add_argument('--file', action='store_true', help='Save output to file in 
 parser.add_argument('--region', help='Specify region (us-west-2 is default)', default='us-west-2')
 args = parser.parse_args()
 
-#if not args.environment or not args.key:
-#    print("Not enough arguments supplied!")
-#    exit(1)
-
 aws_region = args.region
 timestr = time.strftime("%d%m%Y_%H%M%S")
 asg_search_pattern = args.key
@@ -36,19 +32,20 @@ ecinst_list = []
 device_list = []
 volume_list = []
 
-for asg in as_response['AutoScalingGroups']:
-    if args.environment == "ci" and args.environment in asg['AutoScalingGroupName']:
-        if re.search("cinew", asg['AutoScalingGroupName']) is None and re.search(args.key, asg['AutoScalingGroupName']):
-            asg_list.append(asg['AutoScalingGroupName'])
-    else:
-        if args.environment in asg['AutoScalingGroupName'] and re.search(args.key, asg['AutoScalingGroupName']):
-            asg_list.append(asg['AutoScalingGroupName'])
+def get_asgs():
+    for asg in as_response['AutoScalingGroups']:
+        if args.environment == "ci" and args.environment in asg['AutoScalingGroupName']:
+            if re.search("cinew", asg['AutoScalingGroupName']) is None and re.search(args.key, asg['AutoScalingGroupName']):
+                asg_list.append(asg['AutoScalingGroupName'])
+        else:
+            if args.environment in asg['AutoScalingGroupName'] and re.search(args.key, asg['AutoScalingGroupName']):
+                asg_list.append(asg['AutoScalingGroupName'])
+
 file = args.environment + "_" + timestr + ".txt"
 
 def get_instanceid_volumeid():
     for asg_name in asg_list:
-        print("###############################################################################")
-        print("AutoScalingGroupName: ",asg_name)
+        print("###############- AutoScalingGroupName: {0} -###############".format(asg_name))
         asi_response = as_client.describe_auto_scaling_groups(
         AutoScalingGroupNames=[
             asg_name,
@@ -68,7 +65,12 @@ def get_instanceid_volumeid():
                 volume_list.append(volume['Ebs']['VolumeId'])
 
             newdict = dict(zip(device_list, volume_list))
+<<<<<<< HEAD
             print("""InstanceId:
+=======
+            print("""_
+InstanceId:
+>>>>>>> b4935d1b17ba5dadaa51efc45b098604baba3733
 {0}
 VolumeIds:
 {1}""".format(instance['InstanceId'], newdict))
@@ -77,7 +79,9 @@ VolumeIds:
 if args.file:
     with open(file, 'w+') as f:
         with redirect_stdout(f):
+            get_asgs()
             get_instanceid_volumeid()
     print("Data saved to file {0}".format(file))
 else:
+    get_asgs()
     get_instanceid_volumeid()
