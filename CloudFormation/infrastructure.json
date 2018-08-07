@@ -1,0 +1,207 @@
+{
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "Company - Infrastructure Template",
+
+	"Parameters" : {
+
+		"Environment" : {
+			"Type" : "String",
+			"Default" : "prd",
+			"AllowedValues" : [ "dev", "stg", "prd" ],
+			"Description" : "Select environment"
+		},
+
+    "VpcCidr" : {
+      "Type" : "String",
+      "Description": "Vpc CIDR (X.X.0.0/16)",
+      "AllowedPattern": "^(\\d|[01]?\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d|[01]?\\d\\d|2[0-4]\\d|25[0-5])",
+			"Default" : "10.99"
+    }
+  },
+
+	"Mappings" : {
+
+		"OfficeCidr" : {
+			"Private" : { "cidr" : "192.168.0.0/16" },
+			"Public" : { "cidr" : "X.X.X.X/32" }
+		},
+
+		"PeeringVpcId" : {
+			"product1prd" : { "VAVpcId" : "vpc-71e55e15" },
+			"product2prd" : { "VAVpcId" : "vpc-1f0e197d" },
+			"product2stg" : { "VAVpcId" : "vpc-de5b15b9" },
+			"product1stg" : { "VAVpcId" : "vpc-25f59042" }
+		}
+	},
+
+  "Resources" : {
+
+    "Vpc": {
+			"Type" : "AWS::EC2::VPC",
+			"Description" : "VPC Creation",
+			"Properties" : {
+				"CidrBlock" : { "Fn::Join" : [ "", [ { "Ref" : "VpcCidr" }, ".0.0/16" ] ] },
+				"EnableDnsSupport" : "true",
+				"EnableDnsHostnames" : "true",
+				"InstanceTenancy" : "default",
+				"Tags" : [
+					{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, "vpc", { "Ref" : "Environment" } ] ] } }
+				]
+			}
+		},
+
+    "SubnetOne": {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ] },
+				"CidrBlock" : { "Fn::Join" : [ "", [ { "Ref" : "VpcCidr" }, ".0.0/24" ] ] },
+				"MapPublicIpOnLaunch" : "true",
+				"VpcId" : { "Ref" : "Vpc" }
+			}
+		},
+
+		"SubnetTwo": {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ] },
+				"CidrBlock" : { "Fn::Join" : [ "", [ { "Ref" : "VpcCidr" }, ".16.0/24" ] ] },
+				"MapPublicIpOnLaunch" : "true",
+				"VpcId" : { "Ref" : "Vpc" }
+			}
+		},
+
+		"SubnetThree": {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : { "Fn::Select" : [ "2", { "Fn::GetAZs" : { "Ref" : "AWS::Region" } } ] },
+				"CidrBlock" : { "Fn::Join" : [ "", [ { "Ref" : "VpcCidr" }, ".32.0/24" ] ] },
+				"MapPublicIpOnLaunch" : "true",
+				"VpcId" : { "Ref" : "Vpc" }
+			}
+		},
+
+    "SubnetRouteTableAssociationS1" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties" : {
+				"RouteTableId" : { "Ref" : "RouteTable" },
+				"SubnetId" : { "Ref" : "SubnetOne" }
+			}
+		},
+
+		"SubnetRouteTableAssociationS2" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties" : {
+				"RouteTableId" : { "Ref" : "RouteTable" },
+				"SubnetId" : { "Ref" : "SubnetTwo" }
+			}
+		},
+
+		"SubnetRouteTableAssociationS3" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties" : {
+				"RouteTableId" : { "Ref" : "RouteTable" },
+				"SubnetId" : { "Ref" : "SubnetThree" }
+			}
+		},
+
+    "RouteTable" : {
+			"Type" : "AWS::EC2::RouteTable",
+			"Properties" : {
+				"VpcId" : { "Ref" : "Vpc" }
+			}
+		},
+
+		"PublicRoute" : {
+			"Type" : "AWS::EC2::Route",
+			"Properties" : {
+				"RouteTableId" : { "Ref" : "RouteTable" },
+				"DestinationCidrBlock" : "0.0.0.0/0",
+				"GatewayId" : { "Ref" : "InternetGateway" }
+			}
+		},
+
+		"InternetGateway" : {
+			"Type" : "AWS::EC2::InternetGateway"
+		},
+
+		"VPCGatewayAttachment" : {
+			"Type" : "AWS::EC2::VPCGatewayAttachment",
+			"Properties" : {
+				"VpcId" : { "Ref" : "Vpc" },
+				"InternetGatewayId" : { "Ref" : "InternetGateway" }
+			}
+		},
+
+		"SG": {
+    	"Type": "AWS::EC2::SecurityGroup",
+    	"Properties": {
+    		"GroupDescription": "SG for vpc",
+    		"VpcId" : { "Ref" : "Vpc" },
+    		"SecurityGroupIngress" : [
+    		{ "IpProtocol" : "-1", "CidrIp" : { "Fn::FindInMap" : [ "OfficeCidr", "Private", "cidr" ] } },
+				{ "IpProtocol" : "-1", "CidrIp" : { "Fn::FindInMap" : [ "OfficeCidr", "Public", "cidr" ] } },
+				{ "IpProtocol" : "-1", "CidrIp" : { "Fn::GetAtt" : [ "Vpc", "CidrBlock" ] } },
+				{ "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "109.64.71.0/32" }
+				],
+				"Tags" : [ { "Key" : "Name", "Value" : { "Fn::Join" : [ "_", [ { "Ref" : "AWS::StackName" }, "SG", { "Ref" : "Environment" } ] ] } } ]
+    	}
+    }
+  },
+
+	"Outputs" : {
+
+		"VpcId" : {
+			"Value" : { "Ref" : "Vpc" },
+			"Description" : "Vpc Id",
+			"Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-VPCID" }}
+		},
+
+		"VpcCidr" : {
+			"Value" : { "Fn::GetAtt" : [  "Vpc" , "CidrBlock" ] },
+			"Description" : "Vpc CidrBlock",
+			"Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-VPCCIDR" }}
+		},
+
+		"SubnetOne" : {
+			"Value" : { "Ref" : "SubnetOne" },
+			"Description" : "Subnet One",
+			"Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-SubnetOne" }}
+		},
+
+		"SubnetTwo" : {
+			"Value" : { "Ref" : "SubnetTwo" },
+			"Description" : "Subnet Two",
+			"Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-SubnetTwo" }}
+		},
+
+		"SubnetThree" : {
+			"Value" : { "Ref" : "SubnetThree" },
+			"Description" : "Subnet Three",
+			"Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-SubnetThree" }}
+		},
+
+		"SecurityGroup" : {
+			"Value" : { "Ref" : "SG" },
+			"Description" : "Security Group",
+			"Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-SG" }}
+		},
+
+		"Environment" : {
+			"Value" : { "Ref" : "Environment" },
+			"Description" : "Environment",
+			"Export" : { "Name" : { "Fn::Sub": "${AWS::StackName}-Environment" } }
+		},
+
+		"StackName" : {
+			"Value" : { "Ref" : "AWS::StackName" },
+			"Description" : "Stack Name",
+			"Export" : { "Name" : { "Fn::Sub": "${AWS::StackName}-StackName" } }
+		},
+
+		"RouteTable" : {
+			"Value" : { "Ref" : "RouteTable" },
+			"Description" : "Route Table ID",
+			"Export" : { "Name" : { "Fn::Sub": "${AWS::StackName}-RTBID" } }
+		}
+	}
+}

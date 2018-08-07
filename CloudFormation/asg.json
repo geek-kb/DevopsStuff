@@ -1,0 +1,204 @@
+{
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "Company - LaunchConfiguration and AutoScalingGroup Template",
+
+	"Parameters" : {
+
+		"Vpc" : {
+			"Type" : "AWS::EC2::VPC::Id"
+		},
+
+		"SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup::Id",
+      "Description": "choose sg"
+    },
+
+		"Environment" : {
+			"Type" : "String",
+			"Description" : "Choose environment",
+			"AllowedValues" : [ "dev", "stg", "prd" ],
+			"Default" : "prd"
+		},
+
+		"ParentStackName": {
+      "Description": "Name of an active CloudFormation stack that contains the networking resources, such as the subnet and security group, that will be used in this stack.",
+      "Type": "String",
+      "MinLength" : 1,
+      "MaxLength" : 255,
+      "AllowedPattern" : "^[a-zA-Z][-a-zA-Z0-9]*$",
+			"Default" : "test"
+    },
+
+		"PeertoVpc" : {
+			"Type" : "String",
+			"Description" : "Choose Vpc to peer to",
+			"AllowedValues" : [ "booststg", "boostprd", "xsitestg", "xsiteprd" ]
+		}
+	},
+
+	"Mappings" : {
+
+    "AMIMap" : {
+			"us-east-1" : { "amiid" : "ami-759bc50a" },
+			"us-east-2" : { "amiid" : "ami-5e8bb23b" },
+			"us-west-1" : { "amiid" : "ami-4aa04129" },
+			"us-west-2" : { "amiid" : "ami-ba602bc2" },
+			"eu-west-1" : { "amiid" : "ami-4aa04129" },
+			"eu-central-1" : { "amiid" : "ami-de8fb135" },
+			"eu-west-2" : { "amiid" : "ami-6b3fd60c" },
+      "ap-northeast-1" : { "amiid" : "ami-98cfaa75" },
+      "ap-southeast-1" : { "amiid" : "ami-1c106cf6" },
+      "sa-east-1" : { "amiid" : "ami-8eecc9e2" }
+		},
+
+    "KeyName" : {
+      "us-east-1" : { "key" : "va-ni" },
+			"eu-west-2" : { "key" : "ni-uk" },
+      "ap-southeast-1" : { "key" : "ni-au" },
+      "sa-east-1" : { "key" : "ni-sp" },
+      "eu-central-1" : { "key" : "ni-fr" }
+    },
+
+		"AsgSize" : {
+			"dev"  : { "MinSize" :  1 , "MaxSize" : 2 },
+			"stg" : { "MinSize" :  1 , "MaxSize" : 2 },
+			"prd"  : { "MinSize" :  1 , "MaxSize" : 2 }
+		},
+
+		"PeeringVpcId" : {
+			"xsiteprd" : { "vpcid" : "vpc-71e55e15", "cidr" : "10.20.0.0/16" },
+			"boostprd" : { "vpcid" : "vpc-1f0e197d", "cidr" : "172.19.0.0/16" },
+			"booststg" : { "vpcid" : "vpc-de5b15b9" , "cidr" : "10.30.0.0/16" },
+			"xsitestg" : { "vpcid" : "vpc-25f59042", "cidr" : "10.25.0.0/16" }
+		}
+  },
+
+  "Resources" : {
+
+    "REDIRECTRTS" : {
+				"Type" : "AWS::AutoScaling::AutoScalingGroup",
+				"Properties" : {
+					"VPCZoneIdentifier" : [ { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetOne" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetTwo" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetThree" } } ],
+					"LaunchConfigurationName" : { "Ref" : "M5XLLC" },
+					"MinSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MinSize" ] },
+					"MaxSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MaxSize" ] },
+					"TerminationPolicies" : [ "NewestInstance" ],
+					"MetricsCollection": [
+						{
+							"Granularity": "1Minute",
+							"Metrics": []
+						}
+					],
+					"Tags" : [
+						{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-Environment" } } ] ] }, "PropagateAtLaunch" : "true" }
+					]
+				}
+  	},
+
+		"NGINX" : {
+				"Type" : "AWS::AutoScaling::AutoScalingGroup",
+				"Properties" : {
+					"VPCZoneIdentifier" : [ { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetOne" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetTwo" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetThree" } } ],
+					"LaunchConfigurationName" : { "Ref" : "M5XLLC" },
+					"MinSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MinSize" ] },
+					"MaxSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MaxSize" ] },
+					"TerminationPolicies" : [ "NewestInstance" ],
+					"MetricsCollection": [
+						{
+							"Granularity": "1Minute",
+							"Metrics": []
+						}
+					],
+					"Tags" : [
+						{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-Environment" } } ] ] }, "PropagateAtLaunch" : "true" }
+					]
+				}
+  	},
+
+		"HAPROXY" : {
+				"Type" : "AWS::AutoScaling::AutoScalingGroup",
+				"Properties" : {
+					"VPCZoneIdentifier" : [ { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetOne" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetTwo" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetThree" } } ],
+					"LaunchConfigurationName" : { "Ref" : "M5XLLC" },
+					"MinSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MinSize" ] },
+					"MaxSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MaxSize" ] },
+					"TerminationPolicies" : [ "NewestInstance" ],
+					"MetricsCollection": [
+						{
+							"Granularity": "1Minute",
+							"Metrics": []
+						}
+					],
+					"Tags" : [
+						{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-Environment" } } ] ] }, "PropagateAtLaunch" : "true" }
+					]
+				}
+  	},
+
+		"RENDERER" : {
+				"Type" : "AWS::AutoScaling::AutoScalingGroup",
+				"Properties" : {
+					"VPCZoneIdentifier" : [ { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetOne" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetTwo" } }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SubnetThree" } } ],
+					"LaunchConfigurationName" : { "Ref" : "M5XLLC" },
+					"MinSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MinSize" ] },
+					"MaxSize" : { "Fn::FindInMap" : [ "AsgSize", { "Ref" : "Environment" }, "MaxSize" ] },
+					"TerminationPolicies" : [ "NewestInstance" ],
+					"MetricsCollection": [
+						{
+							"Granularity": "1Minute",
+							"Metrics": []
+						}
+					],
+					"Tags" : [
+						{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-Environment" } } ] ] }, "PropagateAtLaunch" : "true" }
+					]
+				}
+  	},
+
+		"M5XLLC" : {
+			"Type" : "AWS::AutoScaling::LaunchConfiguration",
+			"Properties" : {
+				"ImageId" : { "Fn::FindInMap" : [ "AMIMap", { "Ref" : "AWS::Region" }, "amiid" ]},
+				"InstanceType" : "m5.xlarge",
+				"KeyName" : { "Fn::FindInMap" : [ "KeyName", { "Ref" : "AWS::Region" }, "key" ]},
+				"AssociatePublicIpAddress" : "true",
+				"IamInstanceProfile" : "arn:aws:iam::925511037392:instance-profile/BackendServer",
+				"SecurityGroups" : [ { "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-SG" } } ],
+				"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "/usr/bin/cloud-init-per once apt-update apt-get update\n",
+					"/usr/bin/cloud-init-per once bootstrap-deps1 apt-get install python-pip jq python-setuptools heat-cfntools -y\n",
+					"/usr/bin/cloud-init-per once bootstrap-deps2 pip install awscli botocore boto \n",
+					"e xport LC_ALL=C\n",
+					"echo HQREGION=us-east-1 >> /etc/environment", "\n",
+					"echo VPCID=",{ "Ref" : "Vpc" }," >> /etc/environment", "\n",
+					"echo VPCTOPEER=",{ "Fn::FindInMap" : [ "PeeringVpcId", { "Ref" : "PeertoVpc" }, "vpcid" ] }, " >> /etc/environment", "\n",
+					"echo REGION=", { "Ref" : "AWS::Region" }, " >> /etc/environment", "\n",
+					"mkdir aws-cfn-bootstrap-latest\n",
+			    "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
+			    "easy_install aws-cfn-bootstrap-latest\n",
+					"for line in $(cat /etc/environment); do export $line; done\n",
+					"if [[ ! $(aws ec2 describe-vpc-peering-connections --filters Name=requester-vpc-info.vpc-id,Values=$VPCID --region $REGION | grep -q active) ]]; then \n",
+					"export PeeringConnectionId=$(aws ec2 create-vpc-peering-connection --peer-owner-id 925511037392 --peer-vpc-id $VPCTOPEER --vpc-id $VPCID --peer-region $HQREGION --region $REGION | jq -r '.VpcPeeringConnection[]' | grep pcx)", "\n",
+					"sleep 10\n",
+					"aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id $PeeringConnectionId --region $HQREGION\n",
+					"aws ec2 create-route",
+						" --destination-cidr-block ",{ "Fn::FindInMap" : [ "PeeringVpcId", { "Ref" : "PeertoVpc" }, "cidr" ] },
+						" --route-table-id ",{ "Fn::ImportValue" :  { "Fn::Sub" : "${ParentStackName}-RTBID" } },
+						" --vpc-peering-connection-id $PeeringConnectionId",
+						" --region ", { "Ref" : "AWS::Region"}, "\n",
+						" ; fi\n"
+        	]]}
+				}
+			}
+		},
+
+		"ServerProfile" : {
+				"Type" : "AWS::IAM::InstanceProfile",
+				"Properties" : {
+					"Path" : "/",
+					"Roles" : ["BackendServer"]
+				}
+		}
+	}
+}
