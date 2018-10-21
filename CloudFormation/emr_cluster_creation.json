@@ -158,7 +158,7 @@
 					{
 						"Name": "ShipLogsToLogzioAndZabbix",
 						"ScriptBootstrapAction": {
-							"Path": "s3://ni-devops/emr_cluster_creation/emr_bootstrap.sh",
+							"Path": "s3://S3_BUCKET_NAME/emr_cluster_creation/emr_bootstrap.sh",
 							"Args" : [ { "Fn::Join" : [ "_", [ { "Ref" : "AWS::StackName"}, { "Ref" : "FileBeatLogTypeName" } ] ] } ]
 						}
   				}
@@ -182,7 +182,7 @@
 			"Properties": {
 				"ActionOnFailure": "CANCEL_AND_WAIT",
 				"HadoopJarStep": {
-					"Args": [ "s3://ni-devops/emr_cluster_creation/copy_json_serde.sh" ],
+					"Args": [ "s3://S3_BUCKET_NAME/emr_cluster_creation/copy_json_serde.sh" ],
 					"Jar": "s3://us-east-1.elasticmapreduce/libs/script-runner/script-runner.jar"
 				},
 				"Name": "CopyAWSJSONSerDeStep",
