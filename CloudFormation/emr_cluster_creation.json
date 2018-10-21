@@ -27,7 +27,7 @@
 		"KeyName": {
 			"Description": "Name of an existing EC2 KeyPair to enable SSH to the instances",
 			"Type": "AWS::EC2::KeyPair::KeyName",
-			"Default" : "emr-ashburn"
+			"Default" : "emr-production"
 		},
 		"Subnet": {
 			"Description": "Subnet ID for creating the EMR cluster",
