@@ -1,168 +1,195 @@
 {
 "AWSTemplateFormatVersion" : "2010-09-09",
-"Description" : "Company - EMR Cluster creation template",
-
+"Description" : "EMR Cluster creation template",
+"Metadata" : {
+	"AWS::CloudFormation::Interface" : {
+		"ParameterGroups" : [
+			{
+				"Label" : { "default" : "Amazon EC2 Configuration" },
+				"Parameters" : [ "Subnet", "KeyName" ]
+			},
+			{
+				"Label" : { "default" : "EMR Configuration" },
+				"Parameters" : [ "EMRClusterName", "MasterServerCount", "CoreServerCount", "EmrApplicationRelease" ]
+			},
+			{
+				"Label" : { "default" : "Logz.io Configuration" },
+				"Parameters" : [ "FileBeatLogTypeName" ]
+			}
+		]
+	}
+},
 	"Parameters" : {
 		"EMRClusterName": {
-      "Description": "Name of EMR Cluster",
-      "Type": "String"
-    },
-    "KeyName": {
-      "Description": "Name of an existing EC2 KeyPair to enable SSH to the instances",
-      "Type": "AWS::EC2::KeyPair::KeyName",
-      "Default" : "emr-production"
-    },
-    "Subnet": {
-      "Description": "Subnet ID for creating the EMR cluster",
-      "Type": "AWS::EC2::Subnet::Id"
-    }
-  },
+			"Description": "Name of EMR Cluster",
+			"Type": "String"
+		},
+		"KeyName": {
+			"Description": "Name of an existing EC2 KeyPair to enable SSH to the instances",
+			"Type": "AWS::EC2::KeyPair::KeyName",
+			"Default" : "emr-production"
+		},
+		"Subnet": {
+			"Description": "Subnet ID for creating the EMR cluster",
+			"Type": "AWS::EC2::Subnet::Id"
+		},
+		"MasterServerCount" : {
+			"Description" : "Number of Master servers to start",
+			"AllowedValues" : [ "1", "3", "5", "7", "9" ],
+			"Type" : "String",
+			"Default" : "1"
+		},
+		"CoreServerCount" : {
+			"Description" : "Number of Core servers to start",
+			"AllowedValues" : [ "1", "3", "5", "7", "9" ],
+			"Type" : "String",
+			"Default" : "1"
+		},
+		"FileBeatLogTypeName" : {
+			"Description" : "Filebeat logtype name",
+			"Type" : "String"
+		},
+		"EmrApplicationRelease" : {
+			"Description" : "EMR Application Release Version",
+			"Type" : "String",
+			"AllowedValues" : [ "emr-5.15.0",  "emr-5.16.0", "emr-5.17.0" ],
+			"Default" : "emr-5.15.0"
+		}
+	},
 
-  "Mappings" : {
-    "InstanceSettings" : {
-      "MasterInstanceGroup" : { "ami" : "ami-0d813873ae264f8f8", "instancetype" : "m3.xlarge", "instancecount" : "1", "securitygroup" : "sg-4843e534" },
-      "CoreInstanceGroup" : { "ami" : "ami-0d813873ae264f8f8", "instancetype" : "m3.xlarge", "instancecount" : "1", "securitygroup" : "sg-4843e535"  }
-    }
-  },
+	"Mappings" : {
+		"InstanceSettings" : {
+			"MasterInstanceGroup" : { "ami" : "ami-0d813873ae264f8f8", "instancetype" : "m3.xlarge" },
+			"CoreInstanceGroup" : { "ami" : "ami-0d813873ae264f8f8", "instancetype" : "m3.xlarge" }
+		}
+	},
 
-  "Resources" : {
-    "EMRInstanceProfile": {
-      "Type": "AWS::IAM::InstanceProfile",
-      "Properties": {
-        "Roles": [
-          {
-            "Ref": "EMRJobFlowRole"
-          }
-        ]
-      }
-    },
+	"Resources" : {
+		"EMRInstanceProfile": {
+			 "Type": "AWS::IAM::InstanceProfile",
+				"Properties": {
+					"Roles": [ "EMR_EC2_DefaultRole" ]
+				}
+		},
 
-    "EMRJobFlowRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "sts:AssumeRole"
-              ],
-              "Effect": "Allow",
-              "Principal": {
-                "Service":
-                [
-                  "ec2.amazonaws.com"
-                ]
-              }
-            }
-          ]
-        },
-        "ManagedPolicyArns":
-          [
-            "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforEC2Role"
-          ]
-        }
-      },
-
-      "EMRServiceRole": {
-        "Type": "AWS::IAM::Role",
-        "Properties": {
-          "AssumeRolePolicyDocument": {
-            "Statement": [
-              {
-                "Action": [
-                  "sts:AssumeRole"
-                ],
-                "Effect": "Allow",
-                "Principal": {
-                  "Service": [
-                      "elasticmapreduce.amazonaws.com"
-                  ]
-                }
-              }
-            ]
-          },
-          "ManagedPolicyArns": [
-              "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole"
-          ]
-        }
-      },
-
-      "EMRCluster" : {
-        "Type" : "AWS::EMR::Cluster",
-        "Properties" : {
-          "Applications" : [
-            {
-              "Name" : "Hive"
-            },
-            {
-              "Name" : "Pig"
-            },
-            {
-              "Name" : "Hue"
-            },
-            {
-              "Name" : "Spark"
-            },
-            {
-              "Name" : "Zeppelin"
-            },
-            {
-              "Name" : "HCatalog"
-            },
-            {
-              "Name" : "Flink"
-            },
-            {
-              "Name" : "Livy"
-            },
-            {
-              "Name" : "Ganglia"
-            }
-          ],
-          "AutoScalingRole" : "EMR_AutoScaling_DefaultRole",
-          "Configurations" : [
-            {
-              "Classification": "hive-site",
-              "ConfigurationProperties": {
-                "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
-              }
-            },
-            {
-              "Classification": "spark-hive-site",
-              "ConfigurationProperties": {
-                "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
-              }
-            }
-          ],
-          "Instances" : {
-            "MasterInstanceGroup": {
-                "InstanceCount": { "Fn::FindInMap" : [ "InstanceSettings", "CoreInstanceGroup", "instancecount" ] },
-                "InstanceType": { "Fn::FindInMap" : [ "InstanceSettings", "MasterInstanceGroup", "instancetype" ] },
-                "Name": { "Fn::Join" : [ "-", [ { "Ref" : "EMRClusterName" }, "Master" ] ] }
-            },
-            "CoreInstanceGroup": {
-                "InstanceCount": { "Fn::FindInMap" : [ "InstanceSettings", "CoreInstanceGroup", "instancecount" ] },
-                "InstanceType": { "Fn::FindInMap" : [ "InstanceSettings", "CoreInstanceGroup", "instancetype" ] },
-                "Name": { "Fn::Join" : [ "-", [ { "Ref" : "EMRClusterName" }, "Core" ] ] }
-            },
-            "Ec2KeyName": { "Ref": "KeyName" },
-            "Ec2SubnetId" : { "Ref" : "Subnet" }
-          },
-          "JobFlowRole" : { "Ref" : "EMRInstanceProfile" },
-          "Name" : { "Ref" : "EMRClusterName" },
-          "ReleaseLabel" : "emr-5.15.0",
-          "ServiceRole" : { "Ref" : "EMRServiceRole" },
-          "Tags":
-            [
-              {
-                "Key": "Name",
-                "Value": { "Ref" : "EMRClusterName" }
-              }
-            ],
-          "VisibleToAllUsers" : "true"
-        }
-      }
-  },
+		"EMRCluster" : {
+			"Type" : "AWS::EMR::Cluster",
+			"Properties" : {
+				"Applications" : [
+					{
+						"Name" : "Hive"
+					},
+					{
+						"Name" : "Pig"
+					},
+					{
+						"Name" : "Hue"
+					},
+					{
+						"Name" : "Spark"
+					},
+					{
+						"Name" : "Zeppelin"
+					},
+					{
+						"Name" : "HCatalog"
+					},
+					{
+						"Name" : "Flink"
+					},
+					{
+						"Name" : "Livy"
+					},
+					{
+					  "Name" : "Ganglia"
+					}
+				],
+				"LogUri" : "s3://aws-logs-AWS_ACCOUNT_ID-us-east-1/elasticmapreduce/",
+				"AutoScalingRole" : "EMR_AutoScaling_DefaultRole",
+				"Configurations" : [
+					{
+						"Classification": "hive-site",
+						"ConfigurationProperties": {
+							"hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+						}
+					},
+					{
+						"Classification": "spark-hive-site",
+						"ConfigurationProperties": {
+							"hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+						}
+					},
+					{
+						"Classification": "flink-log4j",
+						"ConfigurationProperties": {
+							"log4j.appender.file": "org.apache.log4j.RollingFileAppender",
+							"log4j.appender.file.MaxBackupIndex": "10",
+							"log4j.logger.org.apache.flink.yarn.YarnTaskManager": "ERROR",
+							"log4j.appender.file.MaxFileSize": "10M",
+							"log4j.appender.stdout.layout.ConversionPattern": "[%d] %p %m (%c:%L)%n"
+						}
+					},
+					{
+						"Classification": "spark-defaults",
+						"ConfigurationProperties": {
+							"spark.driver.memory": "5120M"
+						}
+					}
+				],
+				"Instances" : {
+					"MasterInstanceGroup": {
+							"InstanceCount": { "Ref" : "MasterServerCount" },
+							"InstanceType": { "Fn::FindInMap" : [ "InstanceSettings", "MasterInstanceGroup", "instancetype" ] },
+							"Name": { "Fn::Join" : [ "-", [ { "Ref" : "EMRClusterName" }, "Master" ] ] }
+					},
+					"CoreInstanceGroup": {
+							"InstanceCount": { "Ref" : "CoreServerCount" },
+							"InstanceType": { "Fn::FindInMap" : [ "InstanceSettings", "CoreInstanceGroup", "instancetype" ] },
+							"Name": { "Fn::Join" : [ "-", [ { "Ref" : "EMRClusterName" }, "Core" ] ] }
+					},
+					"Ec2KeyName": { "Ref": "KeyName" },
+					"Ec2SubnetId" : { "Ref" : "Subnet" }
+				},
+				"JobFlowRole" : "EMR_EC2_DefaultRole",
+				"Name" : { "Ref" : "EMRClusterName" },
+				"ReleaseLabel" : { "Ref" : "EmrApplicationRelease" },
+				"ServiceRole" : "EMR_DefaultRole",
+				"BootstrapActions": [
+					{
+						"Name": "ShipLogsToLogzioAndZabbix",
+						"ScriptBootstrapAction": {
+							"Path": "s3://S3_BUCKET_NAME/emr_cluster_creation/emr_bootstrap.sh",
+							"Args" : [ { "Fn::Join" : [ "_", [ { "Ref" : "AWS::StackName"}, { "Ref" : "FileBeatLogTypeName" } ] ] } ]
+						}
+  				}
+				],
+				"Tags":
+					[
+						{
+							"Key": "ClusterName",
+							"Value": { "Ref" : "EMRClusterName" }
+						},
+						{
+							"Key" : "FileBeatLogName",
+							"Value" : { "Ref" : "FileBeatLogTypeName" }
+						}
+					],
+				"VisibleToAllUsers" : "true"
+			}
+		},
+		"CopyAWSJSONSerDeStep": {
+			"Type": "AWS::EMR::Step",
+			"Properties": {
+				"ActionOnFailure": "CANCEL_AND_WAIT",
+				"HadoopJarStep": {
+					"Args": [ "s3://S3_BUCKET_NAME/emr_cluster_creation/copy_json_serde.sh" ],
+					"Jar": "s3://us-east-1.elasticmapreduce/libs/script-runner/script-runner.jar"
+				},
+				"Name": "CopyAWSJSONSerDeStep",
+				"JobFlowId": { "Ref": "EMRCluster" }
+			}
+		}
+	},
 
 	"Outputs" : {
 		"EMRClusterName" : {
@@ -171,7 +198,7 @@
 		},
 		"Subnet" : {
 			"Value" : { "Ref" : "Subnet" },
-			"Description" : "Chosen subnet to deploy EMR cluster to"
+			"Description" : "The EMR cluster's Subnet"
 		},
 		"KeyName" : {
 			"Value" : { "Ref" : "KeyName" },
@@ -183,3 +210,4 @@
 		}
 	}
 }
+
