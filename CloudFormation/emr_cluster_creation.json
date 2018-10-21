@@ -10,7 +10,7 @@
 			},
 			{
 				"Label" : { "default" : "EMR Configuration" },
-				"Parameters" : [ "EMRClusterName", "MasterServerCount", "CoreServerCount" ]
+				"Parameters" : [ "EMRClusterName", "MasterServerCount", "CoreServerCount", "EmrApplicationRelease" ]
 			},
 			{
 				"Label" : { "default" : "Logz.io Configuration" },
