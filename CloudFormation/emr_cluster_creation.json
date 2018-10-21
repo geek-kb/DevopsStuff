@@ -104,7 +104,7 @@
 					  "Name" : "Ganglia"
 					}
 				],
-				"LogUri" : "s3://aws-logs-925511037392-us-east-1/elasticmapreduce/",
+				"LogUri" : "s3://aws-logs-AWS_ACCOUNT_ID-us-east-1/elasticmapreduce/",
 				"AutoScalingRole" : "EMR_AutoScaling_DefaultRole",
 				"Configurations" : [
 					{
