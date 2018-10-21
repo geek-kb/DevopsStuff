@@ -1,6 +1,6 @@
 {
 "AWSTemplateFormatVersion" : "2010-09-09",
-"Description" : "Natural Intelligence - EMR Cluster creation template",
+"Description" : "EMR Cluster creation template",
 "Metadata" : {
 	"AWS::CloudFormation::Interface" : {
 		"ParameterGroups" : [
