@@ -79,6 +79,33 @@ Example output:
 >   "Url": "https://api.github.com/users/geek-kb"
 > }
 
+<br><br>
+
+**Troubleshooting:**
+
+Sometimes, when not all elements have keys, the following error will be shown:
+`jq: error (at <stdin>:52243): Cannot iterate over null (null)`
+
+Example:
+`aws ec2 describe-instances | jq ".Reservations[].Instances[] | {VirtualizationType: .VirtualizationType , Tags: .Tags[]}" | tail -5`
+> jq: error (at <stdin>:52243): Cannot iterate over null (null)
+>   "Tags": {
+>     "Key": "SWARM_TYPE",
+>     "Value": "Production"
+>   }
+> }
+
+In order to supress this error, add a question mark after the key which doesn't exist in all elements, in this case "Tags".
+<br><br>
+Example:
+`aws ec2 describe-instances | jq ".Reservations[].Instances[] | {VirtualizationType: .VirtualizationType , Tags: .Tags[]?}" | tail -5`
+
+>   "Tags": {
+>     "Key": "SWARM_TYPE",
+>     "Value": "Production"
+>   }
+> }
+
 
 <br><br>
 
