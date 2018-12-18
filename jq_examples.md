@@ -61,11 +61,11 @@ Example output:
 Example output:
 > {
 >   "VpcId": "vpc-de5xxx9",
->   "SubnetId": "subnet-c11165ef"
+>   "SubnetId": "subnet-cxxx65ef"
 > }
 > {
 >   "VpcId": "vpc-de5xxx9",
->   "SubnetId": "subnet-111bce3f"
+>   "SubnetId": "subnet-xxxbce3f"
 > }
 
 ### Transform using specific element in array (in this case, the first one):
