@@ -72,8 +72,12 @@ Example output:
 
 `jq '.[0] | { Author: .author.login, Url: .committer.url}'`
 
+Example:
+
+`curl -s 'https://api.github.com/repos/geek-kb/DevopsStuff/commits?per_page=5' | jq '.[0] | { Author: .author.login, Url: .committer.url}'`
+
 Example output:
-> curl -s 'https://api.github.com/repos/geek-kb/DevopsStuff/commits?per_page=5' | jq '.[0] | { Author: .author.login, Url: .committer.url}'
+
 > {
 >   "Author": "geek-kb",
 >   "Url": "https://api.github.com/users/geek-kb"
@@ -114,4 +118,3 @@ Example:
 
 
 Written by: Itai Ganot, lel@lel.bz
-
