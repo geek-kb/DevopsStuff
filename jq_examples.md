@@ -20,7 +20,7 @@
 
 `aws ec2 describe-instances | jq '.Reservations[]?.Instances[].NetworkInterfaces[].PrivateIpAddresses[] | .[]'`
 
-- Display all the Values where the Key contains is "DOCKERVERSION":
+- Display all the Values where the Key contains "DOCKERVERSION":
 
 `aws ec2 describe-instances | jq -r '.Reservations[].Instances[].Tags[] | select(.Key | contains("DOCKERVERSION")).Value'`
 
