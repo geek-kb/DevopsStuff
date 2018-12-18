@@ -84,9 +84,11 @@ Example output:
 **Troubleshooting:**
 
 Sometimes, when not all elements have keys, the following error will be shown:
+<br><br>
 `jq: error (at <stdin>:52243): Cannot iterate over null (null)`
-
+<br><br>
 Example:
+<br><br>
 `aws ec2 describe-instances | jq ".Reservations[].Instances[] | {VirtualizationType: .VirtualizationType , Tags: .Tags[]}" | tail -5`
 > jq: error (at <stdin>:52243): Cannot iterate over null (null)
 >   "Tags": {
@@ -98,6 +100,7 @@ Example:
 In order to supress this error, add a question mark after the key which doesn't exist in all elements, in this case "Tags".
 <br><br>
 Example:
+<br><br>
 `aws ec2 describe-instances | jq ".Reservations[].Instances[] | {VirtualizationType: .VirtualizationType , Tags: .Tags[]?}" | tail -5`
 
 >   "Tags": {
