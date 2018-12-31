@@ -1,0 +1,18 @@
+{
+  "Comment": "string",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "ResourceName",
+        "Type": "CNAME",
+        "TTL": 60,
+        "ResourceRecords": [
+          {
+            "Value": "ResourceValue"
+          }
+        ]
+        }
+      }
+  ]
+}
