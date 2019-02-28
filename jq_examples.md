@@ -83,6 +83,10 @@ Example output:
 >   "Url": "https://api.github.com/users/geek-kb"
 > }
 
+### Display all AWS EC2 InstanceIds where Instance contains a Name Tag which matches "jenkins" (case insensitive):
+
+> aws ec2 describe-instances | jq -r '.Reservations[].Instances[] | select(.Tags[]?.Value | match("jenkins";"i")) | .InstanceId'
+
 <br><br>
 
 # **Troubleshooting:**
