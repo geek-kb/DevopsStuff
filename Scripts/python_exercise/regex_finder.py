@@ -3,6 +3,7 @@
 provided) for lines matching a given regular expression pattern and
 underlines, colors or displays the output in a machine-readable way according
 to the user's choice passed by supplied arguments.
+Script by Itai Ganot 2019, lel@lel.bz
 """
 
 import re
