@@ -148,8 +148,7 @@ if __name__ == "__main__":
     parser.add_argument('-f',
                         '--files',
                         help='file(s) to search pattern inside')
-    mutual_group = parser.add_argument_group('optional mutually \
-    exclusive arguments')
+    mutual_group = parser.add_argument_group('optional mutually exclusive arguments')
     mutually_exclusive = mutual_group.add_mutually_exclusive_group()
     mutually_exclusive.add_argument('-u',
                                     '--underline',
