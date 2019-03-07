@@ -49,7 +49,7 @@ cp $changeBatchFile{,.bak}
 cp $hostsfile{,.bak}
 
 hostscount=$(wc -l < $hostsfile | awk '{$1=$1};1')
-red "The are $hostscount hosted-zone-id's to query"
+red "There are $hostscount hosted-zone-id's to query"
 counter="1"
 
 for zoneId in $(cat $hostsfile); do
