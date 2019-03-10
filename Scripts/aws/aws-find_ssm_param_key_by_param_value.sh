@@ -8,7 +8,7 @@
 # When to use this script? When you want to check if there's more than one
 # paramter key which contains the same parameter value.
 #
-# The script will print to scrren the keys and values it's processing but will
+# The script will print to screen the keys and values it's processing but will
 # only log correct matches into the log file which is named like so:
 # SUPPLIED_VALUE-DATE-TIME.log
 # Script by Itai Ganot 2019
