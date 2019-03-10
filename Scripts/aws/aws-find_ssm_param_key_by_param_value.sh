@@ -39,7 +39,9 @@ while getopts ":p:l:d" opt; do
       debug=true
       ;;
     \?)
-      echo "Unknown option: -$OPTARG" >&2; exit 1
+      echo "Unknown option: -$OPTARG" >&2;
+      usage
+      exit 1
       ;;
   esac
 done
