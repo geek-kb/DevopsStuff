@@ -45,7 +45,6 @@ while getopts "p:v:t:e:o" opt; do
         env_name="production"
       fi
       key_id="alias/param_key_${env_name}"
-      env=$key_id
       ;;
     o)
       overwrite=true
