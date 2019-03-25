@@ -42,7 +42,7 @@ read -r -p "Are you sure? [y/n]" answer
 if [[ $answer = [Yy] ]]; then
   # run command to terminate found instance ids
   aws ec2 terminate-instances --instance-ids $instance_ids_to_terminate
-elif [[ $answer = [Nn ]]; then
+elif [[ $answer = [Nn] ]]; then
   echo "User chose not to terminate!"
   exit 0
 fi
