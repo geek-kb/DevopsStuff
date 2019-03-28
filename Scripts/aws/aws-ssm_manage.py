@@ -1,38 +1,64 @@
 #!/usr/bin/env python3
 """This script can:
-1. List all AWS SSM parameters and their values in a given KMS id (staging / production)
+1. List all AWS SSM parameters and their values in a given KMS id
+(staging / production / integration)
+Example:
+./ssm_manage.py -r us-east-1 -e staging
 2. Go through a file and get the values for all included keys
+Example:
+./ssm_manage.py -r us-east-1 -f some_creds.txt
 3. Return a specific key per a given value
+Example:
+./ssm_manage.py -r us-east-1 -v some_keys_value
 4. Replace single / multiple parameters with a given value
+Example:
+./ssm_manage.py -k cred_test_itai -r us-east-1 -p aaa
 5. Save the results to file or print to screen
+Example:
+./ssm_manage.py -r us-east-1 -e production -w output-file
 6. Count the number of parameters per given environment
+Example:
+./ssm_manage.py -r us-east-1 -e production -c
 """
 
 import boto3
 import argparse
 import sys
 import os
-from subprocess import Popen,PIPE,STDOUT,call
+from subprocess import Popen, PIPE
 from botocore.exceptions import ClientError
 
 
 def count_params_per_env(env):
     final_keyid = 'alias/param_key_{}'.format(env)
-    command = 'aws ssm describe-parameters | jq -r \'.Parameters[] | select(.KeyId=="{}") | .Name\' | wc -l'.format(final_keyid)
+    command = 'aws ssm describe-parameters | \
+        jq -r \'.Parameters[] | ' \
+        'select(.KeyId=="{}") | \
+        .Name\' | wc -l'.format(final_keyid)
     proc = Popen(command, shell=True, stdout=PIPE, encoding='utf8')
     output = proc.communicate()[0]
-    print('Number of params in environment %s: %s' % (env, output.strip()), end="")
+    print('Number of params in environment {}: {}'.format(
+        env,
+        output.strip()
+    ),end="")
     sys.exit()
 
 
 def get_all_params_names(ssmclient, env, write_out):
     final_keyid = 'alias/param_key_{}'.format(env)
-    print('Working on env: %s' % env)
+    print('Working on env: {}'.format(env))
     marker = None
     count = 0
     paginator = ssmclient.get_paginator('describe_parameters')
-    page_iterator = paginator.paginate(Filters=[{'Key': 'KeyId', 'Values': [final_keyid]}],
-                                           PaginationConfig={'PageSize': 10,'NextToken': marker})
+    page_iterator = paginator.paginate(Filters=
+    [{
+        'Key': 'KeyId',
+        'Values': [final_keyid]
+    }],
+        PaginationConfig={
+            'PageSize': 10,
+            'NextToken': marker
+        })
 
     for page in page_iterator:
         if not page['Parameters']:
@@ -40,15 +66,23 @@ def get_all_params_names(ssmclient, env, write_out):
         else:
             for param in page['Parameters']:
                 count += 1
-                param_value = ssmclient.get_parameter(Name=param['Name'],
-                                                      WithDecryption=True)['Parameter']['Value']
-                message = '#%i Name: %s | Value: %s | KeyId: %s' % (count, param['Name'], param_value, final_keyid)
+                param_value = ssmclient.get_parameter(
+                    Name=param['Name'],
+                    WithDecryption=True)['Parameter']['Value']
+                message = '#{} Name: {} | Value: {} | KeyId: {}'.format(
+                    count,
+                    param['Name'],
+                    param_value,
+                    final_keyid)
                 if write_out != None:
                     with open(write_out, 'w+') as f:
                         f.write(message + '\n')
                 else:
                     print(message)
-    print('Finished processing %i parameters in KMS %s' % (count, final_keyid))
+    print('Finished processing {} parameters in KMS {}'.format(
+        count,
+        final_keyid))
+
 
 def replace_parameter_value(ssmclient, key, put_value):
     try:
@@ -59,7 +93,7 @@ def replace_parameter_value(ssmclient, key, put_value):
     except Exception as e:
         print(e)
     else:
-        print('Key %s successfully updated!' % key.strip())
+        print('Key {} successfully updated!'.format(key.strip()))
 
 
 def get_key_of_value(ssmclient, value, write_out):
@@ -67,7 +101,10 @@ def get_key_of_value(ssmclient, value, write_out):
     count = 0
     param_keys = []
     paginator = ssmclient.get_paginator('describe_parameters')
-    page_iterator = paginator.paginate(PaginationConfig={'PageSize': 10,'NextToken': marker})
+    page_iterator = paginator.paginate(PaginationConfig={
+        'PageSize': 10,
+        'NextToken': marker
+    })
     for page in page_iterator:
         if not page['Parameters']:
             break
@@ -75,7 +112,9 @@ def get_key_of_value(ssmclient, value, write_out):
             for param in page['Parameters']:
                 count += 1
                 param_name = param['Name']
-                message = '#%i Now processing parameter: %s' % (count, param_name)
+                message = '#{} Now processing parameter: {}'.format(
+                    count,
+                    param_name)
                 if write_out != None:
                    write_out_to_file(write_out, message)
                 else:
@@ -84,18 +123,25 @@ def get_key_of_value(ssmclient, value, write_out):
                                             WithDecryption=True)['Parameter']
                     if param_value['Value'] == value:
                         param_keys.extend(param_value['Name'])
-                        print('Value %s found in parameter %s' % (value, param_name))
+                        print('Value {} found in parameter {}'.format(
+                            value,
+                            param_name))
 
 
 def get_specific_param_value(ssmclient, search_value):
     try:
-        specific_param_value = ssmclient.get_parameter(Name=search_value,
-                                                       WithDecryption=True)['Parameter']
-        message = "Name: %s | Value: %s " % (search_value, specific_param_value['Value'])
+        specific_param_value = ssmclient.get_parameter(
+            Name=search_value,
+            WithDecryption=True)['Parameter']
+        message = "Name: {} | Value: {} ".format(
+            search_value,
+            specific_param_value['Value'])
         print(message)
         return specific_param_value
     except Exception as e:
-        print('No such parameter found: %s, Error: %s' % (search_value, e))
+        print('No such parameter found: {}, Error: {}'.format(
+            search_value,
+            e))
 
 
 def load_file(params_list):
@@ -110,7 +156,7 @@ def create_resource_instance(region):
 
 def write_out_to_file(write_out, text):
     if write_out != None:
-        is_file = os.path.isfile('%s' % write_out)
+        is_file = os.path.isfile('{}'.format(write_out))
         if is_file:
             try:
                 with open(write_out, 'a+') as f:
@@ -124,7 +170,15 @@ def write_out_to_file(write_out, text):
             except Exception as e:
                 print(e)
 
-def main(env, key, parameters_file, region, put_value, value, output_file, count_params):
+
+def main(env,
+         key,
+         parameters_file,
+         region,
+         put_value,
+         value,
+         output_file,
+         count_params):
     ssmc = create_resource_instance(region)
     if count_params and env != '':
         count_params_per_env(env)
@@ -159,7 +213,8 @@ def main(env, key, parameters_file, region, put_value, value, output_file, count
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='script to manage AWS SSM params')
+    parser = argparse.ArgumentParser(
+        description='script to manage AWS SSM params')
     mutual_group = parser.add_argument_group('Parameters display options')
     mutually_exclusive = mutual_group.add_mutually_exclusive_group()
     mutually_exclusive.add_argument('-e',
