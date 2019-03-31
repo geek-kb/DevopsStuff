@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
+"""This script checks current's user's AWS access key age and rotates it
+if it's older than 90 days.
+The rotate works like so:
+1. Creation of a new AWS access key and secret key and printing them to screen.
+2. Disables the key which needs to be rotated
+"""
 
 import boto3
 import datetime
 import argparse
 from datetime import timedelta
+
 
 class User:
     def __init__(self):
@@ -40,7 +47,6 @@ class User:
         )['ResponseMetadata']
         if response['HTTPStatusCode'] == 200:
             print('Key {} disabled!'.format(key))
-
 
 
     def check_users_access_key(self):
@@ -111,7 +117,7 @@ if __name__ == '__main__':
     mutual_group = parser.add_argument_group()
     mutually_exclusive = mutual_group.add_mutually_exclusive_group()
     mutually_exclusive.add_argument('-d',
-                                    '--display',
+                                    '--display-user',
                                     action='store_true',
                                     help='Display Access Key information')
     mutually_exclusive.add_argument('-r',
@@ -120,7 +126,7 @@ if __name__ == '__main__':
                                     help='Rotate keys as necessary')
     args = parser.parse_args()
     try:
-        main(args.display,
+        main(args.display_user,
              args.rotate)
     except Exception as e:
         print(e)
