@@ -80,7 +80,7 @@ class User:
                 KeyLastUsed,
                 keydate_delta,
                 key_age))
-            if td.days > self.MaxKeyAge:
+            if td.days < self.MaxKeyAge:
                 print('Rotation not required yet! key #{} age (in days) is: '
                       '{} and '
                       'lower than default [{}].'.format(i + 1,
