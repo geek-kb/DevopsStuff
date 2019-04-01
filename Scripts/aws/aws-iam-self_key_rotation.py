@@ -52,8 +52,8 @@ class User:
             response = self.iam.create_access_key(
                 UserName=username
             )['AccessKey']
-            print('New Access / Secret keys have been created!\nAccess Key: {'
-                  '}\nSecret Key: {}'.format(
+            print('New Access / Secret keys have been created!\nAccess Key: \
+            {}\nSecret Key: {}'.format(
                 response['AccessKeyId'],
                 response['SecretAccessKey']))
         except ClientError as e:
@@ -95,9 +95,7 @@ class User:
             CreateDate_notz = CreateDate.replace(tzinfo=None)
             TodayDate_notz = self.TodayDate.replace(tzinfo=None)
             self.KeyStatus = response['AccessKeyMetadata'][i]['Status']
-            messge = 'User: {} \
-            Key creation date: {} \
-            Key Status: {}'.format(
+            messge = 'User: {}\nKey creation date: {}\nKey Status: {}'.format(
                 self.username,
                 CreateDate,
                 self.KeyStatus)
@@ -182,3 +180,4 @@ if __name__ == '__main__':
              args.rotate)
     except Exception as e:
         print(e)
+
