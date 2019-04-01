@@ -120,7 +120,7 @@ class User:
                               key_age,
                               self.MaxKeyAge))
             else:
-                print('Rotation required! key #{} age ()in days is: {} and '
+                print('Rotation required! key #{} age (in days) is: {} and '
                       'larger than MaxKeyAge [{}].'.format(i + 1,
                                                            key_age,
                                                            self.MaxKeyAge))
