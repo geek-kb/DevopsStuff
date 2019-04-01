@@ -53,9 +53,8 @@ class User:
                 UserName=username
             )['AccessKey']
             print('New Access / Secret keys have been created!\nAccess Key: \
-            {}\nSecret Key: {}'.format(
-                response['AccessKeyId'],
-                response['SecretAccessKey']))
+            {}\nSecret Key: {}'.format(response['AccessKeyId'],
+                                       response['SecretAccessKey']))
         except ClientError as e:
             if e.response['Error']['Code'] == 'LimitExceeded':
                 print('Error: Max keys quota exceeded! only 2 allowed')
@@ -163,8 +162,8 @@ def main(display, rotate):
 if __name__ == '__main__':
     # Parsing of arguments supplied by the user
     parser = argparse.ArgumentParser(
-        description='script rorate AWS access keys')
-    mutual_group = parser.add_argument_group()
+        description='Rotates current AWS user\'s access keys')
+    mutual_group = parser.add_argument_group('mutually exclusive arguments')
     mutually_exclusive = mutual_group.add_mutually_exclusive_group()
     mutually_exclusive.add_argument('-d',
                                     '--display-user',
@@ -180,4 +179,3 @@ if __name__ == '__main__':
              args.rotate)
     except Exception as e:
         print(e)
-
