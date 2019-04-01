@@ -4,6 +4,8 @@ if it's older than 90 days.
 The rotate works like so:
 1. Creation of a new AWS access key and secret key and printing them to screen.
 2. Disables the key which needs to be rotated
+
+# Script by Itai Ganot 2019, mailto: lel@lel.bz
 """
 
 import boto3
@@ -78,7 +80,7 @@ class User:
             keydate_delta = TodayDate_notz - CreateDate_notz
             td = timedelta(days=self.MaxKeyAge) - keydate_delta
             key_age = self.MaxKeyAge - td.days
-            print('TodayDate: {},\nCreation Date: {},\nLast Used: {}'
+            print('TodayDate: {}\nCreation Date: {}\nLast Used: {}'
                   '\nTime Delta (since creation): {}\nDays Delta '
                   '(since creation): {}'.format(
                 TodayDate_notz,
