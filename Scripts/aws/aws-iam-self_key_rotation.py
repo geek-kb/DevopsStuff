@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """This script checks current's user's AWS access key age and rotates it
 if it's older than 90 days.
-The rotate works like so:
+The rotatation process works like so:
 1. Creation of a new AWS access key and secret key and printing them to screen.
 2. Disables the key which needs to be rotated
 Exit codes:
