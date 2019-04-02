@@ -46,11 +46,11 @@ class User:
                                                          self.arn))
 
 
-    def create_access_key(self, username):
+    def create_access_key(self):
         # Creates a new access and secret key and prints them to STDOUT
         try:
             response = self.iam.create_access_key(
-                UserName=username
+                UserName=self.username
             )['AccessKey']
             print('New Access / Secret keys have been created!\nAccess Key: \
             {}\nSecret Key: {}'.format(response['AccessKeyId'],
@@ -79,13 +79,13 @@ class User:
         """Checks the age of a user's access keys and rotates them if
         equal or larger than the value set in MaxKeyAge
         """
-        self.Keys = []
+        Keys = []
         self.iam = boto3.client('iam')
         response = self.iam.list_access_keys()
-        [self.Keys.extend(AccessKeyMeta['AccessKeyId'] for AccessKeyMeta in
-          response['AccessKeyMetadata'])]
+        arr = [AccessKeyMeta['AccessKeyId'] for AccessKeyMeta in response[
+            'AccessKeyMetadata']]
 
-        for i, eachkey in enumerate(self.Keys):
+        for i, eachkey in enumerate(arr):
             print('--------======== key #{}: {} ========--------'.format(i + 1,
                                                                 eachkey))
             self.AccessKeyCreateDate = response['AccessKeyMetadata'][i][
@@ -127,23 +127,23 @@ class User:
                 self.create_access_key(self.username)
                 self.disable_access_key(self.username, eachkey)
 
-try:
-    iam = boto3.client('iam')
-    response = iam.get_user()
-    username = response['User']['UserName']
-    userid = response['User']['UserId']
-    arn = response['User']['Arn']
-    TodayDate = datetime.datetime.today()
-    MaxKeyAge = 90
-except ClientError as e:
-    if e.response['Error']['Code'] == 'InvalidClientTokenId':
-        print('Error: No AWS access key is configured or key is invalid')
-        sys.exit(1)
 
 def main(display, rotate):
     """Based on the arguments supplied, this function decides how to continue
     and also initializes the class.
     """
+    try:
+        iam = boto3.client('iam')
+        response = iam.get_user()
+        username = response['User']['UserName']
+        userid = response['User']['UserId']
+        arn = response['User']['Arn']
+        TodayDate = datetime.datetime.today()
+        MaxKeyAge = 90
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'InvalidClientTokenId':
+            print('Error: No AWS access key is configured or key is invalid')
+            sys.exit(1)
     current_user = User(iam,
                         response,
                         username,
