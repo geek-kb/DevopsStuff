@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ -z $1 ]; then
+	echo "Please supply a hostname in the convention of ip-1-1-1-1"
+	exit 1
+fi
+var=$1
+if [[ $var =~ ^ip-.* ]]; then
+	echo $var | sed -e 's/^ip-//g' | tr "-" "."
+else
+	echo $var | tr "-" "."
+fi
