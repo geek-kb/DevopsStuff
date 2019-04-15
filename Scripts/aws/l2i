@@ -1,7 +1,10 @@
 #!/bin/bash
 # This little script accepts AWS instance default hostname in the form of
 # ip-1-2-3-4 and returns it in a valid IP format [1.2.3.4].
+# Installation:
 # chmod u+x and place in /usr/local/bin
+# Usage:
+# l2i ip-1-2-3-4
 # Script by Itai Ganot, 2019
 
 if [ -z $1 ]; then
