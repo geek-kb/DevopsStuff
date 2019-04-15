@@ -1,6 +1,7 @@
 #!/bin/bash
 # This little script accepts AWS instance default hostname in the form of
 # ip-1-2-3-4 and returns it in a valid IP format [1.2.3.4].
+# If used on a MacOs, it also copies the valid IP to the local clipboard.
 # Installation:
 # chmod u+x and place in /usr/local/bin
 # Usage:
