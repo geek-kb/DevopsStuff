@@ -58,3 +58,4 @@ elif [[ $action = "delete" ]]; then
   pkill -u ${username}
   userdel -rf ${username}
   rm -rf ${ftphome}/${username}
+fi
