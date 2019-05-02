@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script by Itai Ganot 2019, lel@lel.bz
 function usage(){
-  echo "##########== Foretellix SFTP ==################"
+  echo "##########== Company SFTP ==################"
   echo "This script adds and configures a new sftp user"
   echo "$basename$0 -c [ACTION] Username"
   echo "Available actions:"
@@ -58,4 +58,3 @@ elif [[ $action = "delete" ]]; then
   pkill -u ${username}
   userdel -rf ${username}
   rm -rf ${ftphome}/${username}
-fi<Paste>
