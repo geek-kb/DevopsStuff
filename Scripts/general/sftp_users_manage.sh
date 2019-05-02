@@ -1,12 +1,14 @@
 #!/bin/bash
-# Script by Itai Ganot 2019, lel@lel.bz
+# Script by Itai Ganot, 2019. mailto: lel@lel.bz
 function usage(){
-  echo "##########== Company SFTP ==################"
-  echo "This script adds and configures a new sftp user"
-  echo "$basename$0 -c [ACTION] Username"
-  echo "Available actions:"
-  echo "create, delete"
-  echo "###############################################"
+  echo "#########== Company SFTP User Configuration ==#########"
+  echo "This script adds and configures a new sftp user           "
+  echo "-c          create                                        "
+  echo "-d          delete                                        "
+  echo "-w          create a writable directory in the user's home"
+  echo "Example:                                                  "
+  echo "$basename$0 -c Username                                   "
+  echo "##########################################################"
 }
 
 GREEN=$(tput setaf 2)
@@ -21,7 +23,8 @@ if [[ $# -lt 2 ]]; then
   exit 1
 fi
 
-while getopts "c:d:" opt; do
+writeable="false"
+while getopts "c:d:w" opt; do
   case ${opt} in
     c)
       username=$OPTARG
@@ -30,6 +33,9 @@ while getopts "c:d:" opt; do
     d)
       username=$OPTARG
       action="delete"
+    ;;
+    w)
+      writable="true"
     ;;
     *)
       usage
@@ -51,6 +57,12 @@ if [[ $action = "create" ]]; then
   chown -R root:root ${ftphome}/${username}/
   chmod go-w ${ftphome}/${username}
   mark "User ${username} with password ${userpassword} created successfully!"
+  if [[ $writable == "true" ]]; then
+    mkdir ${ftphome}/${username}/writable
+    chown ${username}:sftp ${ftphome}/${username}/writable
+    chmod ug+rwX ${ftphome}/${username}/writable
+    mark "Writable directory created for user ${username} in path: ${ftphome}/${username}/writable"
+  fi
   mark "After copying files to the users home folder ${ftphome}/${username}, run:"
   mark "chown ${username}:sftp ${ftphome}/${username}/file"
   exit 0
