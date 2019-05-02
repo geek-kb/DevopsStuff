@@ -52,7 +52,7 @@ if [[ $action = "create" ]]; then
   chmod go-w ${ftphome}/${username}
   mark "User ${username} with password ${userpassword} created successfully!"
   mark "After copying files to the users home folder ${ftphome}/${username}, run:"
-  mark "chown ${username}:sftp file/s"
+  mark "chown ${username}:sftp ${ftphome}/${username}/file"
   exit 0
 elif [[ $action = "delete" ]]; then
   pkill -u ${username}
