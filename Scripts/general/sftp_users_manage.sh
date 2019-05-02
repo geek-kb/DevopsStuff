@@ -48,7 +48,7 @@ done
 ftphome="/packages"
 
 if [[ $action = "create" ]]; then
-  userpassword=$(date | md5sum | awk '{print $1}' | cut -c1-10)
+  userpassword=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
   useradd -m -b ${ftphome} -g sftp -s /bin/false ${username}
   if [[ $? -ne "0" ]]; then
     echo "User creation failed!"
