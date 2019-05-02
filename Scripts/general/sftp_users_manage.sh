@@ -1,14 +1,15 @@
 #!/bin/bash
+# This script creates a chrooted sftp user in $ftphome
 # Script by Itai Ganot, 2019. mailto: lel@lel.bz
 function usage(){
-  echo "#########== Company SFTP User Configuration ==#########"
-  echo "This script adds and configures a new sftp user           "
-  echo "-c          create                                        "
-  echo "-d          delete                                        "
-  echo "-w          create a writable directory in the user's home"
-  echo "Example:                                                  "
-  echo "$basename$0 -c Username                                   "
-  echo "##########################################################"
+  echo "###########== Company SFTP User Configuration ==###########"
+  echo "This script adds and configures a new sftp user            "
+  echo "-c          create                                         "
+  echo "-d          delete                                         "
+  echo "-w          create a writable directory in the user's home "
+  echo "Example:                                                   "
+  echo "$basename$0 -c Username                                    "
+  echo "###########################################################"
 }
 
 GREEN=$(tput setaf 2)
