@@ -4,7 +4,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "helm_njs.name" . }} 
   labels:
     app.kubernetes.io/name: {{ include "helm_njs.name" . }}
     helm.sh/chart: {{ include "helm_njs.chart" . }}
