@@ -13,8 +13,10 @@ nameOverride: ""
 fullnameOverride: ""
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 8080
+
+env: {}  
 
 ingress:
   enabled: false
