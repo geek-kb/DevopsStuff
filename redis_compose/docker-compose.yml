@@ -1,0 +1,86 @@
+version: '3'
+services:
+  redis1:
+    image: redis:4
+    ports:
+      - "30001:30001"
+    volumes:
+      - ./docker-data/redis-cluster1.tmpl:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      app_net:
+        ipv4_address: 173.17.0.2
+  redis2:
+    image: redis:4
+    ports:
+      - "30002:30002"
+    volumes:
+      - ./docker-data/redis-cluster2.tmpl:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      app_net:
+        ipv4_address: 173.17.0.3
+  redis3:
+    image: redis:4
+    ports:
+      - "30003:30003"
+    volumes:
+      - ./docker-data/redis-cluster3.tmpl:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      app_net:
+        ipv4_address: 173.17.0.4
+  redis4:
+    image: redis:4
+    ports:
+      - "30004:30004"
+    volumes:
+      - ./docker-data/redis-cluster4.tmpl:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      app_net:
+        ipv4_address: 173.17.0.5
+  redis5:
+    image: redis:4
+    ports:
+      - "30005:30005"
+    volumes:
+      - ./docker-data/redis-cluster5.tmpl:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      app_net:
+        ipv4_address: 173.17.0.6
+  redis6:
+    image: redis:4
+    ports:
+      - "30006:30006"
+    volumes:
+      - ./docker-data/redis-cluster6.tmpl:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      app_net:
+        ipv4_address: 173.17.0.7
+  redis-cluster:
+    tty: true
+    build:
+      context: .
+      args:
+        redis_version: '4.0.1'
+    hostname: server
+    depends_on:
+      - redis1
+      - redis2
+      - redis3
+      - redis4
+      - redis5
+      - redis6
+    networks:
+      app_net:
+        ipv4_address: 173.17.0.8
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 173.17.0.0/16
