@@ -1,0 +1,59 @@
+1  cat /etc/*-release
+    2  cd
+    3  clear
+    4  yum install -y gcc make pcre-devel
+    5  wget http://apache.mivzakim.net//httpd/httpd-2.4.39.tar.gz
+    6  yum install wget
+    7  clear
+    8  wget http://apache.mivzakim.net//httpd/httpd-2.4.39.tar.gz
+    9  wget http://apache.spd.co.il//apr/apr-1.7.0.tar.gz
+   10  wget http://apache.spd.co.il//apr/apr-util-1.6.1.tar.gz
+   11  clear
+   12  ll
+   13  tar xvzf apr-1.7.0.tar.gz
+   14  tar xvzf apr-util-1.6.1.tar.gz
+   15  tar xvzf httpd-2.4.39.tar.gz
+   16  ll
+   17  clear
+   18  ll
+   19  mv apr-1.7.0 apr
+   20  mv apr-util-1.6.1 apr-utils
+   21  mv apr apr-util httpd-2.4.39/srclib/
+   22  mv apr httpd-2.4.39/srclib/
+   23  ll
+   24  mv apr-util httpd-2.4.39/srclib/
+   25  ll
+   26  mv apr-utils apr-util
+   27  mv apr-util httpd-2.4.39/srclib/
+   28  cd httpd-2.4.39
+   29  ll
+   30  clear
+   31  ll
+   32  clear
+   33  ./configure --with-included-apr
+   34  make
+   35  yum install expat
+   36  yum install autoconf expat-devel libtool libnghttp2-devel pcre-devel -y
+   37  ./configure
+   38  make
+   39  make install
+   40  service httpd start
+   41  sysctl start httpd
+   42  ll
+   43  cd build
+   44  cd ../
+   45  ll
+   46  ./httpd
+   47  yum install -y vim
+   48  clear
+   49  vim /etc/hosts
+   50  hostname
+   51  vim /etc/hosts
+   52  ./httpd
+   53  ps -ef | grep httpd
+   54  netstat -plunt
+   55  yum install netstat
+   56  yum provides */netstat
+   57  yum install net-tools
+   58  netstat -plunt
+   59  history
