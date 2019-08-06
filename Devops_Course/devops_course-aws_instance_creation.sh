@@ -76,8 +76,44 @@ function createKeyPair() {
 	green "KeyPair ${kp} created and saved in ~/.ssh/${kp}.pem!"
 }
 
+function createMysqlUserData() {
+	cat <<EOF > /tmp/mysql.txt
+yum update -y
+yum install -y mariadb-server
+systemctl start mariadb
+systemctl enable mariadb
+EOF
+}
+
+function createHttpdUserData() {
+	cat <<EOF > /tmp/httpd.txt
+yum update -y
+yum install -y httpd
+systemctl start httpd
+systemctl enable httpd
+EOF
+}
+
+function createNginxUserData() {
+	cat <<EOF > /tmp/nginx.txt
+yum update -y
+amazon-linux-extras install nginx1.12
+systemctl start nginx
+systemctl enable nginx
+EOF
+}
+
+yellow "Please select security group to attach to the new instance"
 select sgid in $(listSecGroups); do
 	sgi=$(echo ${sgid} | awk -F: '{print $2}')
+	break
+done
+
+yellow "Please select a role for the new instance"
+select role in 'mysql' 'httpd' 'nginx'; do
+	chosenrole=${role}
+	break
+done
 
 	checkKeyPairs
 	if [[ $? -eq 0 ]]; then
@@ -89,4 +125,3 @@ select sgid in $(listSecGroups); do
 		launchNewInstance
 		exit 0
 	fi
-done
