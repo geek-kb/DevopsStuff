@@ -11,7 +11,10 @@ fi
 
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
+YELLOW=`tput setaf 3`
 NOCOLOR=`tput sgr0`
+instancetype="t2.micro"
+snid='subnet-04387a60'
 
 function red() {
 	echo -e -n "$RED $* $NOCOLOR\n"
@@ -19,6 +22,10 @@ function red() {
 
 function green() {
 	echo -e -n "$GREEN $* $NOCOLOR\n"
+}
+
+function yellow() {
+	echo -e -n "$YELLOW $* $NOCOLOR\n"
 }
 
 while getopts "k:p:" opt; do
@@ -33,8 +40,6 @@ while getopts "k:p:" opt; do
 	esac
 done
 
-sn='subnet-04387a60'
-
 function listSecGroups() {
 	aws ec2 describe-security-groups --profile $profile | jq -r '.SecurityGroups[] | "\(.GroupName):\(.GroupId)"'
 }
@@ -44,14 +49,24 @@ function checkKeyPairs() {
 }
 
 function launchNewInstance() {
-	rand=$((RANDOM))
-	aws ec2 run-instances --image-id ami-0b898040803850657 --count 1 --instance-type t2.micro --key-name ${kp} --security-group-ids ${sgi} --subnet-id ${sn} --profile ${profile} > /tmp/$rand.json
-	if [[ $? -eq 0 ]]; then
-		green "Instance has been created successfully!"
-		instanceid=$(cat /tmp/$rand.json | jq -r '.Instances[].InstanceId')
-		green "Instance Id: $instanceid"
+	yellow "A new instance with the following details is about to be created:"
+	yellow "Instance Type: ${instancetype}"
+	yellow "Security Group Id: ${sgi}"
+	yellow "Subnet Id: ${snid}"
+	read -r -p "Please approve by entering 'yes' or cancel by entering 'no' " answer
+	if [[ $answer = 'yes' ]]; then
+		rand=$((RANDOM))
+		aws ec2 run-instances --image-id ami-0b898040803850657 --count 1 --instance-type ${instancetype} --key-name ${kp} --security-group-ids ${sgi} --subnet-id ${snid} --profile ${profile} > /tmp/$rand.json
+		if [[ $? -eq 0 ]]; then
+			green "Instance has been created successfully!"
+			instanceid=$(cat /tmp/$rand.json | jq -r '.Instances[].InstanceId')
+			green "Instance Id: $instanceid"
+		else
+			red "Failed creating instance!"
+		fi
 	else
-		red "Failed creating instance!"
+		echo "User chose to cancel!"
+		exit 0
 	fi
 }
 
