@@ -9,10 +9,10 @@ if [[ $# -lt 4 ]]; then
 	exit 1
 fi
 
-RED=`tput setaf 1`
-GREEN=`tput setaf 2`
-YELLOW=`tput setaf 3`
-NOCOLOR=`tput sgr0`
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+NOCOLOR=$(tput sgr0)
 instancetype="t2.micro"
 snid='subnet-04387a60'
 
