@@ -1,0 +1,14 @@
+Write a CloudFormation template that creates a stack which of the following resources:
+- VPC with CIDR 172.20.0.0/16
+- 3 Subnets of size /20 covering 3 availability zones, for example:
+172.20.0.0/20 on us-east-1
+172.20.16.0/20 on us-east-2
+172.20.32.0/20 on us-west-1
+- A Security Group which opens SSH and HTTP ports to the world.
+- An Internet Gateway
+- An EC2 Instance.
+* Optional:
+Configure a UserData script in the EC2 Instance resource in CloudFormation so it will install Apache (like we did in one of the lessons)
+
+Don't forget to use all available online resources such as Google, AWS official documentation and my CloudFormation template example: 
+https://github.com/geek-kb/DevopsStuff/blob/master/CloudFormation/CloudFormation_example_v5.template
