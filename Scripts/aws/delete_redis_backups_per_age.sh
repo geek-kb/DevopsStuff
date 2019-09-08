@@ -116,8 +116,7 @@ while getopts "n:" opt; do
 done
 
 createFileList
-#for line in $(tac /tmp/${dbName}.txt ); do
-for line in $(tac /tmp/rofbbb ); do
+for line in $(tac /tmp/${dbName}.txt ); do
   cutDate
   dateDiff
   findFilesToDelete
