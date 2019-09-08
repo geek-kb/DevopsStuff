@@ -1,0 +1,37 @@
+{
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "create ec2 instance",
+	"Parameters" : {
+    "KeyPair" : {
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+			"Default" : "iiaa"
+    },
+		"Region" : {
+			"Type" : "String",
+			"Default" : "us-east-1",
+			"AllowedValues" : [ "us-east-1", "us-east-2", "us-west-1" ]
+		}
+  },
+	"Mappings" : {
+		"AmiMap" : {
+			"us-east-1" : { "amiid" : "ami-0b69ea66ff7391e80" },
+			"us-east-2" : { "amiid" : "ami-00c03f7f7f2ec15c3" },
+			"us-west-1" : { "amiid" : "ami-0245d318c6788de52" }
+		}
+	},
+	"Resources" : {
+		"EC2Instance" : {
+			"Type" : "AWS::EC2::Instance",
+		  "Properties" : {
+		      "ImageId" :  { "Fn::FindInMap" : [ "AmiMap", { "Ref" : "Region" }, "amiid" ] },
+		      "InstanceType" : "t2.micro"
+		    }
+		}
+	},
+  "Outputs" : {
+		"InstancePrivateIPAddress" : {
+			"Value" : { "Fn::GetAtt" : [ "EC2Instance", "PrivateIp" ] },
+			"Description" : "private ip address of the instance"
+	}
+}
+}
