@@ -4,6 +4,8 @@
 # hour per those days and deleting the rest of the backups of each day.
 # The script matches the following naming convension:
 # bk20190903-150002-2-CompanyDB-NEW-54_of_100-208-8684-8846.rdb.gz
+# This script uses a tool called ddiff which can be downloaded from here:
+# https://bitbucket.org/hroptatyr/dateutils/downloads/dateutils-0.4.6.tar.xz
 
 todayDate=$(date +'%Y-%m-%d')
 runTime=$(date +'%H:%M:%S')
