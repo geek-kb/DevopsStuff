@@ -1,0 +1,115 @@
+{
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "aa",
+
+	"Parameters" : {
+    "KeyPair" : {
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "Description" : "Select script version"
+    }
+  },
+  "Resources" : {
+    "VPC": {
+      "Type" : "AWS::EC2::VPC",
+      "Description" : "Choose which VPC the security groups should be deployed to",
+      "Properties" : {
+        "CidrBlock" : "172.20.0.0/16",
+        "EnableDnsSupport" : "true",
+        "EnableDnsHostnames" : "true",
+        "InstanceTenancy" : "default"
+      }
+    },
+
+    "SubnetOne": {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : {
+        "Fn::Select" : [
+          "0",
+          {
+            "Fn::GetAZs" : ""
+          }
+          ]
+        },
+				"CidrBlock" : "172.20.0.0/20",
+				"MapPublicIpOnLaunch" : "true",
+				"VpcId" : { "Ref" : "VPC" }
+			}
+		},
+
+    "SubnetTwo": {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : {
+        "Fn::Select" : [
+          "1",
+          {
+            "Fn::GetAZs" : ""
+          }
+          ]
+        },
+				"CidrBlock" : "172.20.16.0/20",
+				"MapPublicIpOnLaunch" : "true",
+				"VpcId" : { "Ref" : "VPC" }
+			}
+		},
+
+    "SubnetThree": {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : {
+        "Fn::Select" : [
+          "2",
+          {
+            "Fn::GetAZs" : ""
+          }
+          ]
+        },
+				"CidrBlock" : "172.20.32.0/20",
+				"MapPublicIpOnLaunch" : "true",
+				"VpcId" : { "Ref" : "VPC" }
+			}
+		},
+
+    "SecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "devops course security group",
+				"VpcId" : { "Ref" : "VPC" },
+				"SecurityGroupIngress" : [
+				{ "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} },
+				{ "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]} }
+				]
+			}
+		},
+
+    "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway"
+    },
+
+    "VPCGatewayAttachment" : {
+			"Type" : "AWS::EC2::VPCGatewayAttachment",
+			"Properties" : {
+				"VpcId" : { "Ref" : "VPC" },
+				"InternetGatewayId" : { "Ref" : "InternetGateway" }
+			}
+		},
+
+    "MyEC2Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "ImageId" : "ami-0b69ea66ff7391e80",
+        "KeyName" : { "Ref" : "KeyPair" },
+        "UserData" : {
+  				"Fn::Base64" : {
+  					"Fn::Join" : ["\n", [
+  						"#!/bin/bash -x",
+  						"sudo yum install -y httpd ; sudo systemctl enable httpd ; sudo systemctl start httpd"
+              ]]
+          }
+        }
+      }
+    }
+  }
+}
+
