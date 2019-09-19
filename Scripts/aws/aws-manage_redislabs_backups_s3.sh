@@ -1,8 +1,10 @@
 #!/bin/bash
-# This script runs through a given directory in s3 redis backups bucket, finds
-# all backups older than 14 days and earlier than 90 days, keeps backups of one
-# hour per those days and deleting the rest of the backups of each day.
-# The script matches the following naming convension:
+# This script runs through a given directory in an s3 redislabs backups bucket
+# where Versioning is enabled. It finds all backups older than 14 days and
+# earlier than 90 days, keeps backups of one hour per each day and deleting
+# the rest of the backups of that day including all previous versions of each
+# file and their Latest versions.
+# The script matches the following naming convention:
 # bk20190903-150002-2-CompanyDB-NEW-54_of_100-208-8684-8846.rdb.gz
 
 todayDate=$(date +'%Y-%m-%d')
@@ -95,15 +97,15 @@ function findFilesToDelete(){
   if [[ $dateDiff -gt 14 && $dateDiff -lt 90 ]]; then
     echo "Date difference is between 14 and 90 days!"
     if [[ ! $line =~ ^bk${somedate}-${chosenBackupHour}.* ]]; then
-      echo "Deleting file $line"
+      echo "Deleting file $line..."
       aws s3 rm s3://${bucketName}/${database}/${line}
       lineDeleteMarkerVersionIds=$(aws s3api list-object-versions --bucket ${bucketName} --prefix ${database}/${line} --output json --query 'DeleteMarkers[].VersionId' | jq -r '.[]')
       echo "Deleting all versions of file ${line}"
       for delMarkerVerId in $(echo $lineDeleteMarkerVersionIds); do
-        echo "Deleting DeleteMarker of file ${line} with VersionId ${delMarkerVerId}"
+        echo "Deleting DeleteMarker of file ${line} with VersionId ${delMarkerVerId}..."
         aws s3api delete-object --bucket ${bucketName} --key ${database}/${line} --version-id ${delMarkerVerId}
       done
-      echo "Deleting Latest version of file ${line}"
+      echo "Deleting Latest version of file ${line}..."
       latestVersion=$(aws s3api list-object-versions --bucket ${bucketName} --prefix ${database}/${line} --output json --query 'Versions[].VersionId' | jq -r '.[]')
       aws s3api delete-object --bucket ${bucketName} --key ${database}/${line} --version-id ${latestVersion}
     else
