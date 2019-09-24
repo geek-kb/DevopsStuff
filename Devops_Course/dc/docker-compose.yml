@@ -1,0 +1,21 @@
+version: '2'
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - '1234:80'
+    networks:
+      - test
+  mysql:
+    image: mysql:5.6
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - '3306:3306'
+    networks:
+      - test
+
+networks:
+  test:
