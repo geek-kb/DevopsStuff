@@ -3,7 +3,7 @@ Write a CloudFormation template that creates a stack which of the following reso
 - 3 Subnets of size /20 covering 3 availability zones, for example:
 172.20.0.0/20 on us-east-1a
 172.20.16.0/20 on us-east-1b
-172.20.32.0/20 on us-west-1c
+172.20.32.0/20 on us-east-1c
 - A Security Group which opens SSH and HTTP ports to the world.
 - An Internet Gateway
 - An EC2 Instance.
