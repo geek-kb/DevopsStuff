@@ -1,0 +1,59 @@
+---
+- hosts: nodes
+  become: true
+  tasks:
+    - name: apt-get update
+      apt:
+        update-cache: yes
+      changed_when: 0
+      when: ansible_os_family == 'Debian'
+
+    - name: ensure mysql is installed
+      apt: pkg={{ item }} state=latest
+      with_items:
+        - mysql-server
+        - apache2
+      when: ansible_os_family == 'Debian'
+
+    - name: ensure httpd is installed
+      yum: name=httpd state=latest
+      when: ansible_os_family == 'RedHat'
+
+    - name: start mysql service
+      service: name=mysql state=started
+      when: ansible_os_family == 'Debian'
+
+    - name: start httpd service
+      service: name=httpd state=restarted
+      when: ansible_os_family == 'RedHat'
+
+    - name: include
+      include_vars:
+        file: name_vars.yml
+        name: stuff
+
+    - name: set fact
+      set_fact: test=true
+
+    - name: delete default index.html
+      file: path=/var/www/html/index.html state=absent
+
+    - name: create text file
+      lineinfile:
+        path: /var/www/html/index.html
+        line: "first name: {{ stuff.my_first_name }}\nlast name: {{ stuff.my_last_name}}\nmy age: {{ stuff.my_age }}"
+        create: yes
+
+    - name: Print some debug information 
+      vars:
+        msg: |
+          Module Variables ("vars"):
+          --------------------------------
+          {{ stuff }}
+      debug:
+        msg: "{{ msg.split('\n') }}"
+
+  handlers:
+    - name: restart apache2
+      service: name=apache2 state=restarted
+
