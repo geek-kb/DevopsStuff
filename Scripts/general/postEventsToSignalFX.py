@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # This script expects three arguments to be passed to it:
 # timestamp, elastic group names, status text
+# Script by Itai Ganot 
 import boto3
 from botocore.exceptions import ClientError
 import datetime
