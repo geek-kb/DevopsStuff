@@ -1,0 +1,10 @@
+beautifulsoup4==4.8.1
+certifi==2019.9.11
+chardet==3.0.4
+google==2.0.2
+idna==2.8
+pyasn1==0.4.7
+pyasn1-modules==0.2.7
+requests==2.22.0
+soupsieve==1.9.5
+urllib3==1.25.6

@@ -1,0 +1,9 @@
+../../../../bin/google
+../googlesearch/__init__.py
+../googlesearch/__pycache__/__init__.cpython-37.pyc
+../googlesearch/user_agents.txt.gz
+PKG-INFO
+SOURCES.txt
+dependency_links.txt
+requires.txt
+top_level.txt

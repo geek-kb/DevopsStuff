@@ -1,0 +1,37 @@
+Metadata-Version: 1.1
+Name: google
+Version: 2.0.2
+Summary: Python bindings to the Google search engine.
+Home-page: http://breakingcode.wordpress.com/
+Author: Mario Vilas
+Author-email: mvilas@gmail.com
+License: UNKNOWN
+Description: googlesearch
+        ============
+        
+        Google search from Python.
+        
+        https://python-googlesearch.readthedocs.io/en/latest/
+        
+        Usage example
+        -------------
+        
+            # Get the first 20 hits for: "Breaking Code" WordPress blog
+            from googlesearch import search
+            for url in search('"Breaking Code" WordPress blog', stop=20):
+                print(url)
+        
+        Installing
+        ----------
+        
+            pip install google
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Environment :: Console
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires: beautifulsoup4
+Provides: googlesearch

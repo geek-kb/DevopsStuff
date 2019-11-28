@@ -1,0 +1,43 @@
+Metadata-Version: 2.1
+Name: temp
+Version: 2019.4.13
+Summary: UNKNOWN
+Home-page: https://github.com/looking-for-a-job/temp.py
+License: UNKNOWN
+Description: <!--
+        https://pypi.org/project/readme-generator/
+        https://pypi.org/project/python-readme-generator/
+        -->
+        
+        [![](https://img.shields.io/pypi/pyversions/temp.svg?longCache=True)](https://pypi.org/project/temp/)
+        
+        #### Installation
+        ```bash
+        $ [sudo] pip install temp
+        ```
+        
+        #### Functions
+        function|`__doc__`
+        -|-
+        `temp.tempdir()` |create temp dir and return path
+        `temp.tempfile()` |create temp file and return path
+        
+        #### Examples
+        ```python
+        >>> import temp
+        >>> temp.tempdir() # dir
+        '/var/folders/rv/gy6_gnfs1d7_pd1518p27tsr0000gn/T/tmpqlLDxb'
+        
+        >>> temp.tempfile() # file
+        '/var/folders/rv/gy6_gnfs1d7_pd1518p27tsr0000gn/T/tmpsctFHJ'
+        
+        >>> temp.TMPDIR
+        '/var/folders/rv/gy6_gnfs1d7_pd1518p27tsr0000gn/T'
+        ```
+        
+        <p align="center">
+            <a href="https://pypi.org/project/python-readme-generator/">python-readme-generator</a>
+        </p>
+Keywords: temp tempdir tempfile
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
