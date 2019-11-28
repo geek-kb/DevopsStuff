@@ -8,8 +8,6 @@ import base64
 import signalfx
 import pytz
 import argparse
-import time
-from tzlocal import get_localzone
 
 signalfxSecretName = 'prod/signalfx/token'
 
@@ -17,7 +15,7 @@ signalfxSecretName = 'prod/signalfx/token'
 def parseTime(timestamp):
     IST = pytz.timezone('Asia/Jerusalem')
     userPassedTS = datetime.datetime.strptime(timestamp, '%Y-%m-%d:%H:%M:%S')
-    time_no_ts = datetime.datetime.timestamp(get_localzone().localize(userPassedTS).astimezone(IST))
+    time_no_ts = datetime.datetime.timestamp(userPassedTS.astimezone(IST))
     timeStamp = int(time_no_ts) * 1000
     return timeStamp
 
@@ -77,15 +75,14 @@ def userTimeToTimestamp(usersTime):
     return timeStamp
 
 
-def postRequestSignalFX(eventTime, elasticGroups, status):
+def postRequestSignalFX(eventTime, elasticGroups):
     sfToken = str(SIGNALFX_TOKEN).split(":")[1][:-1].strip("\"")
     with signalfx.SignalFx().ingest(sfToken) as sfx:
         try:
             sfx.send_event(
-                event_type='Deployment of:',
+                event_type='Deployment',
                 dimensions={
-                    'name': elasticGroups,
-                    'status': status
+                    'name': elasticGroups
                 },
                 timestamp=eventTime
             )
@@ -100,14 +97,10 @@ if __name__ == '__main__':
                         '--elasticgroups',
                         help='affected elasticgroups',
                         required=True)
-    parser.add_argument('-s',
-                        '--status',
-                        help='status',
-                        required=True)
     parser.add_argument('-t',
                         '--timestamp',
                         help='Timestamp',
                         required=True)
     args = parser.parse_args()
     timeStamp = parseTime(args.timestamp)
-    postRequestSignalFX(timeStamp, args.elasticgroups, args.status)
+    postRequestSignalFX(timeStamp, args.elasticgroups)
