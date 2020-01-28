@@ -47,6 +47,23 @@ def installSshpass(file):
     echo {} | sudo -S make install
     '''.format(sshpass_version, passwd))
 
+def sshConfig(ip_list):
+    print colored('Now configuring your {}/.ssh/config file'.format(home), 'green')
+    with open(home+'/.ssh/config', 'a+') as file:
+        for ip in ip_list:
+            file.write("Host {}\nUser {}\nHostName {}\nStrictHostKeyChecking=no\n".format(ip, user, ip))
+            file.write('\n')
+
+def sshCopyId(ip_list, password):
+    for ip in ip_list:
+        print colored('#######################################################', 'yellow')
+        print colored('Copying your personal key to ip: {}'.format(ip), 'green')
+        os.system('sshpass -p {} ssh-copy-id -f {}'.format(password, ip))
+
+def cleanGarbage():
+    os.system('rm -f {}/{}'.format(home, sshpass_filename))
+    os.system('rm -rf sshpass-{}'.format(sshpass_version))
+
 def main():
     cmd = 'which sshpass > /dev/null 2>&1'
     try:
@@ -64,23 +81,6 @@ def main():
         sshConfig(ip_list)
         sshCopyId(ip_list, password)
         cleanGarbage()
-
-def sshConfig(ip_list):
-    print colored('Now configuring your {}/.ssh/config file'.format(home), 'green')
-    with open(home+'/.ssh/config', 'a+') as file:
-        for ip in ip_list:
-            file.write("Host {}\nUser {}\nHostName {}\nStrictHostKeyChecking=no\n".format(ip, user, ip))
-            file.write('\n')
-
-def sshCopyId(ip_list, password):
-    for ip in ip_list:
-        print colored('#######################################################', 'yellow')
-        print colored('Copying your personal key to ip: {}'.format(ip), 'green')
-        os.system('sshpass -p {} ssh-copy-id -f {}'.format(password, ip))
-
-def cleanGarbage():
-    os.system('rm -f {}/{}'.format(home, sshpass_filename))
-    os.system('rm -rf sshpass-{}'.format(sshpass_version))
 
 # Code
 if __name__ == '__main__':
