@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 
 # Imports
-from os.path import expanduser
+from os.path import expanduser, isfile
 import subprocess
 import tarfile
 import urllib2
@@ -23,8 +23,9 @@ dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
 
 # Functions
 def backupSshConfig():
-    print colored('Backing up your ssh config file', 'green')
-    os.system('cp {}/.ssh/config {}/.ssh/config.bak_{}'.format(home, home, dt_string))
+    if isfile('{}/.ssh/config'.format(home)):
+        print colored('Backing up your ssh config file', 'green')
+        os.system('cp {}/.ssh/config {}/.ssh/config.bak_{}'.format(home, home, dt_string))
 
 def downloadSshpass(url):
     filedata = urllib2.urlopen(url)
