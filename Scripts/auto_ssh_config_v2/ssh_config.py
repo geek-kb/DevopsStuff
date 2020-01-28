@@ -48,7 +48,7 @@ def installSshpass(file):
     '''.format(sshpass_version, passwd))
 
 def checkSshpassInstalled():
-    cmd = 'which sshpass'
+    cmd = 'which sshpass > /dev/null 2>&1'
     try:
         subprocess.check_call(cmd, shell=True)
         print colored('sshpass is installed!', 'green')
