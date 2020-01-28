@@ -47,7 +47,7 @@ def installSshpass(file):
     echo {} | sudo -S make install
     '''.format(sshpass_version, passwd))
 
-def checkSshpassInstalled():
+def main():
     cmd = 'which sshpass > /dev/null 2>&1'
     try:
         subprocess.check_call(cmd, shell=True)
@@ -84,4 +84,4 @@ def cleanGarbage():
 
 # Code
 if __name__ == '__main__':
-    checkSshpassInstalled()
+    main()
