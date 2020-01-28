@@ -11,6 +11,7 @@ from datetime import datetime
 from termcolor2 import colored
 
 # Variables
+user = 'root'
 password = 'PASSWORD'
 home = expanduser("~")
 sshpass_version = '1.05'
@@ -67,7 +68,7 @@ def sshConfig(ip_list):
     print colored('Now configuring your {}/.ssh/config file'.format(home), 'green')
     with open(home+'/.ssh/config', 'a+') as file:
         for ip in ip_list:
-            file.write("Host {}\nUser root\nHostName {}\nStrictHostKeyChecking=no\n".format(ip, ip))
+            file.write("Host {}\nUser {}\nHostName {}\nStrictHostKeyChecking=no\n".format(ip, user, ip))
             file.write('\n')
 
 def sshCopyId(ip_list, password):
