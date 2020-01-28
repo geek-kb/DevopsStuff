@@ -1,7 +1,8 @@
 ## SSH auto configuration tool for passworded machine
 
 
-This tool runs through a list of ip's, delimited by comma and generates a .ssh/config block for each server.
+This tool runs through a list of IP addresses (needs to be edited in the code),
+delimited by commas and generates a .ssh/config block for each server.
 
 In the next step, it ssh's to each machine and copies the local ssh public key to each one of the machines.
 
