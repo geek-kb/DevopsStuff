@@ -1,4 +1,5 @@
 #!/usr/bin/python2
+# Script by Itai Ganot 2020
 
 # Imports
 from os.path import expanduser, isfile
