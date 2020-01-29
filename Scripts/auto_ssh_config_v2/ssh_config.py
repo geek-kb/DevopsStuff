@@ -51,7 +51,7 @@ def sshConfig(ip_list):
     print colored('Now configuring your {}/.ssh/config file'.format(home), 'green')
     with open(home+'/.ssh/config', 'a+') as file:
         for ip in ip_list:
-            file.write("Host {}\nUser {}\nHostName {}\nStrictHostKeyChecking=no\n".format(ip, user, ip))
+            file.write("Host {}\nUser {}\nHostName {}\nStrictHostKeyChecking=no\nConnectTimeout=1\n".format(ip, user, ip))
             file.write('\n')
 
 def sshCopyId(ip_list, password):
