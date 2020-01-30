@@ -12,7 +12,7 @@ from datetime import datetime
 from termcolor2 import colored
 
 # Variables
-user = 'root'
+user = 'USERNAME'
 password = 'PASSWORD'
 home = expanduser("~")
 sshpass_version = '1.05'
@@ -27,6 +27,8 @@ def backupSshConfig():
     if isfile('{}/.ssh/config'.format(home)):
         print colored('Backing up your ssh config file', 'green')
         os.system('cp {}/.ssh/config {}/.ssh/config.bak_{}'.format(home, home, dt_string))
+    else:
+        print colored('No configuration file found, not performing backup', 'yellow')
 
 def downloadSshpass(url):
     filedata = urllib2.urlopen(url)
@@ -37,9 +39,8 @@ def downloadSshpass(url):
 def installSshpass(file):
     print colored('In order to install sshpass your laptop user password is required, please enter it now', 'yellow')
     passwd = getpass.getpass()
-    tar = tarfile.open(file, "r:gz")
-    tar.extractall()
-    tar.close()
+    with tarfile.open(file, "r:gz") as tar:
+        tar.extractall()
     print colored('Now installing sshpass!', 'yellow')
     os.system('''
     cd sshpass-{}
@@ -70,18 +71,15 @@ def main():
     try:
         subprocess.check_call(cmd, shell=True)
         print colored('sshpass is installed!', 'green')
-        backupSshConfig()
-        sshConfig(ip_list)
-        sshCopyId(ip_list, password)
-        cleanGarbage()
     except subprocess.CalledProcessError as e:
         print colored('sshpass not installed! installing...', 'red')
         downloadSshpass(url)
         installSshpass(home+'/'+sshpass_filename)
-        backupSshConfig()
-        sshConfig(ip_list)
-        sshCopyId(ip_list, password)
-        cleanGarbage()
+
+    backupSshConfig()
+    sshConfig(ip_list)
+    sshCopyId(ip_list, password)
+    cleanGarbage()
 
 # Code
 if __name__ == '__main__':
