@@ -31,10 +31,9 @@ def backupSshConfig():
         print colored('No configuration file found, not performing backup', 'yellow')
 
 def downloadSshpass(url):
-    filedata = urllib2.urlopen(url)
-    datatowrite = filedata.read()
     with open(home+'/'+sshpass_filename, 'wb') as file:
-        file.write(datatowrite)
+       with urllib2.urlopen(url) as filedata:
+              file.write(filedata.read())
 
 def installSshpass(file):
     print colored('In order to install sshpass your laptop user password is required, please enter it now', 'yellow')
