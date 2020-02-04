@@ -1,0 +1,47 @@
+---
+# tasks file for vault-client
+
+- name: check if vault is installed
+  stat: path="{{ vault.config.binpath }}/vault"
+  register: vault_installed
+
+- name: verify unzip is installed
+  stat: path=/usr/bin/unzip
+  register: unzip_installed
+
+- name: install unzip on mac os
+  homebrew:
+    name: unzip
+    state: present
+  when: ansible_os_family == "Darwin" and not unzip_installed.stat.exists
+
+- name: install unzip on centos
+  yum:
+    name: unzip
+    state: present
+  when: ansible_os_family == "RedHat" and not unzip_installed.stat.exists
+
+- name: download and configure vault client
+  block:
+    - name: download vault
+      get_url:
+        url: "https://releases.hashicorp.com/vault/{{ vault.config.version }}/vault_{{ vault.config.version }}_{{ ansible_system |lower}}_amd64.zip"
+        dest: "/tmp/vault_{{ vault.config.version }}_{{ ansible_os_family |lower }}_amd64.zip"
+
+    - name: unzip
+      command: "unzip -o /tmp/vault_{{ vault.config.version }}_{{ ansible_os_family |lower}}_amd64.zip -d /tmp/"
+
+    - name: move vault binary file to "{{ vault.config.binpath }}"
+      copy:
+        src: /tmp/vault
+        dest: "{{ vault.config.binpath }}/vault"
+        mode: '0744'
+
+    - name: remove vault installation file
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "/tmp/vault_{{ vault.config.version }}_{{ ansible_os_family |lower }}_amd64.zip"
+        - /tmp/vault
+  when: not vault_installed.stat.exists

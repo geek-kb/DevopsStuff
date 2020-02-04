@@ -1,0 +1,20 @@
+---
+# tasks file for common
+- name: python installation on centos 6 machines
+  block:
+  - import_tasks: python2_centos6.yml
+  - import_tasks: python3_centos6.yml
+  when: ansible_distribution_major_version == "6"
+- import_tasks: python.yml
+  when: ansible_distribution_major_version == "7"
+- import_tasks: pip.yml
+- import_tasks: pip_packages.yml
+- import_tasks: repo.yml
+- import_tasks: yum.yml
+- import_tasks: selinux.yml
+- import_tasks: firewalld.yml
+- import_tasks: base_packages.yml
+- import_tasks: ansible.yml
+- import_tasks: time.yml
+- import_tasks: locale.yml
+- import_tasks: vim.yml

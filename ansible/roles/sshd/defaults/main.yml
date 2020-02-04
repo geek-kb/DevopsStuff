@@ -1,0 +1,4 @@
+---
+# defaults file for sshd
+git:
+  devops_repo_url: "git@bitbucket.org:company/devops.git"

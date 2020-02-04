@@ -1,0 +1,50 @@
+---
+
+- name: check if chrony is configured
+  shell: grep "{{ chrony.time_server }}" /etc/chrony.conf
+  register: chrony_configured_result
+  ignore_errors: yes
+  tags: check_chrony
+
+- name: check if ntpd is configured
+  shell: grep server "{{ chrony.time_server }}" /etc/ntp.conf
+  register: ntpd_configured_result
+  ignore_errors: yes
+
+- name: Install and configure chrony
+  block:
+    - name: install chrony
+      yum:
+        name: chrony
+        state: latest
+    - name: configure chrony
+      template: src=chrony.conf.j2 dest=/etc/chrony.conf
+    - name: systemctl system-reload
+      systemd:
+        name: chronyd
+        enabled: yes
+        daemon_reload: yes
+        state: restarted
+      when: ansible_distribution_major_version == "7"
+    - name: restart service
+      service:
+        name: chronyd
+        state: restarted
+      when: ansible_distribution_major_version == "6"
+  when: chrony_configured_result.rc != 0 and ntpd_configured_result.rc != 0
+  tags: common.configure_chrony
+
+- name: configure ntp
+  block:
+  - name: copy ntpd configuration
+    template: src=ntp.conf.j2 dest=/etc/ntp.conf
+  - name: restart service
+    service:
+      name: ntpd
+      enabled: yes
+      state: restarted
+  when: ntpd_configured_result.rc != 0 and chrony_configured_result.rc != 0
+  tags: common.configure_ntpd
+
+
+

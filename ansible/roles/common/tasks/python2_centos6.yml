@@ -1,0 +1,37 @@
+---
+
+- name: verify python2.7 is installed
+  stat: path=/usr/local/bin/python2.7
+  register: python27_result
+
+- name: compile python2.7 from source
+  block:
+  - name: install dependencies
+    yum:
+      name: "{{ packages }}"
+      state: latest
+    vars:
+      packages:
+        - gcc
+        - openssl-devel
+        - bzip2-devel
+  - name: download python2.7
+    get_url:
+      url: https://www.python.org/ftp/python/2.7.16/Python-2.7.16.tgz
+      dest: /usr/src
+  - name: unarchive python2.7
+    unarchive:
+      src: /usr/src/Python-2.7.16.tgz
+      dest: /usr/src
+      remote_src: yes
+  - name: configure and install python2.7
+    command: "{{ item }}"
+    with_items:
+      cd /usr/src/Python-2.7.16
+      ./configure --enable-optimizations
+      make altinstall
+  - name: backup original python2 binary
+    command: mv /usr/bin/python{,.orig}
+  - name: link python2.7 to python
+    command: ln -s /usr/loca/bin/python2.7 /usr/bin/python
+  when: not python27_result.stat.exists

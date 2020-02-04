@@ -1,0 +1,11 @@
+[Unit]
+Description="HashiCorp Consul - A service mesh solution"
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c '/usr/local/bin/consul agent -bind {{ ansible_default_ipv4.address }} -dev -config-dir={{ consul.conf_dir }}'
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target

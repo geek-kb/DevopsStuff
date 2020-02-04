@@ -1,0 +1,7 @@
+---
+# handlers file for consul-client
+- name: restart consul-client
+  service: name=consul-client
+
+- name: restart network
+  service: name=network

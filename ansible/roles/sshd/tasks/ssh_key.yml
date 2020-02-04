@@ -1,0 +1,69 @@
+---
+
+- name: configure ssh key with access to devops repository
+  block:
+    - name: verify .ssh folder exists
+      file:
+        name: "{{ ansible_user_dir }}/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: copy ssh private key to local machine
+      copy:
+        src: "{{ role_path }}/files/ansible_id_rsa"
+        dest: "{{ ansible_user_dir }}/.ssh/ansible_id_rsa"
+        mode: '0400'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+
+    - name: copy ssh public key to local machine
+      copy:
+        src: "{{ role_path }}/files/ansible_id_rsa.pub"
+        dest: "{{ ansible_user_dir }}/.ssh/ansible_id_rsa.pub"
+        mode: '0600'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+  tags: ssh_for_devops_repo
+
+- name: add git config
+  lineinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    line: export GIT_SSH_COMMAND="ssh -i ~/.ssh/ansible_id_rsa -F /dev/null -o StrictHostKeyChecking=no"
+    insertafter: EOF
+    state: present
+
+- name: configure "{{ ansible_user_dir }}/.ssh/config"
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.ssh/config"
+    block: |
+      Host bitbucket.org
+        HostName bitbucket.org
+        IdentityFile ~/.ssh/ansible_id_rsa
+        StrictHostKeyChecking=no
+        User git
+    insertafter: EOF
+    state: present
+    create: yes
+
+- name: run ssh-agent
+  shell: eval $(ssh-agent -s)
+
+- name: add ssh key on CentOS 6 machines
+  shell: "ssh-agent ssh-add {{ ansible_user_dir }}/.ssh/ansible_id_rsa"
+  when: ansible_distribution_major_version == "6"
+
+- name: add ssh key on CentOS 7 machines
+  shell: "ssh-agent ssh-add -k {{ ansible_user_dir }}/.ssh/ansible_id_rsa"
+  when: ansible_distribution_major_version == "7"
+
+- name: configure git
+  shell: git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: source ~/.bashrc
+  shell: . "{{ ansible_user_dir }}/.bashrc"
+
+- name: clone devops repo
+  git:
+    repo: "{{ git.devops_repo_url }}"
+    dest: /root/devops
+    clone: yes

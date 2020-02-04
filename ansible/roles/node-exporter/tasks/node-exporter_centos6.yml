@@ -1,0 +1,40 @@
+---
+
+- name: check if node-exporter is installed
+  stat: path=/etc/init.d/node-exporter
+  register: ne_result
+
+- name: install and configure node-exporter on centos 6
+  block:
+  - name: download node-exporter tarball
+    get_url:
+      url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+      dest: "/tmp/node_exporter-{{ node_exporter_version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+  - name: untar node-exporter tarball
+    unarchive:
+      src: "/tmp/node_exporter-{{ node_exporter_version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+      dest: /tmp
+      remote_src: yes
+  - name: move node-exporter bin to /usr/local/bin
+    shell: "mv /tmp/node_exporter-{{ node_exporter_version }}.{{ ansible_system |lower }}-amd64/node_exporter /usr/local/bin/node_exporter"
+  - name: configure node-exporter
+    template:
+      src: node-exporter.initd.j2
+      dest: /etc/init.d/node-exporter
+      owner: root
+      group: root
+      mode: '0700'
+  - name: configure node-exporter service
+    service:
+      name: node-exporter
+      enabled: yes
+      state: restarted
+  - name: remove tmp files
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - /tmp/node-exporter
+      - "/tmp/node_exporter-{{ node_exporter_version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+  when: not ne_result.stat.exists
+  tags: node-exporter.install_configure_centos6

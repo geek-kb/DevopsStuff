@@ -1,0 +1,11 @@
+---
+# defaults file for common
+chrony:
+  time_server: x.x.x.x
+repo:
+  epel_repo_gpg_key_url: "http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}"
+  epel_repofile_path: "/etc/yum.repos.d/epel.repo"
+  docker_repo_url: "http://download.docker.com/linux/centos/docker-ce.repo"
+  docker_repofile_path: "/etc/yum.repos.d/docker_ce.repo"
+locale:
+  fix_script: "/etc/profile.d/fix_locale.sh"

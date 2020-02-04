@@ -1,0 +1,31 @@
+---
+
+- name: configure and install consul-client centos 7
+  block:
+  - name: check if consul-client service exists
+    stat: path=/etc/systemd/system/consul-client.service
+    register: consul_client_systemd_service
+  - name: install and configure consul-client c7
+    block:
+    - import_tasks: nic.yml
+    - import_tasks: install_consul_client_centos7.yml
+    - import_tasks: iptables.yml
+    - import_tasks: dns_c7.yml
+    when: not consul_client_systemd_service.stat.exists
+    tags: consul-client.centos7_all
+  when: ansible_distribution_major_version == "7"
+
+- name: configure and install consul-client centos 6
+  block:
+  - name: check if consul-client service exists
+    stat: path=/etc/init.d/consul-client
+    register: consul_client_initd_service
+  - name: install and configure consul-client c6
+    block:
+    - import_tasks: nic.yml
+    - import_tasks: install_consul_client_centos6.yml
+    - import_tasks: iptables.yml
+    - import_tasks: dns_c6.yml
+    when: not consul_client_initd_service.stat.exists
+    tags: consul-client.centos6_all
+  when: ansible_distribution_major_version == "6"

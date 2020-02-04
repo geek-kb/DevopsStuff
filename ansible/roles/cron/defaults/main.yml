@@ -1,0 +1,5 @@
+---
+# defaults file for cron
+
+cron_scripts_path: "/root"
+devops_repo_path: "/root/devops"

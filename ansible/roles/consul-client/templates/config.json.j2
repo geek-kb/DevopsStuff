@@ -1,0 +1,15 @@
+{
+    "server": false,
+    "datacenter": "{{ consul_datacenter }}",
+    "data_dir": "{{ consul_var_dir }}",
+    "encrypt": "{{ consul_encrypt_token }}",
+    "log_level": "INFO",
+    "enable_syslog": true,
+    "leave_on_terminate": true,
+    "start_join": [
+      "{{ consul_server_address }}"
+    ],
+    "recursors":[
+      "{{ dns_server_address }}"
+    ]
+}

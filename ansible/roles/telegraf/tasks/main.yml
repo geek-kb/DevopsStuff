@@ -1,0 +1,23 @@
+---
+# tasks file for telegraf
+
+- name: install telegraf
+  block:
+    - name: create repo file
+      copy:
+        src: "{{ role_path }}/files/influxdb.repo"
+        dest: /etc/yum.repos.d/influxdb.repo
+        mode: '0644'
+
+    - name: install telegraf
+      yum:
+        name: telegraf
+        state: latest
+
+    - name: enable and start telegraf service
+      systemd:
+        name: telegraf
+        enabled: yes
+        state: started
+  tags: install_telegraf
+

@@ -1,0 +1,31 @@
+---
+# tasks file for prometheus
+
+- name: prometheus dir
+  file:
+    path: "{{ prometheus_conf_dir }}"
+    state: directory
+
+- name: prometheus config file
+  copy:
+    src: "{{ role_path }}/files/prometheus.yml"
+    dest: "{{ prometheus_conf_dir }}/prometheus.yml"
+    mode: '0644'
+
+- name: pull prometheus image
+  docker_image:
+    name: "{{ prometheus_image_name }}"
+    source: pull
+
+- name: prometheus container
+  docker_container:
+    name: prom
+    image: "{{ prometheus_image_name }}:latest"
+    state: started
+    ports:
+      - "9090:9090"
+    volumes:
+      - "{{ prometheus_conf_dir }}/prometheus.yml:{{ prometheus_conf_dir }}/prometheus.yml"
+    detach: yes
+
+

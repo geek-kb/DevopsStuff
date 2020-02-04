@@ -1,0 +1,39 @@
+---
+
+- name: verify python36u is absent
+  yum:
+    name: python36u
+    state: absent
+
+- name: install python on centos 7
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - python
+      - python3
+
+- name: check if pip is installed
+  stat: path=/usr/bin/pip
+  register: stat_pip_result
+
+- name: check if docker for python is installed
+  shell: python -c "import docker"
+  register: import_docker_result
+  ignore_errors: yes
+
+- name: download pip
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: /tmp/get-pip.py
+    mode: '0700'
+  when: not stat_pip_result.stat.exists
+
+- name: install pip
+  command: python3 /tmp/get-pip.py
+  when: not stat_pip_result.stat.exists
+
+- name: install docker for python
+  pip:
+    name: docker
+  when: import_docker_result.rc != 0

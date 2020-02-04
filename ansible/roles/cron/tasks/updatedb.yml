@@ -1,0 +1,9 @@
+---
+
+- name: update mlocate cache db
+  cron:
+    name: "run updatedb"
+    minute: "0"
+    hour: "6"
+    job: "updatedb"
+

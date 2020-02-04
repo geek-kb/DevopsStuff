@@ -1,0 +1,28 @@
+---
+
+- name: check if EPEL repo is already configured
+  stat: path={{ repo.epel_repofile_path }}
+  register: epel_repofile_result
+
+- name: check if docker repo is already configured
+  stat: path={{ repo.docker_repofile_path }}
+  register: docker_repofile_result
+
+- name: import EPEL GPG key
+  rpm_key:
+    key: "{{ repo.epel_repo_gpg_key_url }}"
+    state: present
+  when: not epel_repofile_result.stat.exists
+
+- name: add epel repository
+  yum:
+    name: epel-release
+    state: present
+  when: not epel_repofile_result.stat.exists
+
+- name: add docker.ce repository
+  get_url:
+    url: "{{ repo.docker_repo_url }}"
+    dest: /etc/yum.repos.d/docker_ce.repo
+  when: not docker_repofile_result.stat.exists and ansible_distribution_major_version == "7"
+

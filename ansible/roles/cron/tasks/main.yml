@@ -1,0 +1,16 @@
+---
+# tasks file for cron
+- name: configure cron
+  block:
+  - name: verify server is a jenkins slave
+    shell: echo "{{ ansible_hostname }}" | grep '^slave'
+    register: jenkins_slave_result
+    ignore_errors: yes
+  - name: verify cleanslave script exists
+    stat: path="{{ cron_scripts_path }}/cleanslave.sh"
+    register: cleanslave_result
+  - import_tasks: cleanslave.yml
+    when: jenkins_slave_result.rc == 0 and not cleanslave_result.stat.exists
+  - import_tasks: devops_git.yml
+  - import_tasks: run_ansible.yml
+  tags: cron.configure

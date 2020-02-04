@@ -1,0 +1,5 @@
+---
+# defaults file for prometheus
+prometheus_image_name: "prom/prometheus"
+prometheus_conf_dir: "/etc/prometheus"
+domain_name: "company.com"

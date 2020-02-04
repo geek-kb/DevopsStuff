@@ -1,0 +1,21 @@
+---
+# defaults file for consul-server
+consul:
+  version: "1.6.2"
+  user: "consul"
+  group: "consul"
+  conf_dir: "/etc/consul.d"
+server_config:
+  server: true
+  bootstrap_expect: 0
+  ui: true
+consul_config:
+  datacenter: "company"
+  data_dir: "/var/consul"
+  encrypt: "Pg8KYJJKZF/wHQJQKCOsGK8/Q1nqsGNQeL1OXUaEWdA="
+  bind_addr: "0.0.0.0"
+  client_addr: "0.0.0.0"
+  raft_multiplier: 1
+  recursors:
+    first: "x.x.x.x"
+    second: "8.8.8.8"

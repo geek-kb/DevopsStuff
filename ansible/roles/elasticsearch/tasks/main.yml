@@ -1,0 +1,19 @@
+---
+# tasks file for elasticsearch
+
+- name: pull elasticsearch image
+  docker_image:
+    name: "{{ elasticsearch_image_name }}:{{ elasticsearch_image_tag }}"
+    source: pull
+
+- name: elasticsearch container
+  docker_container:
+    name: elasticsearch
+    image: "{{ elasticsearch_image_name }}:{{ elasticsearch_image_tag }}"
+    state: started
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    env:
+      discovery.type: "single-node"
+    detach: yes

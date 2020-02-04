@@ -1,0 +1,25 @@
+---
+
+- name: add docker repo and install docker
+  block:
+  - name: verify old docker is absent
+    yum:
+      name:
+        - docker-client
+        - docker-common
+        - docker
+      state: absent
+  - name: install docker
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+  - name: verify docker is running
+    systemd:
+      name: docker
+      enabled: yes
+      state: restarted
+  tags: node-exporter.download_install_docker

@@ -1,0 +1,3 @@
+---
+# tasks file for consul-server
+- include_tasks: install_consul_server.yml
