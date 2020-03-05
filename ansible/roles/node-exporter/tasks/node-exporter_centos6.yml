@@ -1,0 +1,80 @@
+---
+
+- name: check if node-exporter is installed
+  stat: path=/etc/init.d/node-exporter
+  register: ne_result
+
+- name: install and configure node-exporter on centos 6
+  block:
+  - name: download node-exporter tarball
+    get_url:
+      url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter.version }}/node_exporter-{{ node_exporter.version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+      dest: "/tmp/node_exporter-{{ node_exporter.version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+  - name: untar node-exporter tarball
+    unarchive:
+      src: "/tmp/node_exporter-{{ node_exporter.version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+      dest: /tmp
+      remote_src: yes
+  - name: move node-exporter bin to "{{ node_exporter.bin_path }}"
+    shell: "mv /tmp/node_exporter-{{ node_exporter.version }}.{{ ansible_system |lower }}-amd64/node_exporter {{ node_exporter.bin_path }}/node_exporter"
+  - name: configure node-exporter
+    template:
+      src: node-exporter.initd.j2
+      dest: /etc/init.d/node-exporter
+      owner: root
+      group: root
+      mode: '0700'
+  - name: create node_exporter group
+    group:
+      name: "{{ node_exporter.group }}"
+      state: present
+  - name: create node_exporter user
+    user:
+      name: "{{ node_exporter.user }}"
+      group: "{{ node_exporter.group }}"
+      create_home: no
+      state: present
+  - name: configure node-exporter service
+    service:
+      name: node-exporter
+      enabled: yes
+      state: restarted
+  - name: register in consul
+    uri:
+      url: "{{ consul.api_address }}"
+      method: PUT
+      body: '{ "id": "{{ ansible_hostname }}", "name": "node_exporter", "address": "{{ ansible_hostname }}.node.{{ consul.domain }}", "port": {{ node_exporter.port }}, "tags": [ "{{ ansible_hostname }}"] }'
+      body_format: json
+    notify:
+      - restart node-exporter service
+      - restart consul-client service
+  - name: remove tmp files
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - /tmp/node-exporter
+      - "/tmp/node_exporter-{{ node_exporter.version }}.{{ ansible_system |lower }}-amd64.tar.gz"
+  - name: configure cron watchdog script
+    block:
+      - name: create "{{ misc.cron_scripts_path }}"
+        file:
+          path: "{{ misc.cron_scripts_path }}"
+          owner: root
+          group: root
+          mode: '0644'
+          state: directory
+      - name: copy watchdog script
+        copy:
+          src: "{{ role_path}}/files/node-exporter_watchdog_c6"
+          dest: "{{ misc.cron_scripts_path }}/node-exporter_watchdog_c6"
+          owner: root
+          group: root
+          mode: '0755'
+      - name: configure cron
+        cron:
+          name: "node-exporter watchdog script"
+          minute: "*/1"
+          job: "{{ misc.cron_scripts_path }}/node-exporter_watchdog_c6"
+  when: not ne_result.stat.exists
+  tags: node-exporter.install_configure_centos6

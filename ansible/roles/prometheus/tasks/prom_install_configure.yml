@@ -1,0 +1,84 @@
+---
+
+- name: install and configure prometheus
+  block:
+    - name: download prometheus
+      get_url:
+        url: "{{ prometheus_meta.download_url }}/{{ prometheus_meta.filename }}"
+        dest: /tmp
+        checksum: sha256:{{ prometheus_meta.installer_checksum }}
+    - name: unarchive tarball
+      unarchive:
+        src: "/tmp/{{ prometheus_meta.filename }}"
+        dest: /tmp
+        remote_src: yes
+    - name: configure prometheus
+      block:
+        - name: create prometheus user
+          user:
+            name: "{{ prometheus.user }}"
+            shell: /bin/false
+            create_home: false
+        - name: "copy prometheus and promtool to {{ prometheus.bin_dir }}"
+          copy:
+            src: "{{ item }}"
+            dest: "{{ prometheus.bin_dir }}"
+            remote_src: yes
+            owner: "{{ prometheus.user }}"
+            group: "{{ prometheus.group }}"
+            mode: '0755'
+          with_items:
+            - "/tmp/{{ prometheus_meta.extracted_name }}/prometheus"
+            - "/tmp/{{ prometheus_meta.extracted_name }}/promtool"
+        - name: copy consoles directory
+          copy:
+            src: "{{ item }}"
+            dest: "{{ prometheus.etc_dir }}"
+            remote_src: yes
+          with_items:
+            - "/tmp/{{ prometheus_meta.extracted_name }}/consoles"
+            - "/tmp/{{ prometheus_meta.extracted_name }}/console_libraries"
+        - name: ensure directories have correct permissions
+          file:
+            path: "{{ item }}"
+            state: directory
+            owner: "{{ prometheus.user }}"
+            group: "{{ prometheus.group }}"
+            recurse: yes
+          with_items:
+            - "{{ prometheus.var_dir }}"
+            - "{{ prometheus.etc_dir }}"
+        - name: configure prometheus.yml
+          template:
+            src: prometheus.yml.j2
+            dest: "{{ prometheus.etc_dir }}/prometheus.yml"
+            owner: "{{ prometheus.user }}"
+            group: "{{ prometheus.group }}"
+            mode: '0644'
+        - name: configure prometheus service file
+          template:
+            src: prometheus.service.j2
+            dest: "{{ prometheus.systemd_path }}/prometheus.service"
+            owner: root
+            group: root
+            mode: '0644'
+        - name: configure prometheus service
+          systemd:
+            name: prometheus
+            daemon_reload: yes
+            enabled: yes
+            state: restarted
+        - name: register in consul
+          uri:
+            url: "{{ consul.api_url }}"
+            method: PUT
+            body: '{ "id": "prometheus", "name": "prometheus", "address": "prometheus.{{ misc.company_domain }}", "port": {{ prometheus.port }}, "tags": [ "{{ ansible_hostname }}"] }'
+            body_format: json
+    - name: clean garbage
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "/tmp/{{ prometheus_meta.extracted_name }}"
+        - "/tmp/{{ prometheus_meta.filename }}"
+  tags: prometheus.install_configure

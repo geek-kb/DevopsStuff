@@ -1,0 +1,76 @@
+global:
+  scrape_interval:     10s
+  evaluation_interval: 30s
+
+scrape_configs:
+  #- job_name: 'jenkins-automation'
+  #  metrics_path: '/prometheus/'
+  #  scheme: https
+  #  tls_config:
+  #    insecure_skip_verify: true
+  #  bearer_token: <INSERT TOKEN HERE>
+  #  static_configs:
+  #      - targets: ['jenkins-automation.company.com']
+    # The Prometheus metrics plugin exposes metrics with the "job" label which are transformed into "exported_job".
+    # Turn them into "jenkins_job" instead.
+    #metric_relabel_configs:
+    #- action: replace
+    #sss  source_labels: [exported_job]
+    #  target_label: jenkins_job
+    #- action: labeldrop
+    #  regex: exported_job
+
+  - job_name: 'jenkins-master'
+    metrics_path: '/prometheus/'
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
+    bearer_token: <INSERT TOKEN HERE>
+    static_configs:
+    - targets: ['{{ conf.jenkins_url }}']
+
+    # The Prometheus metrics plugin exposes metrics with the "job" label which are transformed into "exported_job".
+    # Turn them into "jenkins_job" instead.
+    #metric_relabel_configs:
+    #- action: replace
+    #  source_labels: [exported_job]
+    #  target_label: jenkins_job
+    #- action: labeldrop
+    #  regex: exported_job
+  #- job_name: 'artifactory_exporter'
+  #  scrape_interval: 5s
+  #  static_configs:
+  #    - targets: ['kib-devops-01:9600']
+  #- job_name: 'consul_exporter'
+  #  scrape_interval: 5s
+  #  static_configs:
+  #    - targets: ['192.168.1.182:9100']
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    consul_sd_configs:
+    - server: '{{ consul.server_ip }}:{{ consul.server_port }}'
+    relabel_configs:
+    - source_labels: [__meta_consul_service_id]
+      target_label: 'instance'
+    - source_labels: [__meta_consul_service]
+      regex: 'consul'
+      action: drop
+    - source_labels: [__meta_consul_service_port]
+      regex: '9107'
+      action: drop
+    - source_labels: [__meta_consul_service_port]
+      regex: '8200'
+      action: drop
+    - source_labels: [__meta_consul_service]
+      regex: 'alertmanager'
+      action: drop
+
+rule_files:
+  - 'alertmanager/alerts.yml'
+
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets:
+      - "{{ alertmanager.server_ip }}:{{ alertmanager.server_port }}"

@@ -1,0 +1,93 @@
+---
+
+- name: install and configure alertmanager
+  block:
+    - name: download alertmanager
+      get_url:
+        url: "{{ alertmanager_meta.download_url }}/{{ alertmanager_meta.filename }}"
+        dest: /tmp
+        checksum: sha256:{{ alertmanager_meta.installer_checksum }}
+    - name: unarchive tarball
+      unarchive:
+        src: "/tmp/{{ alertmanager_meta.filename }}"
+        dest: /tmp
+        remote_src: yes
+    - name: configure alertmanager
+      block:
+        - name: create alertmanager user
+          user:
+            name: "{{ alertmanager.user }}"
+            shell: /bin/false
+            create_home: false
+        - name: "copy alertmanager and amtool to {{ alertmanager.bin_dir }}"
+          copy:
+            src: "{{ item }}"
+            dest: "{{ alertmanager.bin_dir }}"
+            remote_src: yes
+            owner: "{{ alertmanager.user }}"
+            group: "{{ alertmanager.group }}"
+            mode: '0755'
+          with_items:
+            - "/tmp/{{ alertmanager_meta.extracted_name }}/alertmanager"
+            - "/tmp/{{ alertmanager_meta.extracted_name }}/amtool"
+        - name: ensure directories have correct permissions
+          file:
+            path: "{{ item }}"
+            state: directory
+            owner: "{{ alertmanager.user }}"
+            group: "{{ alertmanager.group }}"
+            recurse: yes
+          with_items:
+            - "{{ alertmanager.var_dir }}"
+            - "{{ alertmanager.etc_dir }}"
+            - "{{ alertmanager.tmpl_dir }}"
+        - name: configure alertmanager.yml
+          template:
+            src: alertmanager.yml.j2
+            dest: "{{ alertmanager.etc_dir }}/alertmanager.yml"
+            owner: "{{ alertmanager.user }}"
+            group: "{{ alertmanager.group }}"
+            mode: '0644'
+        - name: configure alertmanager service file
+          template:
+            src: alertmanager.service.j2
+            dest: "{{ alertmanager.systemd_path }}/alertmanager.service"
+            owner: root
+            group: root
+            mode: '0644'
+        - name: copy alerts configuration to "{{ alertmanager.etc_dir }}"
+          copy:
+            path: "{{ role_path }}/files/alerts.yml"
+            dest: "{{ alertmanager.etc_dir }}/alerts.yml"
+            remote_src: yes
+            owner: "{{ alertmanager.user }}"
+            group: "{{ alertmanager.group }}"
+            mode: '0644'
+        - name: copy notifications templates to "{{ alertmanager.tmpl_dir }}"
+          copy:
+            path: "{{ role_path }}/files/notifictions.tmpl"
+            dest: "{{ alertmanager.tmpl_dir }}/notifictions.tmpl"
+            remote_src: yes
+            owner: "{{ alertmanager.user }}"
+            group: "{{ alertmanager.group }}"
+            mode: '0644'
+        - name: configure alertmanager service
+          systemd:
+            name: alertmanager
+            daemon_reload: yes
+            enabled: yes
+            state: restarted
+        - name: register in consul
+          uri:
+            url: "{{ consul.api_url }}"
+            method: PUT
+            body: '{ "id": "alertmanager", "name": "alertmanager", "address": "alertmanager.{{ misc.company_domain }}", "port": {{ alertmanager.port }}, "tags": [ "{{ ansible_hostname }}"] }'
+            body_format: json
+    - name: clean garbage
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "/tmp/{{ alertmanager_meta.extracted_name }}"
+        - "/tmp/{{ alertmanager_meta.filename }}"
+  tags: alertmanager.install_configure

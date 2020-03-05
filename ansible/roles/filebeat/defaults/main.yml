@@ -1,0 +1,11 @@
+---
+# defaults file for filebeat
+filebeat:
+  version: "7.5.2"
+config:
+  kibana:
+    host: "10.100.10.71:5601"
+  elasticsearch:
+    host: "10.100.10.72:9200"
+  logging_level: "debug"
+

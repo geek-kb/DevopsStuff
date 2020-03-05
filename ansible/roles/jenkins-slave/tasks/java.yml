@@ -1,0 +1,36 @@
+---
+
+- name: install and configure java for company
+  block:
+  - name: install java {{ versions.java }}
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+        - java-{{ versions.java }}-openjdk
+        - java-{{ versions.java }}-openjdk-devel
+  - name: find new java home
+    shell: find /usr/lib/jvm -name "java-{{ versions.java }}-openjdk.x86_64"
+    register: java_home_result
+  - debug: msg="{{ java_home_result }}"
+  - name: create a symlink for company java home
+    file:
+      src: "{{ java_home_result.stdout }}"
+      dest: "{{ java.home }}"
+      owner: "{{ config.user }}"
+      group: "{{ config.group }}"
+      state: link
+  - name: create a symlink for company java home at devenv
+    file:
+      src: "{{ java.home }}"
+      dest: "{{ company.company_path }}/java"
+      owner: "{{ config.user }}"
+      group: "{{ config.group }}"
+      state: link
+  - name: add export JAVA_HOME to /etc/profile
+    lineinfile:
+      path: /etc/profile
+      line: 'export JAVA_HOME="{{ java.home }}"'
+      state: present
+      insertafter: EOF
+  tags: jenkins-slave.dl_conf_java

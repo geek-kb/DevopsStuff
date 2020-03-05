@@ -1,0 +1,77 @@
+---
+
+- name: Install required packages
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - "@Development tools"
+    - pam-devel
+    - libcurl
+    - libcurl-devel
+    - audit-libs
+    - dos2unix
+    - elfutils-libelf
+    - glibc
+    - keyutils-libs
+    - libgcc
+    - libselinux
+    - libstdc++
+    - nss-softokn-freebl
+    - pam-1.1.1
+    - firefox
+    - screen
+    - htop
+    - rpm-build
+    - redhat-rpm-config
+    - gcc-c++
+    - net-snmp
+    - net-snmp-utils
+    - net-snmp-libs
+    - bzip2-libs
+    - bzip2
+    - httpd
+    - php
+    - mod_ssl
+    - libselinux-python
+    - ca-certificates
+    - cronie
+    - openssh-server
+    - zlib-devel
+    - perl-devel
+    - tcl
+    - gettext
+    - xorg-x11-xauth
+    - libXtst
+    - libXext
+    - samba
+    - samba-client
+    - samba-common
+    - stunnel
+    - sudo
+    - zip
+    - unzip
+    - acl
+    - screen
+    - vim
+    - bc
+    - yum-utils
+    - libxslt
+    - compat-glibc
+    - compat-glibc-headers
+    - npm
+    - bash-completion
+    - dbus
+
+- name: Install required packages i686
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - glibc-devel.i686
+    - libcurl.i686
+    - zlib.i686
+    - elfutils-libs.i686
+    - pam.i686
+    - keyutils-libs.i686
+    - libstdc++.i686

@@ -1,0 +1,37 @@
+---
+# defaults file for jenkins-slave
+
+config:
+  repos_dir: "/etc/yum.repos.d"
+  user: "root"
+  group: "root"
+  password: "PASSWORD"
+  nameserver1: "192.168.1.88"
+  nameserver2: "192.168.1.68"
+  search_domain: "company.com"
+java:
+  home: "/usr/java/company_java_home"
+mongodb:
+  mongodb_tarball: "mongo-10gen-{{ versions.mongodb }}-mongodb_1.x86_64.rpm"
+  mongosrv_tarball: "mongo-10gen-server-{{ versions.mongodb }}-mongodb_1.x86_64.rpm"
+git:
+  source_url: "https://www.kernel.org/pub/software/scm/git/"
+  file_name: "git-{{ versions.git }}.tar.gz"
+company:
+  mirror_url: "http://mirror.company.com/mrepo/files/rpms/mongo/"
+  artifactory_url: "https://artifactory-prod.company.com/artifactory/generic-repo/"
+  company_path: "/opt/devenv/company"
+  jenkins_url: "https://jenkins-master-rnd.company.com"
+postgres:
+  repo_rpm_url: "http://yum.postgresql.org/{{ versions.postgres }}/redhat/rhel-6-x86_64/pgdg-centos{{ versions.postgres|replace('.','') }}-{{ versions.postgres }}-3.noarch.rpm"
+node:
+  nvm_dl_url: "https://raw.githubusercontent.com/creationix/nvm/v{{ versions.node }}/install.sh"
+misc:
+  bash_it_repo: "https://github.com/Bash-it/bash-it.git"
+  bash_it_dir: "{{ ansible_user_dir }}/.bash_it"
+versions:
+  java: "1.8.0"
+  mongodb: "2.4.14"
+  git: "2.22.0"
+  postgres: "9.4"
+  node: "0.34.0"

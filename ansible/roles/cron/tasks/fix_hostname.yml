@@ -1,0 +1,16 @@
+---
+# tasks file for cron
+- name: configure fix_hostname script in cron
+  block:
+  - name: copy script to its folder
+    template:
+      src: fix_hostname.j2
+      dest: "{{ cron_scripts_path }}/fix_hostname"
+      owner: root
+      group: root
+      mode: '0700'
+  - name: configure fix_hostname cron job
+    cron:
+      name: "fix_hostname"
+      minute: "*/5"
+      job: "{{ cron_scripts_path }}/fix_hostname &>/dev/null"

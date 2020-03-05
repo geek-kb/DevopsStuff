@@ -1,0 +1,69 @@
+[slc6-scl]
+name=Scientific Linux CERN (SLC6) - SCL addons
+baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/x86_64/yum/scl/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
+#uncomment next line if installing on a distribution different than SLC6
+gpgkey=http://linuxsoft.cern.ch/cern/scl/RPM-GPG-KEY-cern
+gpgcheck=1
+enabled=1
+protect=1
+
+[slc6-scl-i686]
+name=Scientific Linux CERN (SLC6) - SCL addons i386
+baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/i386/yum/scl/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
+#uncomment next line if installing on a distribution different than SLC6
+gpgkey=http://linuxsoft.cern.ch/cern/scl/RPM-GPG-KEY-cern
+gpgcheck=1
+enabled=1
+protect=1
+
+[slc6-scl-source]
+name=Scientific Linux CERN (SLC6) - SCL addons - source
+baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/asearch/yum/scl-source/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
+#uncomment next line if installing on a distribution different than SLC6
+gpgkey=http://linuxsoft.cern.ch/cern/scl/RPM-GPG-KEY-cern
+gpgcheck=1
+enabled=0
+protect=1
+
+[slc6-scl-debug]
+name=Scientific Linux CERN (SLC6) - SCL addons - debug
+baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/asearch/yum/scl-debug/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
+#uncomment next line if installing on a distribution different than SLC6
+gpgkey=http://linuxsoft.cern.ch/cern/scl/RPM-GPG-KEY-cern
+gpgcheck=1
+enabled=0
+protect=1
+
+[slc6-scl-testing]
+name=Scientific Linux CERN (SLC6) - SCL addons testing
+baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/testing/asearch/yum/scl-testing/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
+#uncomment next line if installing on a distribution different than SLC6
+gpgkey=http://linuxsoft.cern.ch/cern/scl/RPM-GPG-KEY-cern
+gpgcheck=1
+enabled=0
+protect=1
+
+[slc6-scl-testing-source]
+name=Scientific Linux CERN (SLC6) - SCL addons - testing source
+baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/testing/asearch/yum/scl-testing-source/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
+#uncomment next line if installing on a distribution different than SLC6
+gpgkey=http://linuxsoft.cern.ch/cern/scl/RPM-GPG-KEY-cern
+gpgcheck=1
+enabled=0
+protect=1
+
+[slc6-scl-testing-debug]
+name=Scientific Linux CERN (SLC6) - SCL addons - testing debug
+baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/testing/asearch/yum/scl-testing-debug/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
+#uncomment next line if installing on a distribution different than SLC6
+gpgkey=http://linuxsoft.cern.ch/cern/scl/RPM-GPG-KEY-cern
+gpgcheck=1
+enabled=0
+protect=1

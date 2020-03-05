@@ -1,0 +1,34 @@
+---
+
+- name: check if locale is configured
+  stat: path="{{ locale.fix_script }}"
+  register: locale_stat_result
+
+- name: configure locale
+  block:
+  - name: create fix_locale script
+    file:
+      path: "{{ locale.fix_script }}"
+      state: touch
+
+  - name: configure machine language and locale
+    blockinfile:
+      path: /etc/environment
+      block: |
+        LANG=en_US.UTF-8
+        LANGUAGE=en_US.UTF-8
+        LC_COLLATE=C
+        LC_CTYPE=en_US.UTF-8
+
+  - name: affect locale on current session
+    blockinfile:
+      path: "{{ locale.fix_script }}"
+      block: |
+        LANG=en_US.UTF-8
+        LANGUAGE=en_US.UTF-8
+        LC_COLLATE=C
+        LC_CTYPE=en_US.UTF-8
+
+  - name: run locale fix file
+    shell: source "{{ locale.fix_script }}"
+  when: not locale_stat_result.stat.exists

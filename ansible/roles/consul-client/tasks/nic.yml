@@ -1,0 +1,24 @@
+---
+
+- name: count nics
+  shell: find /etc/sysconfig/network-scripts/ -type f -name ifcfg-\* | grep -v "lo\|ens32" | awk -F- '{print $3}' | wc -l
+  register: count_nics_result
+  ignore_errors: yes
+
+- name: get other nics name
+  shell: find /etc/sysconfig/network-scripts/ -type f -name ifcfg-\* | grep -v "lo\|ens32" | awk -F- '{print $3}'
+  register: other_nic_name_result
+  ignore_errors: yes
+  #- debug:
+  #    msg: find /etc/sysconfig/network-scripts/ -type f -name ifcfg-\* | grep -v "lo\|{{ ansible_default_ipv4.alias }}" | awk -F- '{print $3}' | wc -l
+  #
+  #- debug:
+  #    msg: "{{ count_nics_result.stdout }}"
+
+- name: set unused nic to "onboot=no"
+  replace:
+    path: "/etc/sysconfig/network-scripts/ifcfg-{{ other_nic_name_result.stdout }}"
+    replace: 'ONBOOT=no'
+    regexp: '^ONBOOT=yes'
+  when: count_nics_result.stdout|int > 0
+

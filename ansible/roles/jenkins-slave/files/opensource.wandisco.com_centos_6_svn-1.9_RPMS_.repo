@@ -1,0 +1,6 @@
+
+[opensource.wandisco.com_centos_6_svn-1.9_RPMS_]
+name=added from: http://opensource.wandisco.com/centos/6/svn-1.9/RPMS/
+baseurl=http://opensource.wandisco.com/centos/6/svn-1.9/RPMS/
+enabled=1
+

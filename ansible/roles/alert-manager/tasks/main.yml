@@ -1,0 +1,17 @@
+---
+# tasks file for alertmanager
+
+- name: check if alertmanager is installed
+  shell: which alertmanager
+  register: which_alertmanager_result
+  ignore_errors: yes
+
+- name: check if alertmanager is configured
+  stat: path="{{ alertmanager.systemd_path }}/alertmanager.service"
+  register: stat_alertmanager_service_result
+  ignore_errors: yes
+
+- name: install alertmanager
+  import_tasks: alertmanager_install_configure.yml
+  when: which_alertmanager_result.rc != 0 or not stat_alertmanager_service_result.stat.exists
+

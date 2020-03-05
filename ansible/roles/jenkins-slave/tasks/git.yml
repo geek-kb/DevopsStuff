@@ -1,0 +1,19 @@
+---
+
+- name: remove current git installation
+  yum:
+    name: git
+    state: absent
+
+- name: download and compile git
+  shell: |
+      mkdir /tmp/git-source
+      cd /tmp/git-source
+      wget --no-check-certificate --secure-protocol=TLSv1 "{{ git.source_url }}/{{ git.file_name }}"
+      tar xvzf "{{ git.file_name }}"
+      rm -f "{{ git.file_name }}"
+      cd git-*
+      ./configure
+      make prefix=/usr/local all
+      make prefix=/usr/local install
+      exit 0

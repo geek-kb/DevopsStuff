@@ -1,0 +1,44 @@
+---
+
+- name: verify Centos-Base repo is enabled
+  command: sed -i '12,47{s/^enabled=0/enabled=1/g}' /etc/yum.repos.d/CentOS-Base.repo
+
+- name: install centos-release repo
+  yum:
+    name: centos-release-scl
+    state: latest
+
+- name: check if python3.6 is installed
+  shell: which python3.6
+  register: python36_result
+  ignore_errors: yes
+
+- name: install python3.6 if required
+  block:
+  - name: install python3.6
+    yum:
+      name: rh-python36
+      state: latest
+  - name: get current path
+    shell: grep '^export PATH=' ~/.bashrc | awk -F= '{print $2}' | sed -e 's/^://g'
+    register: path_result
+  - debug:
+      msg: "{{ path_result }}"
+  - debug:
+      msg: "{{ python36_result }}"
+  - name: add python3.6 to path
+    block:
+      - name: replace current path
+        replace:
+          path: "{{ ansible_user_dir }}/.bashrc"
+          regexp: '^export PATH=.*'
+          replace: "export PATH=$PATH:{{ path_result.stdout }}:/opt/rh/rh-python36/root/usr/bin/"
+      - name: add path
+        lineinfile:
+          path: "{{ ansible_user_dir }}/.bashrc"
+          line: "export PATH=$PATH:/opt/rh/rh-python36/root/usr/bin"
+          state: present
+      - name: source ~/.bashrc
+        shell: . "{{ ansible_user_dir }}/.bashrc"
+    when: path_result.stdout == ""
+  when: python36_result.rc != 0

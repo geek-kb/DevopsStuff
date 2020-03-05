@@ -1,0 +1,25 @@
+---
+
+- name: add docker repo and install docker
+  block:
+  - name: "verify old docker is absent {{ ansible_distribution }}-{{ ansible_distribution_major_version }}"
+    yum:
+      name:
+        - docker-client
+        - docker-common
+        - docker
+      state: absent
+  - name: "install docker {{ ansible_distribution }}-{{ ansible_distribution_major_version }}"
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+  - name: "verify docker is running {{ ansible_distribution }}-{{ ansible_distribution_major_version }}"
+    systemd:
+      name: docker
+      enabled: yes
+      state: restarted
+  tags: node-exporter.download_install_docker

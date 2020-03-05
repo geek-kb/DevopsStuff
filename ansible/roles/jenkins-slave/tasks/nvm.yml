@@ -1,0 +1,25 @@
+---
+- name: verify that nvm is installed
+  shell: which nvm
+  register: which_nvm_result
+  ignore_errors: yes
+
+- name: install and configure nvm
+  block:
+    - name: download nvm
+      get_url:
+        url: "{{ node.nvm_dl_url }}"
+        dest: /tmp/nvm_install.sh
+        mode: '0700'
+    - name: install nvm
+      shell: /tmp/nvm_install.sh
+    - name: delete nvm install script
+      file:
+        path: /tmp/nvm_install.sh
+        state: absent
+    - name: source nvm script
+      shell: source /root/.nvm/nvm.sh
+      args:
+        executable: /bin/bash
+  when: which_nvm_result.rc != 0
+  tags: jenkins-slave.dl_conf_nvm

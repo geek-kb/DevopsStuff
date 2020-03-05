@@ -1,0 +1,7 @@
+---
+
+- name: restart consul-client service
+  service: name=consul-client state=restarted
+
+- name: restart node-exporter service
+  service: name=node-exporter state=restarted

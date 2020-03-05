@@ -1,0 +1,75 @@
+---
+
+- name: configure ssh key with access to devops repository
+  block:
+    - name: verify .ssh folder exists
+      file:
+        name: "{{ ansible_user_dir }}/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: copy ssh private key to local machine
+      copy:
+        src: "{{ role_path }}/files/{{ ssh.key_name }}"
+        dest: "{{ ansible_user_dir }}/.ssh/{{ ssh.key_name }}"
+        mode: '0400'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+
+    - name: copy ssh public key to local machine
+      copy:
+        src: "{{ role_path }}/files/{{ ssh.key_name }}.pub"
+        dest: "{{ ansible_user_dir }}/.ssh/{{ ssh.key_name }}.pub"
+        mode: '0600'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+  tags: ssh_for_devops_repo
+
+- name: add git config
+  lineinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    line: export GIT_SSH_COMMAND="ssh -i {{ ansible_user_dir }}/.ssh/{{ ssh.key_name }} -F /dev/null -o StrictHostKeyChecking=no"
+    insertafter: EOF
+    state: absent
+
+- name: configure "{{ ansible_user_dir }}/.ssh/config"
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.ssh/config"
+    block: |
+      Host bitbucket.org
+        HostName bitbucket.org
+        IdentityFile "{{ ansible_user_dir }}/.ssh/{{ ssh.key_name }}"
+        StrictHostKeyChecking=no
+        User git
+    insertafter: EOF
+    state: present
+    create: yes
+
+    #- name: delete ssh config file
+    #  file:
+    #    path: "{{ ansible_user_dir }}/.ssh/{{ ssh.key_name }}"
+    #    state: absent
+    #  tags: ssh.delete_config
+
+- name: run ssh-agent
+  shell: eval $(ssh-agent -s)
+
+- name: add ssh key on CentOS 6 machines
+  shell: ssh-agent ssh-add "{{ ansible_user_dir }}/.ssh/{{ ssh.key_name }}"
+  when: ansible_distribution_major_version == "6"
+
+- name: add ssh key on CentOS 7 machines
+  shell: ssh-agent ssh-add -k "{{ ansible_user_dir }}/.ssh/{{ ssh.key_name }}"
+  when: ansible_distribution_major_version == "7"
+
+- name: configure git
+  shell: git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: source ~/.bashrc
+  shell: . "{{ ansible_user_dir }}/.bashrc"
+
+- name: clone devops repo
+  git:
+    repo: "{{ git.devops_repo_url }}"
+    dest: /root/devops
+    clone: yes

@@ -1,0 +1,7 @@
+---
+# defaults file for sshd
+git:
+  devops_repo_url: "git@bitbucket.org:company/devops.git"
+ssh:
+  ansible_key_md5hash: "18fd5007b9c92fb018d2e774cc4cf199"
+  key_name: "ansible_id_rsa"

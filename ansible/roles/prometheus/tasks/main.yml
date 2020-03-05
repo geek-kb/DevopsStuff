@@ -1,0 +1,17 @@
+---
+# tasks file for prometheus
+
+- name: check if prometheus is installed
+  shell: which prometheus
+  register: which_prometheus_result
+  ignore_errors: yes
+
+- name: check if prometheus is configured
+  stat: path="{{ prometheus.systemd_path }}/prometheus.service"
+  register: stat_prom_service_result
+  ignore_errors: yes
+
+- name: install prometheus
+  import_tasks: prom_install_configure.yml
+  when: which_prometheus_result.rc != 0 or not stat_prom_service_result.stat.exists
+

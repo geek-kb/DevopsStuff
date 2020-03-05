@@ -1,0 +1,11 @@
+---
+
+- name: configure iptables to forward dns
+  block:
+  - name: redirect local dns udp
+    iptables_raw:
+      state: absent
+  - name: redirect local dns tcp
+    iptables_raw:
+      state: absent
+  tags: consul.iptables_remove

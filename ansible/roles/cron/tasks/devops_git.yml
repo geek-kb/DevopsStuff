@@ -1,0 +1,9 @@
+---
+
+- name: update devops repo
+  cron:
+    name: git pull devops
+    #minute: "0"
+    #hour: "6"
+    #job: "cd /root/devops && git pull"
+    state: absent

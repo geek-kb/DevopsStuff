@@ -1,0 +1,30 @@
+---
+
+- name: remove aria2
+  yum:
+    name: aria2
+    state: absent
+  ignore_errors: yes
+
+- name: Upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+    exclude:
+      - 'gcc-*'
+      - 'libgcc-*'
+  tags: common.upgrade_all
+
+- name: lock gcc version centos 6
+  yum:
+    name: 'gcc-4.4.7'
+    state: installed
+  when: ansible_distribution_major_version == "6"
+
+- name: lock gcc version centos 7
+  yum:
+    name: 'gcc-4.8.5'
+    state: installed
+  when: ansible_distribution_major_version == "7"
+
+

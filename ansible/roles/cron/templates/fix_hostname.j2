@@ -1,0 +1,6 @@
+#!/bin/bash
+IPADDR={{ ansible_default_ipv4.address }}
+HOSTNAME={{ ansible_hostname }}
+FQDN={{ ansible_fqdn }}
+sed -i "s/^$IPADDR.*/$IPADDR $FQDN $HOSTNAME/" /etc/hosts
+hostname $HOSTNAME

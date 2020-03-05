@@ -1,0 +1,7 @@
+---
+# defaults file for cron
+
+cron_scripts_path: "/root/cron_scripts"
+devops_repo_path: "/root/devops"
+cron_user: root
+cron_group: root

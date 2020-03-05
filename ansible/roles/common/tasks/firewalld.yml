@@ -1,0 +1,13 @@
+---
+
+- name: check if systemd is installed
+  stat: path=/usr/bin/systemctl
+  register: systemctl_result
+  ignore_errors: yes
+
+- name: disable firewalld (systemd)
+  systemd:
+    state: stopped
+    name: firewalld
+    enabled: false
+  when: systemctl_result.stat.exists

@@ -1,0 +1,9 @@
+---
+
+- name: run ansible
+  cron:
+    name: "run ansible"
+    #minute: "0"
+    #hour: "6"
+    #job: "cd {{ devops_repo_path }}/ansible && ansible-playbook local_playbook.yml"
+    state: absent

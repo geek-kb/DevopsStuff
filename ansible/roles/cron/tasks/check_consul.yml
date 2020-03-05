@@ -1,0 +1,16 @@
+---
+# tasks file for cron
+- name: configure check_consul script in cron
+  block:
+  - name: copy check_consul script to its folder
+    copy:
+      src: "{{ role_path }}/files/check_consul"
+      dest: "{{ cron_scripts_path }}/check_consul"
+      owner: root
+      group: root
+      mode: '0700'
+  - name: configure check_consul cron job
+    cron:
+      name: "check_consul"
+      minute: "*/1"
+      job: "{{ cron_scripts_path }}/check_consul &>/dev/null"

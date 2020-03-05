@@ -1,0 +1,59 @@
+---
+# tasks file for node-exporter
+- name: check if host is configured in AD dns
+  shell: ping -c 1 "{{ ansible_hostname }}.{{ consul.company_domain }}"
+  register: ping_hostname_result
+  ignore_errors: yes
+
+- name: install and configure node-exporter
+  block:
+    - name: pull node-exporter image
+      docker_image:
+        name: "{{ node_exporter.docker_image_name }}"
+        source: pull
+    - name: node_exporter container
+      docker_container:
+        name: node-exporter
+        image: "{{ node_exporter.docker_image_name }}:latest"
+        state: started
+        ports:
+          - "{{ node_exporter.port }}:{{ node_exporter.port }}"
+        volumes:
+          - "/:/host:ro,rslave"
+        detach: yes
+        command: --path.rootfs=/host
+    - name: register in consul with {{ consul.domain }}
+      uri:
+        url: "{{ consul.api_address }}"
+        method: PUT
+        body: '{ "id": "{{ ansible_hostname }}", "name": "node_exporter", "address": "{{ ansible_hostname }}.node.{{ consul.domain }}", "port": {{ node_exporter.port }}, "tags": [ "{{ ansible_hostname }}"] }'
+        body_format: json
+      when: ping_hostname_result.rc != 0
+    - name: register in consul with {{ consul.company_domain }}
+      uri:
+        url: "{{ consul.api_address }}"
+        method: PUT
+        body: '{ "id": "{{ ansible_hostname }}", "name": "node_exporter", "address": "{{ ansible_hostname }}.{{ consul.company_domain }}", "port": {{ node_exporter.port }}, "tags": [ "{{ ansible_hostname }}"] }'
+        body_format: json
+      when: ping_hostname_result == 0
+    - name: configure cron watchdog script
+      block:
+        - name: create "{{ misc.cron_scripts_path }}"
+          file:
+            path: "{{ misc.cron_scripts_path }}"
+            owner: root
+            group: root
+            mode: '0644'
+            state: directory
+        - name: copy watchdog script
+          copy:
+            src: "{{ role_path}}/files/node-exporter_watchdog_c7.sh"
+            dest: "{{ misc.cron_scripts_path }}"
+            owner: root
+            group: root
+            mode: '0755'
+        - name: configure cron
+          cron:
+            name: "node-exporter watchdog script"
+            minute: "*/5"
+            job: "{{ misc.cron_scripts_path }}/node-exporter_watchdog_c7.sh"

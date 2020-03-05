@@ -1,0 +1,29 @@
+---
+# defaults file for prometheus
+alertmanager:
+  version: "0.20.0"
+  user: "prometheus"
+  group: "prometheus"
+  var_dir: "/var/lib/prometheus/alertmanager"
+  etc_dir: "/etc/prometheus/alertmanager"
+  bin_dir: "/usr/local/bin"
+  tmpl_dir: "/etc/prometheus/alertmanager/templates"
+  systemd_path: "/etc/systemd/system"
+  jenkins_hostname: "jenkins-master-rnd.company.com"
+  port: 9093
+slack:
+  webhook_url: "https://hooks.slack.com/services/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"
+  notifications_channel: "#devops-alerts"
+  icon_url: "https://avatars3.githubusercontent.com/u/3380462"
+  default_receiver_name: slack-channel
+consul:
+  server_ip: "consul.company.com"
+  api_url: "http://consul.company.com:8500/v1/agent/service/register"
+alertmanager_meta:
+  download_url: "https://github.com/prometheus/alertmanager/releases/download/v{{ alertmanager.version }}"
+  extracted_name: "alertmanager-{{ alertmanager.version }}.linux-amd64"
+  filename: "alertmanager-{{ alertmanager.version }}.linux-amd64.tar.gz"
+  installer_checksum: "3a826321ee90a5071abf7ba199ac86f77887b7a4daa8761400310b4191ab2819"
+misc:
+  consul_domain: "company.consul"
+  company_domain: "company.com"

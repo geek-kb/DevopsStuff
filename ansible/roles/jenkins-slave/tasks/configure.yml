@@ -1,0 +1,85 @@
+---
+
+- name: configure company related stuff
+  block:
+  - name: set root password
+    shell: echo "{{ config.user }}:{{ config.password }}" | chpasswd
+  - name: generate dbus uuid
+    shell: dbus-uuidgen --ensure
+  - name: configure resolv.conf
+    template:
+      src: resolv.conf.j2
+      dest: /etc/resolv.conf
+      mode: '0644'
+      owner: root
+      group: root
+      force: yes
+  - name: delete default localtime file
+    file:
+      path: /etc/localtime
+      state: absent
+  - name: create new localtime file
+    file:
+      src: /usr/share/zoneinfo/Asia/Jerusalem
+      dest: /etc/localtime
+      state: link
+      force: yes
+  - name: make sure .ssh directory exists
+    file:
+      path: "{{ ansible_user_dir }}/.ssh"
+      state: directory
+      owner: "{{ config.user }}"
+      group: "{{ config.group }}"
+      mode: '0700'
+  - name: configure ssh
+    blockinfile: 
+      path: "{{ ansible_user_dir }}/.ssh/config"
+      create: yes
+      block: |
+        Host *
+        StrictHostKeyChecking no
+  - name: configure hosts file
+    replace:
+      path: /etc/hosts
+      regexp: "^127.0.0.1.*"
+      replace: "127.0.0.1 {{ ansible_hostname }}"
+  - name: configure hostname in network file
+    replace:
+      path: /etc/sysconfig/network
+      regexp: "^HOSTNAME=.*"
+      replace: "HOSTNAME={{ ansible_hostname }}"
+  - name: reload sshd service centos 6
+    service:
+      name: sshd
+      state: reloaded
+    when: ansible_distribution_major_version == "6"
+  - name: reload sshd service centos 7
+    systemd:
+      name: sshd
+      state: reloaded
+    when: ansible_distribution_major_version == "7"
+  tags: jenkins-slave.conf_company
+
+- name: check if bash_it is installed
+  stat: path="{{ misc.bash_it_dir }}"
+  register: stat_bash_it_result
+
+- name: download, configure and run bash_it
+  block:
+    - name: verify destination folder exists
+      file:
+        path: "{{ misc.bash_it_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ config.user }}"
+        group: "{{ config.group }}"
+    - name: clone repo
+      git:
+        repo: "{{ misc.bash_it_repo }}"
+        clone: yes
+        depth: 1
+        dest: "{{ misc.bash_it_dir }}"
+    - name: run bash_it
+      shell: "{{ misc.bash_it_dir }}/install.sh --no-modify-config --silent"
+  when: not stat_bash_it_result.stat.exists
+  tags: jenkins-slave.dl_conf_bash_it

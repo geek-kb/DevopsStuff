@@ -1,0 +1,7 @@
+#!/bin/bash
+export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+service="node-exporter"
+systemctl status $service &>/dev/null
+if [[ $? -ne 0 ]]; then
+	systemctl restart $service
+fi

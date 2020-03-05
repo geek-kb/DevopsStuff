@@ -1,0 +1,6 @@
+#!/bin/bash
+export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+service consul-client status &>/dev/null
+if [[ $? -ne 0 ]]; then
+	service consul-client start
+fi

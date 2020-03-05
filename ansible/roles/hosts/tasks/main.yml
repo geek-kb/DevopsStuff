@@ -1,0 +1,29 @@
+---
+# tasks file for hosts
+
+- name: check if personal dns record should be fixed
+  shell: grep "jenkins-new-tos1" /etc/hosts
+  register: grep_result
+  ignore_errors: yes
+
+- name: replace current self hosts record which might contain fqdn with just hostname
+  block:
+    - name: fix /etc/hosts
+      replace:
+        path: /etc/hosts
+        regexp: '.*{{ ansible_hostname }}.*'
+        replace: '{{ ansible_default_ipv4.address }} {{ ansible_hostname }}'
+    - name: set hostname
+      shell: hostname "{{ ansible_hostname }}"
+    - name: restart consul-client centos 6
+      service:
+        name: consul-client
+        state: restarted
+      when: ansible_distribution_major_version == "6"
+    - name: restarted consul-client centos 7
+      systemd:
+        name: consul-client
+        state: restarted
+      when: ansible_distribution_major_version == "7"
+  when: grep_result.rc == 0
+

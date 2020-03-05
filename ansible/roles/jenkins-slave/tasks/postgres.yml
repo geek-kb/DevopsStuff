@@ -1,0 +1,24 @@
+---
+
+- name: install and run postgres
+  block:
+    - name: install postgres repo
+      yum:
+        name: "{{ postgres.repo_rpm_url }}"
+        state: installed
+    - name: install postgres
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+        - "postgresql{{ versions.postgres|replace('.','') }}"
+        - "postgresql{{ versions.postgres|replace('.','') }}-server"
+        - "postgresql{{ versions.postgres|replace('.','') }}-libs"
+        - "postgresql{{ versions.postgres|replace('.','') }}-plpython"
+    - name: postgres initdb
+      command: "service postgresql-{{ versions.postgres }} initdb"
+    - name: postgres service start
+      service:
+        name: "postgresql-{{ versions.postgres }}"
+        state: started
+  tags: jenkins-slave.install_pgrs

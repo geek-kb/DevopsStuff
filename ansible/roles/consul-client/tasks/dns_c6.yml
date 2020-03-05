@@ -1,0 +1,27 @@
+---
+
+- name: remove current dns
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    line: '^DNS.*'
+    state: absent
+
+- name: configure nic search domain
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    line: 'DOMAIN=node.{{ consul_datacenter }}.consul'
+
+- name: configure nic second dns
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    line: "DNS1={{ dns_server_address1 }}"
+
+- name: configure nic third dns
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    line: "DNS2={{ dns_server_address2 }}"
+
+- name: apply dns settings (initd)
+  service:
+    name: network
+    state: restarted

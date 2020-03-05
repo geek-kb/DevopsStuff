@@ -1,0 +1,9 @@
+---
+
+- name: run ansible on jenkins slaves
+  cron:
+    name: "run ansible on jenkins slaves"
+    minute: "0"
+    hour: "6"
+    job: "cd {{ devops_repo_path }}/ansible && ansible-playbook local_slave_playbook.yml"
+    state: present

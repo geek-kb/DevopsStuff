@@ -1,0 +1,14 @@
+---
+consul:
+  api_address: "http://consul.company.com:8500/v1/agent/service/register"
+  domain: "company.consul"
+  company_domain: "company.com"
+node_exporter:
+  user: "node_exporter"
+  group: "node_exporter"
+  docker_image_name: "quay.io/prometheus/node-exporter"
+  version: "0.18.1"
+  bin_path: "/usr/local/bin"
+  port: 9100
+misc:
+  cron_scripts_path: "/root/cron_scripts"

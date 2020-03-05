@@ -1,0 +1,13 @@
+---
+
+- name: install mlocate
+  yum:
+    name: mlocate
+    state: latest
+
+- name: configure cron to run updatedb every night
+  cron:
+    name: "run mlocate"
+    hour: "3"
+    minute: "0"
+    job: updatedb

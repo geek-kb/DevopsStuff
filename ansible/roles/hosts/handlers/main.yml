@@ -1,0 +1,5 @@
+---
+# handlers file for hosts
+
+- name: restart consul-client service
+  service: name=consul-client state=restarted

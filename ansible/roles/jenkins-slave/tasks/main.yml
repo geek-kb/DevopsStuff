@@ -1,0 +1,23 @@
+---
+# tasks file for jenkins-slave
+- include_tasks: install_packages.yml
+  tags: jenkins-slave.install_packages
+- include_tasks: git.yml
+  tags: jenkins-slave.git
+- include_tasks: java.yml
+  tags: jenkins-slave.java
+- include_tasks: configure.yml
+  tags: jenkins-slave.configure
+- include_tasks: mongod.yml
+  tags: jenkins-slave.mongod
+- include_tasks: postgres.yml
+  tags: jenkins-slave.postgres
+- include_tasks: nvm.yml
+  tags: jenkins-slave.nvm
+- include_tasks: sccache.yml
+  tags: jenkins-slave.sccache
+- include_tasks: tss_code.yml
+  tags: jenkins-slave.tss_code
+
+
+

@@ -1,0 +1,30 @@
+---
+
+- name: remove currently installed mongo packages
+  yum:
+    name: mongodb-org-*
+    state: absent
+
+- name: install mongo 
+  yum:
+    name: "{{ packages }}"
+    state: installed
+  vars:
+    packages:
+      - "{{ company.mirror_url }}/{{ mongodb.mongodb_tarball }}"
+      - "{{ company.mirror_url }}/{{ mongodb.mongosrv_tarball }}"
+
+- name: mongo service control
+  block:
+    - name: mongod start
+      service:
+        name: mongod
+        state: started
+    - name: mongod stop
+      service:
+        name: mongod
+        state: stopped
+    - name: delete local.ns
+      file:
+        path: /var/lib/mongo/local.ns
+        state: absent

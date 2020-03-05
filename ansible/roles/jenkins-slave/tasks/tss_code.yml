@@ -1,0 +1,23 @@
+---
+
+- name: clone tss code
+  block:
+    - name: create a symlink for java
+      file:
+        src: "{{ java.home }}"
+        dest: "{{ company.company_path }}/java"
+        state: link
+    - name: clone tss repo
+      git:
+        repo: 'git@gitlab.company.com:RnD/tss.git'
+        dest: "{{ company.company_path }}/tss"
+    - name: checkout master
+      shell: |
+        cd "{{ company.company_path }}/tss"
+        git checkout master
+
+- name: download TOS
+  shell: |
+    RUNFILE_URL=$(wget -q -O- --no-check-certificate --secure-protocol=TLSv1 'https://jenkins-master-rnd.company.com/job/tss-trunk-Full-IT-Tests/lastSuccessfulBuild/api/xml/?tree=description' | \
+    > sed s/.*https/https/g | sed s/\.run\&.*/\.run/g)
+    wget --no-check-certificate --secure-protocol=TLSv1 $RUNFILE_URL

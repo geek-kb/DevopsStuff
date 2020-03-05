@@ -1,0 +1,28 @@
+---
+# defaults file for prometheus
+prometheus:
+  version: "2.16.0"
+  user: "prometheus"
+  group: "prometheus"
+  var_dir: "/var/lib/prometheus"
+  etc_dir: "/etc/prometheus"
+  bin_dir: "/usr/local/bin"
+  systemd_path: "/etc/systemd/system"
+  port: 9090
+conf:
+  jenkins_url: "jenkins-master-rnd.company.com"
+consul:
+  server_ip: "consul.company.com"
+  server_port: "8500"
+  api_url: "http://consul.company.com:8500/v1/agent/service/register"
+prometheus_meta:
+  download_url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus.version }}-rc.1"
+  extracted_name: "prometheus-{{ prometheus.version }}-rc.1.linux-amd64"
+  filename: "prometheus-{{ prometheus.version }}-rc.1.linux-amd64.tar.gz"
+  installer_checksum: "cf428b49c5e0feaa980b55321ab049f86a31161cb87a2c1576c7e39bac099639"
+alertmanager:
+  server_ip: "prometheus.company.com"
+  server_port: 9093
+misc:
+  consul_domain: "company.consul"
+  company_domain: "company.com"

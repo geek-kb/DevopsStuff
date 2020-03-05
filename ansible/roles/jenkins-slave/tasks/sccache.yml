@@ -1,0 +1,12 @@
+---
+
+- name: install and configure sccache
+  block:
+    - name: download sccache tarball
+      shell: |
+        cd /tmp
+        wget --no-check-certificate --secure-protocol=TLSv1 --progress=bar "{{ company.artifactory_url }}/sccache.gz"
+        tar zxvf sccache.gz
+        cd sccache
+        ./configure
+        rm -rf /tmp/sccache*
