@@ -1,6 +1,0 @@
----
-consul_api_address: "http://x.x.x.x:8500/v1/agent/service/register"
-node_exporter_image: "quay.io/prometheus/node-exporter"
-node_exporter_version: "0.18.1"
-node_exporter_user: "root"
-bin_path: "/usr/local/bin"

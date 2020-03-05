@@ -1,9 +1,0 @@
----
-# tasks file for sshd
-- name: check if ansible_id_rsa exists
-  stat: path="{{ ansible_user_dir }}/.ssh/ansible_id_rsa"
-  register: ssh_key_result
-  ignore_errors: yes
-
-- include_tasks: ssh_key.yml
-  when: not ssh_key_result.stat.exists

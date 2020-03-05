@@ -1,6 +1,0 @@
----
-# tasks file for myrole_debug
-
-- debug:
-    msg: "greater than 3.8"
-  when: ansible_python_version >= '3.8'

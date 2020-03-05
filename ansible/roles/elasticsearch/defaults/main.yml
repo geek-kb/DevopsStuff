@@ -1,4 +1,0 @@
----
-# defaults file for elasticsearch
-elasticsearch_image_name: "docker.elastic.co/elasticsearch/elasticsearch"
-elasticsearch_image_tag: "7.5.0"

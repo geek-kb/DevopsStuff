@@ -1,9 +1,0 @@
----
-
-- name: install pip packages
-  pip:
-    name: "{{ packages }}"
-  vars:
-    packages:
-      - docker
-      - ansible

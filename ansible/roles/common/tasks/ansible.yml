@@ -1,9 +1,0 @@
----
-
-- name: configure ansible.cfg
-  copy:
-    src: "{{ role_path }}/files/ansible.cfg"
-    dest: /etc/ansible/ansible.cfg
-    mode: '0644'
-    owner: root
-    group: root

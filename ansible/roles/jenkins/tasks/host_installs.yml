@@ -1,6 +1,0 @@
----
-
-- name: install java
-  yum:
-    name: "java-{{ host.java_version }}-openjdk.x86_64"
-    state: present
