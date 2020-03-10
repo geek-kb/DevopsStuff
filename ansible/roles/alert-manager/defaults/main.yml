@@ -12,7 +12,7 @@ alertmanager:
   jenkins_hostname: "jenkins-master-rnd.company.com"
   port: 9093
 slack:
-  webhook_url: "https://hooks.slack.com/services/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"
+  webhook_url: "https://hooks.slack.com/services/TOKEN"
   notifications_channel: "#devops-alerts"
   icon_url: "https://avatars3.githubusercontent.com/u/3380462"
   default_receiver_name: slack-channel
