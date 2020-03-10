@@ -9,8 +9,6 @@ consul:
   conf_dir: "/etc/consul.d/client"
   encrypt_token: "TOKEN"
   server_address: "consul.company.com"
-  dns_server_address1: "192.168.1.88"
-  dns_server_address2: "192.168.1.68"
   bin_path: "/usr/local/bin"
   slaves_prefix: "agent"
 dns:
