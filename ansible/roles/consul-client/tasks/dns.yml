@@ -1,0 +1,33 @@
+---
+
+- name: remove current dns
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    regexp: '^DNS.*'
+    state: absent
+
+- name: remove current dns domain
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    regexp: '^DOMAIN=.*'
+    state: absent
+
+- name: configure nic search domain
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    line: 'DOMAIN="{{ dns.company_domain }} {{ dns.company_consul_domain }}"'
+
+- name: configure nic first dns
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    line: "DNS1={{ dns.server_address1 }}"
+
+- name: configure nic second dns
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv4.interface }}
+    line: "DNS2={{ dns.server_address2 }}"
+  notify:
+    - restart network
+    - restart consul-client
+
+- meta: flush_handlers

@@ -1,7 +1,7 @@
 ---
 
 - name: check if server is a jenkins slave
-  shell: hostname | grep "^{{ slaves_prefix }}"
+  shell: hostname | grep "^{{ consul.slaves_prefix }}"
   register: check_slave_result
   ignore_errors: yes
 
@@ -9,7 +9,7 @@
   block:
     - name: download consul
       get_url:
-        url: https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip
+        url: https://releases.hashicorp.com/consul/{{ consul.version }}/consul_{{ consul.version }}_linux_amd64.zip
         dest: /tmp/consul.zip
         mode: '0600'
     - name: unzip consul
@@ -30,11 +30,11 @@
         path: /var/consul
         state: directory
     - name: configure consul-client
-      template: src=config.json.j2 dest={{ consul_config_dir }}/config.json
+      template: src=config.json.j2 dest={{ consul.conf_dir }}/config.json
     - name: configure consul-client systemd
       template: src=consul-client.service.j2 dest=/etc/systemd/system/consul-client.service
     - name: configure client as slave
-      template: src=config_with_meta.json.j2 dest="{{ consul_config_dir }}/config.json"
+      template: src=config_with_meta.json.j2 dest="{{ consul.conf_dir }}/config.json"
       when: check_slave_result.rc == 0
   tags: consul.configure
 

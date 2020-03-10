@@ -23,13 +23,13 @@
 . /etc/rc.d/init.d/functions
 
 prog=consul
-user={{ consul_user }}
-exec={{ bin_path }}/$prog
+user={{ consul.user }}
+exec={{ consul.bin_path }}/$prog
 pidfile=/var/run/$prog.pid
 lockfile=/var/lock/subsys/$prog
 logfile=/var/log/$prog
-conffile={{ consul_config_dir }}/config.json
-confdir={{ consul_config_dir }}
+conffile={{ consul.conf_dir }}/config.json
+confdir={{ consul.conf_dir }}
 
 # pull in sysconfig settings
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog

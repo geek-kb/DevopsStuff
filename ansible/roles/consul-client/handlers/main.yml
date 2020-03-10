@@ -1,7 +1,9 @@
 ---
 # handlers file for consul-client
 - name: restart consul-client
-  service: name=consul-client
-
+  service: name=consul-client state=restarted
+  listen: "restart consul-client"
+  
 - name: restart network
-  service: name=network
+  service: name=network state=restarted
+  listen: "restart network"

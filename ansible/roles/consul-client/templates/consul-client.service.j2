@@ -4,7 +4,7 @@ After=network.target
  
 [Service]
 Type=simple
-ExecStart=/bin/bash -c '/usr/bin/consul agent -bind {{ ansible_default_ipv4.address }} -config-dir {{ consul_config_dir }}'
+ExecStart=/bin/bash -c '/usr/bin/consul agent -bind {{ ansible_default_ipv4.address }} -config-dir {{ consul.conf_dir }}'
 TimeoutStartSec=0
  
 [Install]
