@@ -1,4 +1,5 @@
 #!/usr/bin/python2
+# Tested only on MacOSx
 # Script by Itai Ganot 2020
 
 # Imports
