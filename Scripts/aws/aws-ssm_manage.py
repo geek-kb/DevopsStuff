@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Written by Itai Ganot 2018
 """This script can:
 1. List all AWS SSM parameters and their values in a given KMS id
 (staging / production / integration)
