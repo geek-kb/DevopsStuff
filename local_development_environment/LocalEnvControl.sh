@@ -3,6 +3,7 @@
 # Find the full information about this script in the README.md file in its github repo:
 # https://github.com/Company/local-development-environment
 # This script has been tested on MacOSX only.
+# Script by Itai Ganot 2019
 
 # Editable Variables
 defaultBranch='feature/local_development_env'
