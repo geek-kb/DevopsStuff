@@ -24,9 +24,6 @@ CREATE TABLE branches_to_delete (
     insert_date datetime DEFAULT CURRENT_TIMESTAMP);
 
 ALTER TABLE `branches_to_delete` ADD UNIQUE INDEX `unique_branch_name` (`branch_name`);
-
-Example command to run the script:
-./b_o.py --db-password $DB_PASS --gitlab-token $GITLAB_TOKEN
 """
 
 
@@ -44,11 +41,11 @@ from os import getcwd
 from email.message import Message
 
 
-PROTECTED_BRANCHES = ["^repo-R*", "final-*", "master", "^remotes/*", "^origin/pegasus$"]  # Allows regex
+PROTECTED_BRANCHES = ["^reponame-R*", "final-*", "master", "^remotes/*", "^origin/pegasus$"]  # Allows regex
 unwanted_branches = ["^auto_feature/*"] # Allows regex
-gitlab_repo_project_id = '4'
+gitlab_reponame_project_id = '4'
 gitlab_host = 'https://gitlab.company.com'
-company_repo = 'git@gitlab.company.com:RnD/REPONAME.git'
+reponame_repo = 'git@gitlab.company.com:RnD/reponame.git'
 white_list_file = 'white.list'
 db_host = 'DATABASE_HOST'
 db_user = 'DATABASE_USER'
@@ -57,7 +54,7 @@ db_table = 'TABLE_NAME'
 smtp_server = 'SMTP_SERVER_ADDRESS'
 cicd_team_email = 'cicd-team@company.com'
 from_email = 'jenkins@company.com'
-to_email = ['rnd@company.com',cicd_team_email,'itai.ganot@company.com']
+to_email = ['itai.ganot@company.com','rnd@company.com']
 all_branches = []
 excluded = []
 branches_to_delete = {}
@@ -90,12 +87,10 @@ def test_white_list_file():
                 else:
                     print('white.list file is empty!')
         except Exception as e:
-            print('{}Unable to find {} file in {}, exiting! {}'.format(
-            Color.RED,
-            white_list_file,
-            getcwd(),
-            Color.END)
-            )
+            print('{}Unable to find {} file in {}, exiting! {}'.format(Color.RED,
+                                                                       white_list_file,
+                                                                       getcwd(),
+                                                                       Color.END))
             exit(1)
     else:
         print("white.list file couldn't be found")
@@ -106,13 +101,14 @@ def identify_old_branches(db_password, gitlab_private_token):
                        private_token=gitlab_private_token,
                        api_version=4,
                        ssl_verify=False)
-    project = gl.projects.get(gitlab_repo_project_id)
+    project = gl.projects.get(gitlab_reponame_project_id)
     for branch in project.branches.list(all=True):
         if any([re.match(pattern, branch.name) for pattern in PROTECTED_BRANCHES]):
             continue
         if any([re.match(unwanted_branch, branch.name) for unwanted_branch in unwanted_branches]):
+            print('{}Removing unwanted branch: {}{}'.format(Color.YELLOW, branch, Color.END))
             insert_deleted_data(db_password, branch.name)
-            delete_branch_from_gitlab(branch.name)
+            delete_branch_from_gitlab(branch.name, gitlab_private_token)
             continue
         if branch.name in excluded:
             print("{}Branch '{}' is in excluded list! skipping...  {}".format(
@@ -161,7 +157,7 @@ def send_mail(msg):
     m['From'] = from_email
     m['To'] = ', '.join(to_email)
     m['X-Priority'] = '2'
-    m['Subject'] = 'Urgent! Branch Cleanup for: {} {}'.format(gitlab_repo_project_id, date_today)
+    m['Subject'] = 'Urgent! Branch Cleanup for: {} {}'.format(reponame_repo, date_today)
     m.set_payload(msg)
     server = smtplib.SMTP(host=smtp_server)
     try:
@@ -218,12 +214,17 @@ INSERT INTO {db_table} (`branch_name`, `source_control`, `status`) VALUES (%s,'g
         connection.close()
 
 
-def delete_branch_from_gitlab(branch):
-    print('{}Removing unwanted branch: {}{}'.format(Color.YELLOW, branch, Color.END))
+def delete_branch_from_gitlab(branch, gitlab_private_token):
+    gl = gitlab.Gitlab(gitlab_host,
+                       private_token=gitlab_private_token,
+                       api_version=4,
+                       ssl_verify=False)
+    project = gl.projects.get(gitlab_reponame_project_id)
+    print('{}Removing branch: {} from gitlab {}'.format(Color.YELLOW, branch, Color.END))
     project.branches.delete(branch)
 
 
-def delete_branch(db_passwd):
+def delete_branch(db_passwd, gitlab_private_token):
     connection = mysql.connector.connect(user=db_user,
                                          host=db_host,
                                          database=db_name,
@@ -244,7 +245,7 @@ select branch_name from {db_table} where DATE(insert_date) = %s and status = 'to
                                                                           Color.END))
                 continue
             else:
-                delete_branch_from_gitlab(branch_name)
+                delete_branch_from_gitlab(branch_name, gitlab_private_token)
                 try:
                     cursor.execute(f"""
 update {db_table} set status = 'deleted' where branch_name = %s and status = 'to_delete'""",(branch_name,), multi=1)
@@ -257,8 +258,8 @@ update {db_table} set status = 'deleted' where branch_name = %s and status = 'to
 
 
 def main(process, delete, db_password, gitlab_private_token):
-    print("{}Looking for branches with last commit date older than:{} {}".format(Color.BLUE,
-                                                                                 first_notice_delta,
+    print("{}Looking for branches with last commit date older than: {} {}".format(Color.BLUE,
+                                                                                 since_date,
                                                                                  Color.END))
     try:
         test_white_list_file()
@@ -270,7 +271,7 @@ def main(process, delete, db_password, gitlab_private_token):
             print('{}Finding branches that have been marked for deletion last week and deleting them{}'.format(
                 Color.GREEN,
                 Color.END))
-            delete_branch(db_password)
+            delete_branch(db_password, gitlab_private_token)
     except KeyboardInterrupt:
         print('Cancelled by user!')
     finally:
@@ -278,7 +279,7 @@ def main(process, delete, db_password, gitlab_private_token):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Gitlab - branch cleaner for company repo')
+    parser = argparse.ArgumentParser(description='Gitlab - branch cleaner for reponame repo')
     mutual_group = parser.add_argument_group(
         'mutually exclusive action arguments')
     mutually_exclusive_actions = mutual_group.add_mutually_exclusive_group()
