@@ -131,7 +131,7 @@ def display_results(db_passwd):
         insert_data(db_passwd, branch_name, committer_email)
 
 
-def compile_email():
+ddef compile_email():
     email_message = """
 Hi,
 The following branches ({}) have not been committed to for over {} months (or {} days) and will be deleted within a week:
@@ -148,8 +148,12 @@ DevOps team
                                                                                    for k,
                                                                                        v in branches_to_delete.items()]
                                                                                   ), cicd_team_email)
-    print("{}The following message is going to be mailed:{} {}".format(Color.YELLOW, Color.END, email_message))
-    send_mail(email_message)
+    print("len branches_to_delete: {}".format(len(branches_to_delete)))
+    if len(branches_to_delete) > 0:
+        print("{}The following message is going to be mailed:{} {}".format(Color.YELLOW, Color.END, email_message))
+        send_mail(email_message)
+    else:
+        print('No branches to delete, not sending email!')
 
 
 def send_mail(msg):
