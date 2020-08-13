@@ -148,7 +148,6 @@ DevOps team
                                                                                    for k,
                                                                                        v in branches_to_delete.items()]
                                                                                   ), cicd_team_email)
-    print("len branches_to_delete: {}".format(len(branches_to_delete)))
     if len(branches_to_delete) > 0:
         print("{}The following message is going to be mailed:{} {}".format(Color.YELLOW, Color.END, email_message))
         send_mail(email_message)
