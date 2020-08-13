@@ -21,7 +21,7 @@ CREATE TABLE branches_to_delete (
     branch_name varchar(255),
     last_committer varchar(255),
     status varchar(10),
-    insert_date datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);
+    insert_date datetime DEFAULT CURRENT_TIMESTAMP);
 
 ALTER TABLE `branches_to_delete` ADD UNIQUE INDEX `unique_branch_name` (`branch_name`);
 
@@ -85,17 +85,17 @@ def test_white_list_file():
                                   white_list_file)):
         try:
             with open(white_list_file) as f:
-                fileread = f.read(1)
-                if fileread:
-                    for line in f.readlines():
-                        excluded.append(line.strip())
-                    else:
-                        print('white.list file is empty!')
+                for line in f.readlines():
+                    excluded.append(line.strip())
+                else:
+                    print('white.list file is empty!')
         except Exception as e:
-            print('{}Unable to find {} file in {}, exiting! {}'.format(Color.RED,
-                                                                       white_list_file,
-                                                                       getcwd(),
-                                                                       Color.END))
+            print('{}Unable to find {} file in {}, exiting! {}'.format(
+            Color.RED,
+            white_list_file,
+            getcwd(),
+            Color.END)
+            )
             exit(1)
     else:
         print("white.list file couldn't be found")
