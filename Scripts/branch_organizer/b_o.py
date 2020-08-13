@@ -119,7 +119,8 @@ def identify_old_branches(db_password, gitlab_private_token):
                 Color.RED, branch.name, Color.END))
             continue
         if not project.commits.list(ref_name=branch.name, since=since_date):
-            last_committer = project.commits.list(ref_name=branch.name)[0].committer_email
+            committer_list = project.commits.list(ref_name=branch.name)
+            last_committer = committer_list[0].committer_email if committer_list else None
             branches_to_delete[branch.name] = last_committer
 
 
