@@ -99,6 +99,11 @@ function get_sg_vpc_id(){
 	aws ec2 describe-security-groups --filters "Name=group-id,Values=${group_id}" --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].VpcId'
 }
 
+function generate_sg_link(){
+	colyellow "Link to SG:"
+	echo "https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#SecurityGroup:groupId=${group_id}"
+}
+
 # Test if jq command line tool is installed (required)
 which jq >/dev/null
 if [[ $? -ne 0 ]]; then
@@ -153,6 +158,7 @@ else
 		colyellow "Group \"${group_name}\" is the default VPC group and cannot be deleted!"
 		exit 0
 	fi
+	generate_sg_link
   bold "Do you wish to delete group name: \"${group_name}\" id: \"${group_id}\"? [Y/n] "
   read -r answer
   if [[ ${answer} = [yY] ]]; then
