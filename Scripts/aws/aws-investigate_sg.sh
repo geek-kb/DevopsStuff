@@ -147,6 +147,23 @@ fi
 vpcid=$(get_sg_vpc_id | sort | uniq)
 colyellow "Describing security group \"${group_name}\" attached to vpc \"${vpcid}\""
 display_referring_sgs
+generate_sg_link
+colyellow "Checking if security group \"${group_name}\" is attached to any network interfaces"
+eni=$(display_enis)
+if [[ -n ${eni} ]]; then
+	echo "Security group is attached to the following network interfaces:"
+	echo ${eni} | tr " " '\n'
+else
+	echo "Security group \"${group_name}\" is not attached to any network interfaces"
+fi
+colyellow "Checking if security group \"${group_name}\" is referenced by any other security groups"
+sgref=$(display_referred_sgs | sort | uniq)
+if [[ -n ${sgref} ]]; then
+	echo "Security group \"${group_name}\" is referenced in the following groups:"
+	echo ${sgref} | tr " " '\n'
+else
+	echo "Security group \"${group_name}\" is not referenced by any other security groups"
+fi
 instances_count=$(display_instance_count)
 if [[ ${instances_count} -gt 0 ]]; then
   colyellow "Security group name \"${group_name}\" with id \"${group_id}\" is attached to the following instances:"
@@ -158,7 +175,6 @@ else
 		colyellow "Group \"${group_name}\" is the default VPC group and cannot be deleted!"
 		exit 0
 	fi
-	generate_sg_link
   bold "Do you wish to delete group name: \"${group_name}\" id: \"${group_id}\"? [Y/n] "
   read -r answer
   if [[ ${answer} = [yY] ]]; then
@@ -166,15 +182,6 @@ else
     if [[ $? -eq 0 ]]; then
       echo "Group name: \"${group_name}\" with id: \"${group_id}\" has been deleted!"
       echo "${group_name} (${group_id})"
-    else
-      eni=$(display_enis)
-      if [[ -n ${eni} ]]; then
-        colred "Unable to delete group \"${group_name}\" as it is attached to network interfaces:"
-        echo ${eni}
-      else
-        echo "Unable to delete group \"${group_name}\" as it is referenced in the following groups:"
-        display_referred_sgs | sort | uniq
-      fi
     fi
   else
     echo "Not deleting security group ${group_name}"
