@@ -104,6 +104,24 @@ function generate_sg_link(){
 	echo "https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#SecurityGroup:groupId=${group_id}"
 }
 
+function check_sg_attached_lb(){
+	lb_attached_sg=$(aws elb describe-load-balancers --profile ${profile} --region ${region} --output json | jq -r '.LoadBalancerDescriptions[].SecurityGroups[]' | grep ${group_id} | sort | uniq)
+	if [[ -n ${lb_attached_sg} ]]; then
+		lb_name=$(aws elb describe-load-balancers --profile ${profile} --region ${region} --output json | jq -r --arg group_id ${group_id} '.LoadBalancerDescriptions[] | select(.SecurityGroups[0]==$group_id) | .LoadBalancerName')
+		colred "Security group name \"${group_name}\" is attached to load balancer: ${lb_name}"
+	fi
+}
+
+function check_vpc_endpoint(){
+	vpcendpoint_sg=$(aws ec2 describe-vpc-endpoints --region ${region} --profile ${profile} | jq -r '.VpcEndpoints[] | ( .Groups[] | select(.GroupId? | startswith("sg-"))).GroupId')
+	echo "vpcendpoint_sg: ${vpcendpoint_sg}"
+	if [[ ${vpcendpoint_sg}	== ${group_id} ]]; then
+		vpcendpoint_type=$(aws ec2 describe-vpc-endpoints --region ${region} --profile $profile | jq -r --arg group_id ${group_id} '.VpcEndpoints[] | ( select(.Groups[].GroupId?==$group_id)) | .VpcEndpointType')
+		vpcendpoint_id=$(aws ec2 describe-vpc-endpoints --region ${region} --profile $profile | jq -r --arg group_id ${group_id} '.VpcEndpoints[] | ( select(.Groups[].GroupId?==$group_id)) | .VpcEndpointId')
+		echo "Security group name \"${group_name}\" is attached to attached to Vpc Endpoint from type \"${vpcendpoint_type}\" and Id \"${vpcendpoint_id}\""
+	fi
+}
+
 # Test if jq command line tool is installed (required)
 which jq >/dev/null
 if [[ $? -ne 0 ]]; then
@@ -145,6 +163,7 @@ else
 fi
 
 vpcid=$(get_sg_vpc_id | sort | uniq)
+colgreen "--------------------------------------------------------------------------"
 colyellow "Describing security group \"${group_name}\" attached to vpc \"${vpcid}\""
 display_referring_sgs
 generate_sg_link
@@ -175,16 +194,18 @@ else
 		colyellow "Group \"${group_name}\" is the default VPC group and cannot be deleted!"
 		exit 0
 	fi
-  bold "Do you wish to delete group name: \"${group_name}\" id: \"${group_id}\"? [Y/n] "
-  read -r answer
-  if [[ ${answer} = [yY] ]]; then
-    delete_security_group
-    if [[ $? -eq 0 ]]; then
-      echo "Group name: \"${group_name}\" with id: \"${group_id}\" has been deleted!"
-      echo "${group_name} (${group_id})"
-    fi
-  else
-    echo "Not deleting security group ${group_name}"
-    exit 0
-  fi
+	check_sg_attached_lb
+	#check_vpc_endpoint
+  # bold "Do you wish to delete group name: \"${group_name}\" id: \"${group_id}\"? [Y/n] "
+  # read -r answer
+  # if [[ ${answer} = [yY] ]]; then
+  #   delete_security_group
+  #   if [[ $? -eq 0 ]]; then
+  #     echo "Group name: \"${group_name}\" with id: \"${group_id}\" has been deleted!"
+  #     echo "${group_name} (${group_id})"
+  #   fi
+  # else
+  #   echo "Not deleting security group ${group_name}"
+  #   exit 0
+  # fi
 fi
