@@ -89,6 +89,26 @@ Example output:
 
 <br><br>
 
+### Display a security group's list of rules and format it as: FromPort (if exists) to ToPort (if exists) transformed to strings so I'd be able to add a dash between the values which can be done only with strings. In addition also display protocol name and source cidr or seurity group, format the output as "Tab Separated Value". 
+
+> aws ec2 describe-security-groups --group-id ${group_id} --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[] | [ ((.FromPort // "")|tostring)+" - "+((.ToPort // "")|tostring), .IpProtocol, .IpRanges[].CidrIp // .UserIdGroupPairs[].GroupId // "" ] | @tsv'
+
+Example output:
+
+>10000 - 10100	tcp	10.200.120.0/24	10.200.130.0/24
+
+>8081 - 8120	tcp	10.200.120.0/24	10.200.130.0/24
+
+>5432 - 5432	tcp	sg-0e73b6cca3a6a83d2
+
+### Display a list of instances attached to a given security group, format it as a tab separated table with values that indicate the instance's id, state, launch time and name, parsed from Tag called "Name":
+
+> aws ec2 describe-instances --filters "Name=instance.group-id,Values=${group_id}" --profile ${profile} --region ${region} --output json | jq -r '.Reservations[].Instances[] | [ .InstanceId, .State.Name, .LaunchTime, (.Tags[] | select(.Key=="Name").Value) ] | @tsv'
+
+Example output:
+
+> i-098c5d63a3edb3629	running	2020-04-05T11:27:01+00:00	k8s-prod-eu-west-1-worker-eks_asg
+
 # **Troubleshooting:**
 
 ### Sometimes, when not all elements have keys, the following error will be shown:
