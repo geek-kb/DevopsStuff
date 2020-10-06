@@ -153,7 +153,7 @@ while getopts "g:p:r:" opt; do
 		;;
 		*)
 		usage
-;;
+		;;
 	esac
 done
 
