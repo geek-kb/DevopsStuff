@@ -1,17 +1,12 @@
 #!/bin/bash
-# This tool handles AWS security groups.
+# This tool investigates AWS security groups.
 # It accepts the following arguments:
 # credentials_profile, region and security_group_id
-# It then checks if the security group is attached to any instance, if it does,
-# It displays the list of instance id's and exits.
-# If the security group is not attached to any instances, it checks if the SG
-# is a vpc-default sg. If it is, then it prints out a message. if it's not, it
-# asks the user if they want to delete the security group.
-# If the user choooses to delete, the script first checks if the SG is
-# referenced by any other security group or ENI.
-# If it's referenced, then it displays the referencing SG's or the ENI's it's
-# Attached to. Else, if it's not attached to any ENI and not referenced, it
-# gets deleted.
+# It then describes the security group's rules, generates a url to the sg,
+# if the sg is attached to any elastic network interfaces it shows these eni's,
+# displays security group id's that refer to the investigated sg, checks if any
+# instances are attached to this sg and if there are any then they are displayed
+# formatted like so: Instance Id, Status, Launch time and Name.
 # Script by Itai Ganot lel@lel.bz
 
 # Color functions
@@ -26,23 +21,18 @@ NOCOLOR=$(tput sgr0)
 function colyellow {
 	echo -e -n "${YELLOW}$* ${NOCOLOR}\n"
 }
-
 function colgreen {
 	echo -e -n "${GREEN}$* ${NOCOLOR}\n"
 }
-
 function colred {
 	echo -e -n "${RED}$* ${NOCOLOR}\n"
 }
-
 function colblue {
 	echo -e -n "${BLUE}$* ${NOCOLOR}\n"
 }
-
 function bold {
 	echo -e -n "${BOLD}$* ${NOCOLOR}\n"
 }
-
 function underline {
 	echo -e -n "${UNDERLINE}$* ${NOCOLOR}\n"
 }
@@ -59,16 +49,31 @@ function usage(){
 }
 
 # AWS functions
-function display_referring_sgs(){
+function display_sg_rules(){
+	colyellow "SG Rules:"
   aws ec2 describe-security-groups --group-id ${group_id} --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[] | [ ((.FromPort // "")|tostring)+" - "+((.ToPort // "")|tostring), .IpProtocol, .IpRanges[].CidrIp // .UserIdGroupPairs[].GroupId // "" ] | @tsv'
 }
 
 function display_referred_sgs(){
-	aws ec2 describe-security-groups --filters "Name=ip-permission.group-id,Values=${group_id}" --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[].UserIdGroupPairs[].GroupId'
+	colyellow "Checking if security group \"${group_name}\" is referenced by any other security groups"
+	sgref=$(aws ec2 describe-security-groups --filters "Name=ip-permission.group-id,Values=${group_id}" --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[].UserIdGroupPairs[].GroupId' | sort | uniq)
+	if [[ -n ${sgref} ]]; then
+		echo "Security group \"${group_name}\" is referenced in the following groups:"
+		echo ${sgref} | tr " " '\n'
+	else
+		echo "Security group \"${group_name}\" is not referenced by any other security groups"
+	fi
 }
 
 function display_enis(){
-	aws ec2 describe-network-interfaces --filters "Name=group-id,Values=${group_id}" --profile ${profile} --region ${region} | jq -r '.NetworkInterfaces[].NetworkInterfaceId'
+	colyellow "Checking if SG is attached to any elastic network interfaces"
+	eni=$(aws ec2 describe-network-interfaces --filters "Name=group-id,Values=${group_id}" --profile ${profile} --region ${region} | jq -r '.NetworkInterfaces[].NetworkInterfaceId')
+	if [[ -n ${eni} ]]; then
+		echo "Security group is attached to the following network interfaces:"
+		echo ${eni} | tr " " '\n'
+	else
+		echo "Security group \"${group_name}\" is not attached to any network interfaces"
+	fi
 }
 
 function display_group_name(){
@@ -105,10 +110,13 @@ function generate_sg_link(){
 }
 
 function check_sg_attached_lb(){
+	colyellow "Checking if security group \"${group_name}\" is attached to a Load Balancer"
 	lb_attached_sg=$(aws elb describe-load-balancers --profile ${profile} --region ${region} --output json | jq -r '.LoadBalancerDescriptions[].SecurityGroups[]' | grep ${group_id} | sort | uniq)
 	if [[ -n ${lb_attached_sg} ]]; then
 		lb_name=$(aws elb describe-load-balancers --profile ${profile} --region ${region} --output json | jq -r --arg group_id ${group_id} '.LoadBalancerDescriptions[] | select(.SecurityGroups[0]==$group_id) | .LoadBalancerName')
-		colred "Security group name \"${group_name}\" is attached to load balancer: ${lb_name}"
+		colred "Security group \"${group_name}\" is attached to load balancer: \"${lb_name}\""
+	else
+		echo "Security group \"${group_name}\" is not attached to any load balancer"
 	fi
 }
 
@@ -163,49 +171,41 @@ else
 fi
 
 vpcid=$(get_sg_vpc_id | sort | uniq)
-colgreen "--------------------------------------------------------------------------"
-colyellow "Describing security group \"${group_name}\" attached to vpc \"${vpcid}\""
-display_referring_sgs
-generate_sg_link
-colyellow "Checking if security group \"${group_name}\" is attached to any network interfaces"
-eni=$(display_enis)
-if [[ -n ${eni} ]]; then
-	echo "Security group is attached to the following network interfaces:"
-	echo ${eni} | tr " " '\n'
-else
-	echo "Security group \"${group_name}\" is not attached to any network interfaces"
-fi
-colyellow "Checking if security group \"${group_name}\" is referenced by any other security groups"
-sgref=$(display_referred_sgs | sort | uniq)
-if [[ -n ${sgref} ]]; then
-	echo "Security group \"${group_name}\" is referenced in the following groups:"
-	echo ${sgref} | tr " " '\n'
-else
-	echo "Security group \"${group_name}\" is not referenced by any other security groups"
-fi
-instances_count=$(display_instance_count)
-if [[ ${instances_count} -gt 0 ]]; then
-  colyellow "Security group name \"${group_name}\" with id \"${group_id}\" is attached to the following instances:"
-  underline "InstanceId              State   LaunchTime                      InstanceName"
-  describe_instances_table
-else
-  echo "Security group \"${group_name}\" with id \"${group_id}\" is not attached to any instances"
-	if [[ ${group_name} = "default" ]]; then
-		colyellow "Group \"${group_name}\" is the default VPC group and cannot be deleted!"
-		exit 0
+if [[ $? -eq 0 ]]; then
+	colgreen "--------------------------------------------------------------------------"
+	bold "Investigating security group \"${group_name}\" with Id \"${group_id}\" in region ${region} attached to vpc \"${vpcid}\""
+	display_sg_rules
+	generate_sg_link
+	display_enis
+	display_referred_sgs
+	colyellow "Checking if security group \"${group_name}\" is attached to any instances"
+	instances_count=$(display_instance_count)
+	if [[ ${instances_count} -gt 0 ]]; then
+	  colyellow "Security group name \"${group_name}\" with id \"${group_id}\" is attached to the following instances:"
+	  underline "InstanceId              State   LaunchTime                      InstanceName"
+	  describe_instances_table
+	else
+	  echo "Security group \"${group_name}\" is not attached to any instances"
+		if [[ ${group_name} = "default" ]]; then
+			colyellow "Group \"${group_name}\" is the default VPC group and cannot be deleted!"
+			exit 0
+		fi
+		check_sg_attached_lb
+		#check_vpc_endpoint
+	  # bold "Do you wish to delete group name: \"${group_name}\" id: \"${group_id}\"? [Y/n] "
+	  # read -r answer
+	  # if [[ ${answer} = [yY] ]]; then
+	  #   delete_security_group
+	  #   if [[ $? -eq 0 ]]; then
+	  #     echo "Group name: \"${group_name}\" with id: \"${group_id}\" has been deleted!"
+	  #     echo "${group_name} (${group_id})"
+	  #   fi
+	  # else
+	  #   echo "Not deleting security group ${group_name}"
+	  #   exit 0
+	  # fi
 	fi
-	check_sg_attached_lb
-	#check_vpc_endpoint
-  # bold "Do you wish to delete group name: \"${group_name}\" id: \"${group_id}\"? [Y/n] "
-  # read -r answer
-  # if [[ ${answer} = [yY] ]]; then
-  #   delete_security_group
-  #   if [[ $? -eq 0 ]]; then
-  #     echo "Group name: \"${group_name}\" with id: \"${group_id}\" has been deleted!"
-  #     echo "${group_name} (${group_id})"
-  #   fi
-  # else
-  #   echo "Not deleting security group ${group_name}"
-  #   exit 0
-  # fi
+else
+	colgreen "--------------------------------------------------------------------------"
+	echo "Security group \"${group_name}\" does not exist!"
 fi
