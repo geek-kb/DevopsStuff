@@ -87,8 +87,6 @@ Example output:
 
 > aws ec2 describe-instances | jq -r '.Reservations[].Instances[] | select(.Tags[]?.Value | match("jenkins";"i")) | .InstanceId'
 
-<br><br>
-
 ### Display a security group's list of rules and format it as: FromPort (if exists) to ToPort (if exists) transformed to strings so I'd be able to add a dash between the values which can be done only with strings. In addition also display protocol name and source cidr or security group, format the output as "Tab Separated Value". 
 
 > aws ec2 describe-security-groups --group-id ${group_id} --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[] | [ ((.FromPort // "")|tostring)+" - "+((.ToPort // "")|tostring), .IpProtocol, .IpRanges[].CidrIp // .UserIdGroupPairs[].GroupId // "" ] | @tsv'
