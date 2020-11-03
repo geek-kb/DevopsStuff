@@ -66,7 +66,7 @@ function display_sg_rules(){
 	aws ec2 describe-security-groups --group-id ${group_id} --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[] | [ ((.FromPort // "")|tostring)+" - "+((.ToPort // "")|tostring), .IpProtocol, .IpRanges[].CidrIp // .UserIdGroupPairs[].GroupId // "" ] | @tsv'
 }
 
-function display_referred_sgs(){
+function display_referring_sgs(){
 	colyellow "Checking if security group \"${group_name}\" is referenced by any other security groups"
 	sgref=$(aws ec2 describe-security-groups --filters "Name=ip-permission.group-id,Values=${group_id}" --profile ${profile} --region ${region} --output json | jq -r --arg sgtofind ${group_id} '.SecurityGroups[] | select(.IpPermissions[].UserIdGroupPairs[].GroupId | contains($sgtofind)) | .GroupId' | sort | uniq)
 	if [[ -n ${sgref} ]]; then
@@ -189,7 +189,7 @@ if [[ $? -eq 0 ]]; then
 	display_sg_rules
 	generate_sg_link
 	display_enis
-	display_referred_sgs
+	display_referring_sgs
 	colyellow "Checking if security group \"${group_name}\" is attached to any instances"
 	instances_count=$(display_instance_count)
 	if [[ ${instances_count} -gt 0 ]]; then
