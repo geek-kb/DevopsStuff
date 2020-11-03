@@ -45,7 +45,7 @@ unset AWS_DEFAULT_OUTPUT
 
 # Usage
 function usage(){
-	echo ${basename}${0} -p AWS_CREDENTIALS_PROFILE -r AWS_REGION -g AWS_EC2_GROUP_ID
+  echo ${basename}${0} -p AWS_CREDENTIALS_PROFILE -r AWS_REGION -g AWS_EC2_GROUP_ID
 }
 
 # AWS functions
@@ -56,7 +56,7 @@ function display_sg_rules(){
 
 function display_referred_sgs(){
 	colyellow "Checking if security group \"${group_name}\" is referenced by any other security groups"
-	sgref=$(aws ec2 describe-security-groups --filters "Name=ip-permission.group-id,Values=${group_id}" --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[].UserIdGroupPairs[].GroupId' | sort | uniq)
+	sgref=$(aws ec2 describe-security-groups --filters "Name=ip-permission.group-id,Values=${group_id}" --profile ${profile} --region ${region} --output json | jq -r --arg sgtofind ${group_id} '.SecurityGroups[] | select(.IpPermissions[].UserIdGroupPairs[].GroupId | contains($sgtofind)) | .GroupId' | sort | uniq)
 	if [[ -n ${sgref} ]]; then
 		echo "Security group \"${group_name}\" is referenced in the following groups:"
 		echo ${sgref} | tr " " '\n'
@@ -73,7 +73,7 @@ function display_enis(){
 		echo ${eni} | tr " " '\n'
 	else
 		echo "Security group \"${group_name}\" is not attached to any network interfaces"
-fi
+	fi
 }
 
 function display_group_name(){
@@ -133,41 +133,41 @@ function check_vpc_endpoint(){
 # Test if jq command line tool is installed (required)
 which jq >/dev/null
 if [[ $? -ne 0 ]]; then
-	echo "The script requires the jq tool, please install it and re-run the script"
-	exit 1
+  echo "The script requires the jq tool, please install it and re-run the script"
+  exit 1
 fi
 
 # Code
 while getopts "g:p:r:" opt; do
-	case $opt in
-		g)
-		gV=${OPTARG}
-		group_id=$(echo $gV | tr [:upper:] [:lower:])
-		;;
-		p)
-		profile=${OPTARG}
-		;;
-		r)
-		rV=${OPTARG}
-		region=$(echo $rV | tr [:upper:] [:lower:])
-		;;
-		*)
-		usage
-		;;
-	esac
+  case $opt in
+    g)
+    gV=${OPTARG}
+    group_id=$(echo $gV | tr [:upper:] [:lower:])
+    ;;
+    p)
+    profile=${OPTARG}
+    ;;
+    r)
+    rV=${OPTARG}
+    region=$(echo $rV | tr [:upper:] [:lower:])
+    ;;
+    *)
+    usage
+    ;;
+  esac
 done
 
 if [[ $# -lt 6 ]]; then
-	echo "Not enough arguments"
-	usage
-	exit 1
+  echo "Not enough arguments"
+  usage
+  exit 1
 fi
 
 describe_security_group >/dev/null
 if [[ $? -eq 0 ]]; then
-	group_name=$(display_group_name)
+  group_name=$(display_group_name)
 else
-	exit 0
+  exit 0
 fi
 
 vpcid=$(get_sg_vpc_id | sort | uniq)
@@ -181,9 +181,9 @@ if [[ $? -eq 0 ]]; then
 	colyellow "Checking if security group \"${group_name}\" is attached to any instances"
 	instances_count=$(display_instance_count)
 	if [[ ${instances_count} -gt 0 ]]; then
-		colyellow "Security group name \"${group_name}\" with id \"${group_id}\" is attached to the following instances:"
-		underline "InstanceId              State   LaunchTime                      InstanceName"
-		describe_instances_table
+	  colyellow "Security group name \"${group_name}\" with id \"${group_id}\" is attached to the following instances:"
+	  underline "InstanceId              State   LaunchTime                      InstanceName"
+	  describe_instances_table
 	else
 	  echo "Security group \"${group_name}\" is not attached to any instances"
 		if [[ ${group_name} = "default" ]]; then
@@ -191,19 +191,6 @@ if [[ $? -eq 0 ]]; then
 			exit 0
 		fi
 		check_sg_attached_lb
-		#check_vpc_endpoint
-	  # bold "Do you wish to delete group name: \"${group_name}\" id: \"${group_id}\"? [Y/n] "
-	  # read -r answer
-	  # if [[ ${answer} = [yY] ]]; then
-	  #   delete_security_group
-	  #   if [[ $? -eq 0 ]]; then
-	  #     echo "Group name: \"${group_name}\" with id: \"${group_id}\" has been deleted!"
-	  #     echo "${group_name} (${group_id})"
-	  #   fi
-	  # else
-	  #   echo "Not deleting security group ${group_name}"
-	  #   exit 0
-	  # fi
 	fi
 else
 	colgreen "--------------------------------------------------------------------------"
