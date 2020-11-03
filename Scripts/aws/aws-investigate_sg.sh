@@ -55,10 +55,10 @@ function usage(){
 # Script functions
 
 function get_jq(){
-  echo "jq not installed, installing..."
-  wget -s -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-  chmod +x ./jq
-  cp jq /usr/bin/
+	echo "jq not installed, installing..."
+	wget -s -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+	chmod +x ./jq
+	cp jq /usr/bin/
 }
 
 function display_sg_rules(){
