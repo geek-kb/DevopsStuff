@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This tool investigates AWS security groups.
 # It accepts the following arguments:
 # credentials_profile, region and security_group_id
@@ -10,6 +11,7 @@
 # Script by Itai Ganot lel@lel.bz
 
 # Color functions
+
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
@@ -38,17 +40,27 @@ function underline {
 }
 
 # Output settings
+
 export AWS_PAGER=""
 #export AWS_DEFAULT_OUTPUT="table"
 #unset AWS_PAGER
 unset AWS_DEFAULT_OUTPUT
 
 # Usage
+
 function usage(){
-  echo ${basename}${0} -p AWS_CREDENTIALS_PROFILE -r AWS_REGION -g AWS_EC2_GROUP_ID
+	echo ${basename}${0} -p AWS_CREDENTIALS_PROFILE -r AWS_REGION -g AWS_EC2_GROUP_ID
 }
 
-# AWS functions
+# Script functions
+
+function get_jq(){
+  echo "jq not installed, installing..."
+  wget -s -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+  chmod +x ./jq
+  cp jq /usr/bin/
+}
+
 function display_sg_rules(){
 	colyellow "SG Rules:"
 	aws ec2 describe-security-groups --group-id ${group_id} --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].IpPermissions[] | [ ((.FromPort // "")|tostring)+" - "+((.ToPort // "")|tostring), .IpProtocol, .IpRanges[].CidrIp // .UserIdGroupPairs[].GroupId // "" ] | @tsv'
@@ -130,14 +142,14 @@ function check_vpc_endpoint(){
 	fi
 }
 
-# Test if jq command line tool is installed (required)
+# Code
+
+# Test if jq command line tool is installed (required) - if not, install it
 which jq >/dev/null
 if [[ $? -ne 0 ]]; then
-  echo "The script requires the jq tool, please install it and re-run the script"
-  exit 1
+  get_jq
 fi
 
-# Code
 while getopts "g:p:r:" opt; do
   case $opt in
     g)
