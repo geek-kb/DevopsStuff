@@ -8,7 +8,7 @@
 # displays security group id's that refer to the investigated sg, checks if any
 # instances are attached to this sg and if there are any then they are displayed
 # formatted like so: Instance Id, Status, Launch time and Name.
-# Script by Itai Ganot lel@lel.bz 2020
+# Script by Itai Ganot lel@lel.bz
 
 # Color functions
 
@@ -208,3 +208,4 @@ else
 	colgreen "--------------------------------------------------------------------------"
 	echo "Security group \"${group_name}\" does not exist!"
 fi
+
