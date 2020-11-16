@@ -23,12 +23,15 @@ NOCOLOR=$(tput sgr0)
 function colyellow {
 	echo -e -n "${YELLOW}$* ${NOCOLOR}\n"
 }
+
 function colgreen {
 	echo -e -n "${GREEN}$* ${NOCOLOR}\n"
 }
+
 function bold {
 	echo -e -n "${BOLD}$* ${NOCOLOR}\n"
 }
+
 function underline {
 	echo -e -n "${UNDERLINE}$* ${NOCOLOR}\n"
 }
@@ -41,12 +44,15 @@ function usage(){
   echo ${basename}${0} -f filename_containing_sgs_and_regions -p aws_profile_name -i
   exit 1
 }
+
 function investigate_sg(){
   ./investigate_sg.sh -r ${region} -p ${profile} -g ${sg}
 }
+
 function display_group_name(){
 	aws ec2 describe-security-groups --group-id ${sg} --profile ${profile} --region ${region} --output json | jq -r '.SecurityGroups[].GroupName'
 }
+
 function delete_referred_sg(){
   group_name=$(display_group_name)
   colgreen "---------------------------------------------------------------------"
