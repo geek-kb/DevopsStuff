@@ -131,7 +131,7 @@ def display_results(db_passwd):
         insert_data(db_passwd, branch_name, committer_email)
 
 
-ddef compile_email():
+def compile_email():
     email_message = """
 Hi,
 The following branches ({}) have not been committed to for over {} months (or {} days) and will be deleted within a week:
