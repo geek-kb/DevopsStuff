@@ -16,7 +16,7 @@ pathspec==0.7.0
 proselint==0.10.2
 pycodestyle==2.5.0
 pyflakes==2.1.1
-PyYAML==5.3
+PyYAML==5.4
 six==1.13.0
 termcolor2==0.0.3
 trollius==2.2.post1
