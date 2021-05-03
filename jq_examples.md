@@ -107,6 +107,15 @@ Example output:
 
 > i-098c5d63a3edb3629	running	2020-04-05T11:27:01+00:00	k8s-prod-eu-west-1-worker-eks_asg
 <br><br>
+
+### Extracting a value of all CloudFormation stacks which match specific string in key Stackname and StackStatus of "CREATE COMPLETE" or "UPDATE_COMPLETE":
+
+> aws cloudformation list-stacks --profile production | jq -r '.StackSummaries[] | select(.StackName == "some-stack-name" and ( .StackStatus == "CREATE_COMPLETE" or .StackStatus == "UPDATE_COMPLETE" )) | .StackId'
+
+Example output:
+
+> arn:aws:cloudformation:us-east-1:AWS_ACCOUNT_ID:stack/some-stack-name/44239210-9703-11eb-b085-12da3ecd6186
+
 # **Troubleshooting:**
 
 ### Sometimes, when not all elements have keys, the following error will be shown:
