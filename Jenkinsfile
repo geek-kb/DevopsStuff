@@ -1,13 +1,15 @@
 pipeline {
     agent any
-    stage('first'){
-        steps{
-            git 'https://github.com/geek-kb/DevopsStuff.git'
+    stages {
+        stage('first'){
+            steps{
+                git 'https://github.com/geek-kb/DevopsStuff.git'
+            }
         }
-    }
-    stage('something'){
-        steps{
-            sh 'echo hi'
+        stage('something'){
+            steps{
+                sh 'echo hi'
+            }
         }
     }
 }
