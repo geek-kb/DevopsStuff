@@ -11,5 +11,10 @@ pipeline {
                 sh 'echo hi'
             }
         }
+        stage('this will trigger the job'){
+            steps{
+                sh 'echo trigger'
+            }
+        }
     }
 }
