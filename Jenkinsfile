@@ -16,5 +16,10 @@ pipeline {
                 sh 'echo trigger'
             }
         }
+        stage('this is a new stage'){
+            steps{
+                sh 'date'
+            }
+        }
     }
 }
