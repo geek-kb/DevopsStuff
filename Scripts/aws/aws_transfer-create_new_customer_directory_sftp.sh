@@ -15,7 +15,7 @@ fi
 
 function usage(){
     echo "This script creates AWS IAM policies and role that are required in order to setup"
-    echo "a new customer's directory in the Amazon transfer family (sftp server) of yotpo-cs."
+    echo "a new customer's directory in the Amazon transfer family (sftp server) of company-cs."
     echo "Usage:"
     echo "${basename}${0} -u UserName"
 }
@@ -104,25 +104,25 @@ cat <<EOF > temp-${s3_bucket_name}-read-write
     ]
 }
 EOF
-sed -i.bak "s/USERNAME/$username/g" temp-yotpo-cs-ftp-read-write
-sed -i.bak "s/S3BUCKETNAME/$s3_bucket_name/g" temp-yotpo-cs-ftp-read-write
-aws iam create-policy --policy-name ${s3_bucket_name}-read-write-${username} --policy-document file://temp-yotpo-cs-ftp-read-write
+sed -i.bak "s/USERNAME/$username/g" temp-company-cs-ftp-read-write
+sed -i.bak "s/S3BUCKETNAME/$s3_bucket_name/g" temp-company-cs-ftp-read-write
+aws iam create-policy --policy-name ${s3_bucket_name}-read-write-${username} --policy-document file://temp-company-cs-ftp-read-write
 rm -f temp-${s3_bucket_name}-read-write
 
 # AWS Iam - attach the below policies to the new role
-policies="yotpo-cs-ftp-scope-down yotpo-cs-ftp-deny-mkdir yotpo-cs-ftp-read-write-${username}"
+policies="company-cs-ftp-scope-down company-cs-ftp-deny-mkdir company-cs-ftp-read-write-${username}"
 for policy_name in ${policies}; do
     arn=$(aws iam list-policies --scope Local --output json | jq -r --arg polname ${policy_name} '.Policies[] | select(.PolicyName==$polname) | .Arn')
-    echo "Adding ${policy_name} - ${arn} to newly created role yotpo-cs-ftp-read-write-${username}"
-    aws iam attach-role-policy --role-name yotpo-cs-ftp-read-write-${username} --policy-arn $arn
+    echo "Adding ${policy_name} - ${arn} to newly created role company-cs-ftp-read-write-${username}"
+    aws iam attach-role-policy --role-name company-cs-ftp-read-write-${username} --policy-arn $arn
 done
 
 # AWS Iam - verify the role has been created successfully
-aws iam get-role --role-name yotpo-cs-ftp-read-write-${username}
+aws iam get-role --role-name company-cs-ftp-read-write-${username}
 
 if [[ $? -eq 0 ]]; then
-    echo "Role yotpo-cs-ftp-read-write-${username} successfully created!"
-    role_arn=$(aws iam get-role --role-name yotpo-cs-ftp-read-write-${username} | jq -r '.Role.Arn')
+    echo "Role company-cs-ftp-read-write-${username} successfully created!"
+    role_arn=$(aws iam get-role --role-name company-cs-ftp-read-write-${username} | jq -r '.Role.Arn')
 fi
 
 # AWS S3 - create a folder with the name of the user in the bucket
@@ -130,7 +130,7 @@ aws s3api put-object --bucket ${s3_bucket_name} --key ${username}/
 
 # AWS Transfer - creates the user and attaches the role to it
 # If the version of AWS-CLI is 2.x then the command should be:
-#aws transfer create-user --home-directory /yotpo-cs-ftp/${username} --home-directory-type PATH --role ${role_arn} --server-id ${server_id} --user-name ${username}
+#aws transfer create-user --home-directory /company-cs-ftp/${username} --home-directory-type PATH --role ${role_arn} --server-id ${server_id} --user-name ${username}
 # But for version 1.x the command should be:
 aws transfer create-user --home-directory /${s3_bucket_name}/${username} --role ${role_arn} --server-id ${server_id} --user-name ${username}
 
