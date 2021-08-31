@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # This script answers the security vulnerability of releasing an AWS elastic IP without making sure it is deleted from all security groups.
-# Run the script and it will go through the list of AWS profiles, it will then check if there are any unassociated elastic ips and if such an eip exists in any security group inbound rule.
-# If the eip isn't found on any SG - it's allocationg will be released and if it's found in a SG, the rule containing the eip will be deleted and the allocation will be released.
+# Run the script and it will go through the list of AWS profiles, it will then check if there are any unassociated elastic ips and if such 
+# an eip exists in any security group inbound rule.
+# If the eip isn't found on any SG - it's allocationg will be released and if it's found in a SG, the rule containing the eip will be
+# deleted and the allocation will be released.
+# Script by Itai Ganot 2021
 
 log_file="$(echo ${0::-3}).log"
 
@@ -18,7 +21,7 @@ function timestamp(){
     DATE=$(date +%Y-%m-%d)
     TIME=$(date +%H:%M:%S)
     ZONE=$(date +"%Z %z")
-    echo $TEXT $DATE $TIME $ZONE
+    echo "${DATE} ${TIME} ${ZONE}"
 }
 
 function logger(){
@@ -32,22 +35,22 @@ function logger(){
     case "$1" in
         y)
         echo -e -n "$(timestamp) ${YELLOW}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "$log_file"
+        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
         ;;
         g)
         echo -e -n "$(timestamp) ${GREEN}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "$log_file"
+        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
         ;;
         b)
         echo -e -n "$(timestamp) ${BOLD}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "$log_file"
+        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
         ;;
         u)
         echo -e -n "$(timestamp) ${UNDERLINE}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "$log_file"
+        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
         ;;
         n)
-        echo -e -n "$(timestamp) $2\n" | tee -a "$log_file"
+        echo -e -n "$(timestamp) $2\n" | tee -a "${log_file}"
         ;;
         *)
         echo "Unknown color!"
@@ -85,7 +88,7 @@ function display_null_association_allocationid(){
 }
 
 function check_rule_number_exists(){
-    rule_number_exists=$(jq -r --arg number $number '.SecurityGroups[].IpPermissions[$number|tonumber]' "/tmp/${groupid}.txt")
+    rule_number_exists=$(jq -r --arg number "${number}" '.SecurityGroups[].IpPermissions[$number|tonumber]' "/tmp/${groupid}.txt")
     echo $rule_number_exists
 }
 
@@ -121,7 +124,7 @@ function break_sg_rules_to_files_and_revoke(){
     for number in $(seq 0 60); do
         rule_number=$(check_rule_number_exists)
         if [[ "${rule_number}" != null ]]; then
-            jq -r --arg number $number '.SecurityGroups[].IpPermissions[$number|tonumber]' "/tmp/${groupid}.txt" > "/tmp/${groupid}_${number}.txt"
+            jq -r --arg number "${number}" '.SecurityGroups[].IpPermissions[$number|tonumber]' "/tmp/${groupid}.txt" > "/tmp/${groupid}_${number}.txt"
             revoke_sg_rules
         else
             break
@@ -138,7 +141,7 @@ function release_vpc_eip(){
 }
 
 function release_eip_addr(){
-    logger g "Releasing ip $ip with AllocationId ${allocation}"
+    logger g "Releasing ip ${ip} with AllocationId ${allocation}"
     release_ec2-classic_eip
     if [[ $? -eq 0 ]]; then
         logger g "Allocation released successfully!"
@@ -174,38 +177,38 @@ done
 # Code
 install_deps
 for prof in $(echo ${profile} | tr " " "\n"); do
-    for region in $regions; do
+    for region in "${regions}"; do
         logger b "------------ Now working on profile ${prof} in region ${region}"
         addresses=$(display_elastic_addresses)
-        if [[ -z "$addresses" ]]; then
+        if [[ -z "${addresses}" ]]; then
             logger g "No elastic ips found in profile ${prof} in region ${region}"
         else
             not_null_association_public_ips=$(display_not_null_allocation_publicips)
             logger g "The following IPs are allocated and associated:"
-            logger n "$(echo $not_null_association_public_ips | xargs)"
+            logger n "$(echo ${not_null_association_public_ips} | xargs)"
             logger n "----------------------------------------------------------"
             null_association_allocationid=$(display_null_association_allocationid)
-            if [[ -n "$null_association_allocationid" ]]; then
-                for allocation in ${null_association_allocationid}; do
-                    if [[ -n "$allocation" ]]; then
+            if [[ -n "${null_association_allocationid}" ]]; then
+                for allocation in "${null_association_allocationid}"; do
+                    if [[ -n "${allocation}" ]]; then
                         ip=$(display_publicip_of_null_association)
                         logger y "Found unassociated elastic ips:"
                         logger n "${ip}"
                         groupids=$(display_sg_ids_that_contains_rules_with_ip)
-                        if [[ -n ${groupids} ]]; then
+                        if [[ -n "${groupids}" ]]; then
                             logger y "IP ${ip} found in groups:"
                             logger n "$(echo ${groupids} | xargs)"
-                            for groupid in ${groupids}; do
+                            for groupid in "${groupids}"; do
                                 describe_sg_to_file
                                 break_sg_rules_to_files_and_revoke
                                 if [[ $? -eq 0 ]]; then
-                                    logger g "The rule containing ip $ip has been deleted from security group $groupid successfully"
+                                    logger g "The rule containing ip ${ip} has been deleted from security group ${groupid} successfully"
                                 fi
                                 rm -f "/tmp/${groupid}.txt"
                             done
                             release_eip_addr
                         else
-                            logger g "IP $ip cannot be found in any security groups"
+                            logger g "IP ${ip} cannot be found in any security groups"
                             release_eip_addr
                         fi
                     fi
