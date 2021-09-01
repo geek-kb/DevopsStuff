@@ -5,6 +5,7 @@
 # an eip exists in any security group inbound rule.
 # If the eip isn't found on any SG - it's allocationg will be released and if it's found in a SG, the rule containing the eip will be
 # deleted and the allocation will be released.
+# The script sends all the important output to a log file called the same as the script but ends with ".log".
 # Script by Itai Ganot 2021
 
 log_file="$(echo ${0::-3}).log"
@@ -34,20 +35,16 @@ function logger(){
 
     case "$1" in
         y)
-        echo -e -n "$(timestamp) ${YELLOW}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
+        echo -e -n "$(timestamp) ${YELLOW}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
         ;;
         g)
-        echo -e -n "$(timestamp) ${GREEN}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
+        echo -e -n "$(timestamp) ${GREEN}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
         ;;
         b)
-        echo -e -n "$(timestamp) ${BOLD}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
+        echo -e -n "$(timestamp) ${BOLD}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
         ;;
         u)
-        echo -e -n "$(timestamp) ${UNDERLINE}$2 ${NOCOLOR}\n"
-        echo -e -n "$(timestamp) $2\n" >> "${log_file}"
+        echo -e -n "$(timestamp) ${UNDERLINE}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
         ;;
         n)
         echo -e -n "$(timestamp) $2\n" | tee -a "${log_file}"
