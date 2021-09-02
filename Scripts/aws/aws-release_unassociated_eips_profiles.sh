@@ -9,12 +9,25 @@
 # Script by Itai Ganot 2021
 
 log_file="$(echo ${0::-3}).log"
+export TERM=xterm-256color
 
 # Functions
 function usage(){
     # This function explains how to use the script
     echo "Please supply a regions list and aws profiles list"
     echo "${basename}${0} -r [regions list separated by comma] -p [profiles list separated by comma]"
+}
+
+function load_colors() {
+    if [[ -z "${NOCOLOR}" ]]
+    then
+        export RED=$(tput setaf 1)
+        export GREEN=$(tput setaf 2)
+        export YELLOW=$(tput setaf 3)
+        export BOLD=$(tput bold)
+        export UNDERLINE=$(tput smul)
+        export NOCOLOR=$(tput sgr0)
+    fi
 }
 
 function timestamp(){
@@ -27,18 +40,17 @@ function timestamp(){
 
 function logger(){
     # This functions prints all given commands colored and logs each command to the log file uncolored
-    GREEN=$(tput setaf 2)
-    YELLOW=$(tput setaf 3)
-    BOLD=$(tput bold)
-    UNDERLINE=$(tput smul)
-    NOCOLOR=$(tput sgr0)
+    load_colors
 
     case "$1" in
-        y)
-        echo -e -n "$(timestamp) ${YELLOW}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
+        r)
+        echo -e -n "$(timestamp) ${RED}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
         ;;
         g)
         echo -e -n "$(timestamp) ${GREEN}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
+        ;;
+        y)
+        echo -e -n "$(timestamp) ${YELLOW}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
         ;;
         b)
         echo -e -n "$(timestamp) ${BOLD}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
@@ -47,7 +59,7 @@ function logger(){
         echo -e -n "$(timestamp) ${UNDERLINE}$2 ${NOCOLOR}\n" | tee >(sed 's/\x1B[\[\(][0-9;]*[BJKmsu]//g' >> ${log_file})
         ;;
         n)
-        echo -e -n "$(timestamp) $2\n" | tee -a "${log_file}"
+        echo -e -n "$(timestamp) $2\n" | tee -a "$log_file"
         ;;
         *)
         echo "Unknown color!"
@@ -112,7 +124,12 @@ function revoke_sg_rules(){
     Cidr=$(jq -r '.IpRanges[].CidrIp' "/tmp/${groupid}_${number}.txt")
     Ip=$(echo ${Cidr} | awk -F/ '{print $1}')
     if [[ ${Ip} == ${ip} ]]; then
-        aws ec2 revoke-security-group-ingress --region "${region}" --profile "${prof}"--group-id "${groupid}" --ip-permissions IpProtocol=$Protocol,FromPort=$FromPort,ToPort=$ToPort,IpRanges=[{CidrIp=$Cidr}]
+        logger n "aws ec2 revoke-security-group-ingress --region ${region} --group-id ${groupid} --ip-permissions IpProtocol=$Protocol,FromPort=$FromPort,ToPort=$ToPort,IpRanges=[{CidrIp=$Cidr}]"
+        if [[ $? -eq 0 ]]; then
+            logger g "The rule containing ip $ip has been deleted from security group $groupid successfully"
+        else
+            logger r "Unable to delete the rule containing ip $ip from security group $groupid"
+        fi
     fi
     rm -f "/tmp/${groupid}_${number}.txt"
 }
@@ -138,13 +155,17 @@ function release_vpc_eip(){
 }
 
 function release_eip_addr(){
-    logger g "Releasing ip ${ip} with AllocationId ${allocation}"
-    release_ec2-classic_eip
+    logger g "Releasing ip $ip with AllocationId ${allocation}"
+    echo release_ec2-classic_eip
     if [[ $? -eq 0 ]]; then
         logger g "Allocation released successfully!"
     else
-        release_vpc_eip
-        logger g "Allocation released successfully!"
+        echo release_vpc_eip
+        if [[ $? -eq 0 ]]; then
+            logger g "Allocation released successfully!"
+        else
+            logger r "Failed to release allocation!"
+        fi
     fi
 }
 
@@ -198,10 +219,10 @@ for prof in $(echo ${profile} | tr " " "\n"); do
                             for groupid in "${groupids}"; do
                                 describe_sg_to_file
                                 break_sg_rules_to_files_and_revoke
+                                rm -f "/tmp/${groupid}.txt"
                                 if [[ $? -eq 0 ]]; then
                                     logger g "The rule containing ip ${ip} has been deleted from security group ${groupid} successfully"
                                 fi
-                                rm -f "/tmp/${groupid}.txt"
                             done
                             release_eip_addr
                         else
