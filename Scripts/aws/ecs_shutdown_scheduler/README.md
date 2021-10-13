@@ -1,15 +1,15 @@
-#ECS_shutdown_scheduler
+# ECS_shutdown_scheduler
 
 This lambda function runs at night and morning setting ECS services desired count down to a (configureable) minimal value or back to the previously retained values.
 
-###How does it act?
+### How does it act?
 
 If a capacity provider is attached to the cluster, the services are not touched and the capacity provider is updated instead.
 If no capacity provider is present, the lambda runs through each service, setting it down to minimal values or back up to previous values.
 If an ECS cluster has both a capacity provider and container instances from another autoscaling group (other than the one attached to the capacity provider),
 only the other autoscaling group minimum and desired values are updated.
 
-###Installation
+### Installation
 
 1. Create an IAM role for the lambda.
 2. Add the "AWSLambdaBasicExecutionRole" policy to the role in addition to the [inline\_policy_document] (https://github.com/geek-kb/DevopsStuff/tree/master/Scripts/aws/ecs_shutdown_schedule/lambda_inline_policy.json) file which can be found in this directory.
