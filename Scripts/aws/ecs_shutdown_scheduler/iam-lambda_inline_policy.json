@@ -1,0 +1,78 @@
+{
+    "Statement": [
+        {
+            "Action": [
+                "application-autoscaling:DescribeScalableTargets",
+                "application-autoscaling:RegisterScalableTarget"
+            ],
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "AppAutoscaling"
+        },
+        {
+            "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:UpdateAutoScalingGroup",
+                "autoscaling:CreateOrUpdateTags"
+            ],
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "Autoscaling"
+        },
+        {
+            "Action": [
+                "ecs:ListClusters",
+                "ecs:ListServices",
+                "ecs:TagResource"
+            ],
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "EcsTag"
+        },
+        {
+            "Action": [
+                "ecs:UpdateService",
+                "ecs:DescribeServices"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:ecs:AWS_REGION:AWS_ACCOUNT_ID:service/*",
+            "Sid": "Services"
+        },
+        {
+            "Action": [
+                "ecs:DescribeClusters",
+                "ecs:DescribeCapacityProviders",
+                "ecs:ListContainerInstances"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:ecs:AWS_REGION:AWS_ACCOUNT_ID:cluster/*",
+            "Sid": "Clusters"
+        },
+        {
+            "Action": [
+                "ecs:DescribeContainerInstances"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:ecs:AWS_REGION:AWS_ACCOUNT_ID:container-instance/*",
+            "Sid": "ContainerInstances"
+        },
+        {
+            "Action": [
+                "ecs:DescribeCapacityProviders",
+                "ecs:UpdateCapacityProvider"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:ecs:AWS_REGION:AWS_ACCOUNT_ID:capacity-provider/*",
+            "Sid": "CapacityProviders"
+        },
+        {
+            "Action": [
+                "ec2:DescribeInstances"
+            ],
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "EC2Instances"
+        }
+    ],
+    "Version": "2012-10-17"
+}
