@@ -122,6 +122,9 @@ Example output:
 ### time based on a specific date (2022-05-13)
 
 > aws rds describe-db-snapshots --db-instance-identifier production-company-rds01 --region us-east-2 | jq --arg snapshot_date 2022-05-13 -r '.DBSnapshots[] | select((.DBSnapshotIdentifier | startswith("production-company-rds01") and (.OriginalSnapshotCreateTime | startswith($snapshot_date))) | "OriginalSnapshotCreateTime="+.OriginalSnapshotCreateTime, "DBSnapshotArn="+.DBSnapshotArn, "DBSnapshotIdentifier="+.DBSnapshotIdentifier'
+
+Example output:
+
 > OriginalSnapshotCreateTime=2022-05-13T07:06:44.974000+00:00
 > DBSnapshotArn=arn:aws:rds:us-east-2:ACCOUNT_ID:snapshot:rds:production-company-rds-01-2022-05-13-07-06
 > DBSnapshotIdentifier=rds:production-company-rds01-2022-05-13-07-06
