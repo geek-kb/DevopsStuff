@@ -117,9 +117,7 @@ Example output:
 
 > arn:aws:cloudformation:us-east-1:AWS_ACCOUNT_ID:stack/some-stack-name/44239210-9703-11eb-b085-12da3ecd6186
 
-### Extracting db snapshot identifier, db snapshot arn and db snapshot create
-
-### time based on a specific date (2022-05-13)
+### Extracting db snapshot identifier, db snapshot arn and db snapshot create time based on a specific date (2022-05-13)
 
 > aws rds describe-db-snapshots --db-instance-identifier production-company-rds01 --region us-east-2 | jq --arg snapshot_date 2022-05-13 -r '.DBSnapshots[] | select((.DBSnapshotIdentifier | startswith("production-company-rds01") and (.OriginalSnapshotCreateTime | startswith($snapshot_date))) | "OriginalSnapshotCreateTime="+.OriginalSnapshotCreateTime, "DBSnapshotArn="+.DBSnapshotArn, "DBSnapshotIdentifier="+.DBSnapshotIdentifier'
 
