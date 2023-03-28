@@ -160,4 +160,4 @@ Example:
 
 <br><br>
 
-Written by: Itai Ganot, lel@lel.bz
+Maintained by: Itai Ganot, lel@lel.bz
