@@ -1,6 +1,8 @@
 #!/bin/bash
+# Script by Itai Ganot 2023
 export AWS_PAGER=""
 
+# Usage
 function usage(){
 echo "This script lists and purges a given queue url"
 echo "Available switches:"
@@ -15,6 +17,7 @@ echo "./purge_queues.sh -e stg -q queue_name"
 echo " "
 }
 
+# jq installation function
 function get_jq(){
 	echo "jq not installed, installing..."
 	wget -s -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
@@ -55,6 +58,7 @@ if [[ -z $list && -z $env ]]; then
 	usage
 	exit 1
 fi
+
 if [[ $env == 'stg' ]]; then
 	acc_id='STG_ACCOUNT_ID'
 	region='eu-west-2'
@@ -62,10 +66,11 @@ elif [[ $env == 'prd' ]]; then
 	acc_id='PRD_ACCOUNT_ID'
 	region='us-east-1'
 fi	
+
 queue_url=https://sqs.${region}.amazonaws.com/${acc_id}/${queue_name}
+
 if [[ $list == 'true' ]]; then
 	aws sqs list-queues --region $region | jq -r '.QueueUrls[]' | rev | awk -F/ '{print $1}' | rev
 elif [[ $list == 'false' ]]; then
 	aws sqs purge-queue --region $region --queue-url ${queue_url}
 fi
-
