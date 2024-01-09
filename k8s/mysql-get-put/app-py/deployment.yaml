@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-api
+  template:
+    metadata:
+      labels:
+        app: flask-api
+    spec:
+      containers:
+        - name: flask-api
+          image: camelel/py-get-put:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: MYSQL_DATABASE
+              value: getput
+            - name: MYSQL_APP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-db-user-pass
+                  key: db_username.txt
+            - name: MYSQL_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-db-user-pass
+                  key: db_password.txt
+            - name: MYSQL_HOST
+              value: mysql.dev.svc.cluster.local
+            - name: MYSQL_TABLE_NAME
+              value: users
+            - name: DATABASE_URL
+              value: mysql://$(DATABASE_USER):$(DATABASE_PASSWORD)@$(DATABASE_HOST):3306/$(DATABASE_NAME)

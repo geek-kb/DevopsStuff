@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+    name: db-server
+subsets:
+    - addresses:
+        - ip: 192.168.49.2
+      ports:
+        - port: 3306
