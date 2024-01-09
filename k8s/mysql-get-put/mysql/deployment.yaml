@@ -20,12 +20,9 @@ spec:
             - /bin/sh
             - -c
             - |
-              echo "Downloading init.sql"
               wget --no-check-certificate "https://raw.githubusercontent.com/geek-kb/DevopsStuff/master/init.sql" -O /docker-entrypoint-initdb.d/init.sql
-              echo "Downloaded init.sql"
               sed -i 's/${TEMP_MYSQL_USER}/$(MYSQL_APP_USER)/g' /docker-entrypoint-initdb.d/init.sql
               sed -i 's/${TEMP_MYSQL_PASSWORD}/$(MYSQL_APP_PASSWORD)/g' /docker-entrypoint-initdb.d/init.sql
-              cat /docker-entrypoint-initdb.d/init.sql
           env:
             - name: MYSQL_APP_USER
               valueFrom:
