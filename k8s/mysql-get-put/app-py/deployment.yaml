@@ -34,3 +34,4 @@ spec:
               value: mysql.dev.svc.cluster.local
             - name: MYSQL_TABLE_NAME
               value: users
+
