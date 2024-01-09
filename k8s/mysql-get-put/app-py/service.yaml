@@ -7,6 +7,6 @@ spec:
     app: flask-api
   ports:
     - protocol: TCP
-      port: 80  # Exposed port for the service
-      targetPort: 5000  # Port your Flask app listens on
-  type: LoadBalancer  # Use "LoadBalancer" for cloud-based deployments
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
