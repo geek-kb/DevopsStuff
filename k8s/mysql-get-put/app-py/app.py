@@ -143,12 +143,8 @@ def submit():
         write_data_to_mysql([data])
     except Exception as e:
         return jsonify({"error": str(e)})
-    # Process the input as needed
-    # For example, print the values
-    print("First name:", fname)
-    print("Last name:", lname)
 
-    # You can also return a response to the user if needed
+    # Returns a response to the user if needed
     return "Form submitted successfully!"
 
 if __name__ == '__main__':
