@@ -34,5 +34,3 @@ spec:
               value: mysql.dev.svc.cluster.local
             - name: MYSQL_TABLE_NAME
               value: users
-            - name: DATABASE_URL
-              value: mysql://$(DATABASE_USER):$(DATABASE_PASSWORD)@$(DATABASE_HOST):3306/$(DATABASE_NAME)
