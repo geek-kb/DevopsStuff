@@ -2,6 +2,7 @@ import mysql.connector
 import json
 import logging
 import os
+import time
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)

@@ -12,7 +12,7 @@ GRANT ALL PRIVILEGES ON ${TEMP_MYSQL_DATABASE}.* TO '${TEMP_MYSQL_USER}'@'%';
 FLUSH PRIVILEGES;
 
 -- Use the newly created database
-USE getput;
+USE ${TEMP_MYSQL_DATABASE};
 
 -- Create a new table
 CREATE TABLE IF NOT EXISTS users (
