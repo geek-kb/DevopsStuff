@@ -2,7 +2,7 @@ import mysql.connector
 import json
 import logging
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
@@ -121,6 +121,35 @@ def insert_data():
         return jsonify({"message": "Data inserted successfully."})
     except Exception as e:
         return jsonify({"error": str(e)})
+
+# Route to display the HTML form
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('form.html')
+
+# Route to handle form submission
+@app.route('/submit', methods=['POST'])
+def submit():
+    # Get user input from the form
+    fname = request.form.get('fname')
+    lname = request.form.get('lname')
+
+    data = {
+        "fname": fname,
+        "lname": lname
+    }
+    logger.info("Data received: %s", data)
+    try:
+        write_data_to_mysql([data])
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    # Process the input as needed
+    # For example, print the values
+    print("First name:", fname)
+    print("Last name:", lname)
+
+    # You can also return a response to the user if needed
+    return "Form submitted successfully!"
 
 if __name__ == '__main__':
     logger.info("Starting the application.")
