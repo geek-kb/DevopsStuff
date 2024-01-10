@@ -1,8 +1,6 @@
 import mysql.connector
-import json
 import logging
 import os
-import time
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
@@ -25,7 +23,6 @@ def get_data_from_mysql(query):
         username = os.environ.get("MYSQL_APP_USER")
         password = os.environ.get("MYSQL_APP_PASSWORD")
         database = os.environ.get("MYSQL_DATABASE")
-        table_name = os.environ.get("MYSQL_TABLE_NAME")
 
         # Establish a connection to the MySQL database
         connection = mysql.connector.connect(
@@ -84,7 +81,7 @@ def write_data_to_mysql(data):
                 lname = entry['lname']
                 insert_query = "INSERT INTO {} (fname, lname) VALUES ('{}', '{}')".format(table_name, fname, lname)
                 cursor.execute(insert_query)
-            
+
             logger.info("Data inserted successfully.")
 
             # Commit the changes
