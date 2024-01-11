@@ -21,9 +21,9 @@ spec:
             - -c
             - |
               wget --no-check-certificate "https://raw.githubusercontent.com/geek-kb/DevopsStuff/master/init.sql" -O /docker-entrypoint-initdb.d/init.sql
-              sed -i "s/${TEMP_MYSQL_USER}/$(MYSQL_APP_USER)/g" /docker-entrypoint-initdb.d/init.sql
-              sed -i "s/${TEMP_MYSQL_PASSWORD}/$(MYSQL_APP_PASSWORD)/g" /docker-entrypoint-initdb.d/init.sql
-              sed -i "s/${TEMP_MYSQL_DATABASE}/$(MYSQL_DATABASE)/g" /docker-entrypoint-initdb.d/init.sql
+              sed -i 's/${TEMP_MYSQL_USER}/$(MYSQL_APP_USER)/g' /docker-entrypoint-initdb.d/init.sql
+              sed -i 's/${TEMP_MYSQL_PASSWORD}/$(MYSQL_APP_PASSWORD)/g' /docker-entrypoint-initdb.d/init.sql
+              sed -i 's/${TEMP_MYSQL_DATABASE}/$(MYSQL_DATABASE)/g' /docker-entrypoint-initdb.d/init.sql
           env:
             - name: MYSQL_APP_USER
               valueFrom:
@@ -35,6 +35,8 @@ spec:
                 secretKeyRef:
                   name: app-db-user-pass
                   key: db_app_password.txt
+            - name: MYSQL_DATABASE
+              value: getput
           volumeMounts:
             - mountPath: /docker-entrypoint-initdb.d
               name: init
