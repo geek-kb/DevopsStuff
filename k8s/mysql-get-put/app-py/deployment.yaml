@@ -24,14 +24,13 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: app-db-user-pass
-                  key: db_username.txt
+                  key: db_app_username.txt
             - name: MYSQL_APP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: app-db-user-pass
-                  key: db_password.txt
+                  key: db_app_password.txt
             - name: MYSQL_HOST
               value: mysql.dev.svc.cluster.local
             - name: MYSQL_TABLE_NAME
               value: users
-

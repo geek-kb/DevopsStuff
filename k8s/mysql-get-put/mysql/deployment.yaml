@@ -29,12 +29,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: app-db-user-pass
-                  key: db_username.txt
+                  key: db_app_username.txt
             - name: MYSQL_APP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: app-db-user-pass
-                  key: db_password.txt
+                  key: db_app_password.txt
           volumeMounts:
             - mountPath: /docker-entrypoint-initdb.d
               name: init
