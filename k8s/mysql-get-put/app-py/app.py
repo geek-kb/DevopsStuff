@@ -8,7 +8,7 @@ app = Flask(__name__)
 # Configure the logger
 logging.basicConfig(
     level=logging.DEBUG,  # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    format="%(asctime)s [%(levelname)s] %(message)s",  # Define the log format
+    format="{} [{}] {}".format("%(asctime)s", "%(levelname)s", "%(message)s"),  # Define the log format
     datefmt="%Y-%m-%d %H:%M:%S"  # Define the date/time format
 )
 
@@ -44,7 +44,7 @@ def get_data_from_mysql(query):
             return data
 
     except mysql.connector.Error as error:
-        logger.error("An error occurred: %s", error)
+        logger.error("An error occurred: {}".format(error))
         print("Error:", error)
 
     finally:
@@ -91,7 +91,7 @@ def write_data_to_mysql(data):
             print("Data inserted successfully.")
 
     except mysql.connector.Error as error:
-        logger.error("An error occurred: %s", error)
+        logger.error("An error occurred: {}".format(error))
         print("Error:", error)
         return jsonify({"error": str(error)}), 500
 
@@ -113,7 +113,7 @@ def fetch_data():
 def insert_data():
     try:
         data = request.get_json()
-        logger.info("Data received: %s", data)
+        logger.info("Data received: {}".format(data))
         print(data)
         write_data_to_mysql(data)
         return jsonify({"message": "Data inserted successfully."})
@@ -136,7 +136,7 @@ def submit():
         "fname": fname,
         "lname": lname
     }
-    logger.info("Data received: %s", data)
+    logger.info("Data received: {}".format(data))
     try:
         write_data_to_mysql([data])
     except Exception as e:

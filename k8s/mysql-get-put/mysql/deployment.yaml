@@ -61,6 +61,10 @@ spec:
           volumeMounts:
             - name: init
               mountPath: /docker-entrypoint-initdb.d
+          resources:
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
       volumes:
         - name: init
           emptyDir: {}
