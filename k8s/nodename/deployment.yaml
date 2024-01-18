@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: php-nodename
+  name: php-nodename
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php-nodename
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: php-nodename
+    spec:
+      containers:
+      - image: camelel/php-nodename
+        imagePullPolicy: Always
+        name: php-nodename
+        resources: {}
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
