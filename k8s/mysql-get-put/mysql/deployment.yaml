@@ -37,7 +37,10 @@ spec:
                   name: app-db-user-pass
                   key: db_app_password.txt
             - name: MYSQL_DATABASE
-              value: getput
+              valueFrom:
+                configMapKeyRef:
+                  key: MYSQL_DATABASE
+                  name: db-config-map
           volumeMounts:
             - mountPath: /docker-entrypoint-initdb.d
               name: init
@@ -56,7 +59,10 @@ spec:
                   name: db-user-pass
                   key: db_root_username.txt
             - name: MYSQL_DATABASE
-              value: getput
+              valueFrom:
+                configMapKeyRef:
+                  key: MYSQL_DATABASE
+                  name: db-config-map
           ports:
             - containerPort: 3306
           volumeMounts:
