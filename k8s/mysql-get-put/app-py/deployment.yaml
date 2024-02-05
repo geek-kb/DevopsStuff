@@ -19,11 +19,6 @@ spec:
           ports:
             - containerPort: 5000
           env:
-            - name: MYSQL_DATABASE
-              valueFrom:
-                configMapKeyRef:
-                  name: db-config-map
-                  key: MYSQL_DATABASE
             - name: MYSQL_APP_USER
               valueFrom:
                 configMapKeyRef:
@@ -34,6 +29,11 @@ spec:
                 secretKeyRef:
                   name: db-app-user-pass
                   key: db_app_password.txt
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config-map
+                  key: MYSQL_DATABASE
             - name: MYSQL_HOST
               valueFrom: 
                 configMapKeyRef:

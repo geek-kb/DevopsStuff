@@ -48,16 +48,16 @@ spec:
         - name: mysql-get-put
           image: camelel/mysql-get-put:latest
           env:
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: db-root-user-pass
-                  key: db_root_password.txt
             - name: MYSQL_ROOT_USER
               valueFrom:
                 configMapKeyRef:
                   name: db-config-map
                   key: MYSQL_ROOT_USER
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-root-user-pass
+                  key: db_root_password.txt
             - name: MYSQL_DATABASE
               valueFrom:
                 configMapKeyRef:
