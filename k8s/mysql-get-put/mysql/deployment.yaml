@@ -28,13 +28,13 @@ spec:
           env:
             - name: MYSQL_APP_USER
               valueFrom:
-                secretKeyRef:
-                  name: app-db-user-pass
-                  key: db_app_username.txt
+                configMapKeyRef:
+                  name: db-config-map
+                  key: MYSQL_APP_USER
             - name: MYSQL_APP_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: app-db-user-pass
+                  name: db-app-user-pass
                   key: db_app_password.txt
             - name: MYSQL_DATABASE
               valueFrom:
@@ -51,7 +51,7 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: db-user-pass
+                  name: db-root-user-pass
                   key: db_root_password.txt
             - name: MYSQL_ROOT_USER
               valueFrom:
