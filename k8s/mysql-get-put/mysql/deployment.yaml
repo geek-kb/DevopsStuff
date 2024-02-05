@@ -55,9 +55,9 @@ spec:
                   key: db_root_password.txt
             - name: MYSQL_ROOT_USER
               valueFrom:
-                secretKeyRef:
-                  name: db-user-pass
-                  key: db_root_username.txt
+                configMapKeyRef:
+                  name: db-config-map
+                  key: MYSQL_ROOT_USER
             - name: MYSQL_DATABASE
               valueFrom:
                 configMapKeyRef:

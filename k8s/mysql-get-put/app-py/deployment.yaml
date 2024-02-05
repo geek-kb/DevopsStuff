@@ -23,15 +23,21 @@ spec:
               value: getput
             - name: MYSQL_APP_USER
               valueFrom:
-                secretKeyRef:
-                  name: app-db-user-pass
-                  key: db_app_username.txt
+                configMapKeyRef:
+                  name: db-config-map 
+                  key: MYSQL_APP_USER 
             - name: MYSQL_APP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: app-db-user-pass
                   key: db_app_password.txt
             - name: MYSQL_HOST
-              value: mysql.dev.svc.cluster.local
+              valueFrom: 
+                configMapKeyRef:
+                  name: db-config-map
+                  key: MYSQL_HOST
             - name: MYSQL_TABLE_NAME
-              value: users
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config-map
+                  key: MYSQL_TABLE_NAME 

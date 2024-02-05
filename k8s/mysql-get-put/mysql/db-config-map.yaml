@@ -5,3 +5,7 @@ metadata:
   namespace: dev
 data:
   MYSQL_DATABASE: getput
+  MYSQL_ROOT_USER: root
+  MYSQL_APP_USER: app_user
+  MYSQL_HOST: mysql.dev.svc.cluster.local
+  MYSQL_TABLE_NAME: users
