@@ -103,9 +103,8 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                 echo "Creating directory for $cert certificate"
                 mkdir -p $cert && cd $cert
                 echo "Generating $cert certificate"
-                openssl genrsa -out $cert.key 2048
-                openssl req -new -key $cert.key -out $cert.csr -subj "/CN=$cert"
                 if [ "$cert" = "ca" ]; then
+                    openssl genrsa -out $cert.key 2048
                     openssl x509 -req -in $cert.csr -signkey $cert.key -out $cert.crt
                 else
                     openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
@@ -124,8 +123,8 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                 mkdir -p $cert && cd $cert
                 echo "Generating $cert certificate"
                 easyrsa init-pki
-                easyrsa build-ca nopass
                 if [ "$cert" = "ca" ]; then
+                    easyrsa build-ca nopass
                     easyrsa build-server-full $cert nopass
                 else
                     easyrsa build-client-full $cert nopass
@@ -143,10 +142,11 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                 echo "Creating directory for $cert certificate"
                 mkdir -p $cert && cd $cert
                 echo "Generating $cert certificate"
-                cfssl gencert -initca ca-csr.json | cfssljson -bare ca
                 if [ "$cert" = "ca" ]; then
-                    cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server-csr.json | cfssljson -bare server
-                    cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client-csr.json | cfssljson -bare client
+                    cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+                else
+                    cfssl gencert -ca=$ca_cert_path/ca.pem -ca-key=$ca_cert_path/ca-key.pem -config=ca-config.json -profile=server server-csr.json | cfssljson -bare server
+                    cfssl gencert -ca=$ca_cert_path/ca.pem -ca-key=$ca_cert_path/ca-key.pem -config=ca-config.json -profile=client client-csr.json | cfssljson -bare client
                 fi
                 cd ../
             done
