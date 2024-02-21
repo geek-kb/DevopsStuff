@@ -105,8 +105,11 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                 echo "Generating $cert certificate"
                 if [ "$cert" = "ca" ]; then
                     openssl genrsa -out $cert.key 2048
+                    openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-ca"
                     openssl x509 -req -in $cert.csr -signkey $cert.key -out $cert.crt
                 else
+                    openssl genrsa -out $cert.key 2048
+                    openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert"
                     openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
                 fi
                 cd ../
