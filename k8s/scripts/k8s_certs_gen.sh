@@ -89,6 +89,28 @@ for cert_type in $certificates_list; do
         elif [ "$cert" = "admin" ]; then
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-admin/O=system:masters"
             openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        elif [ "$cert" = "kube-apiserver" ]; then
+            read -r -p "Enter the IP address of the kube-apiserver: " kube_apiserver_ip
+            read -r -p "Enter the IP address of the pod running the kube-apiserver: " kube_apiserver_pod_ip
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kube-apiserver"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+            cat <<EOF > openssl.cnf
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster.local
+IP.1 = $kube_apiserver_ip
+IP.2 = $kube_apiserver_pod_ip
+EOF
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt -extfile openssl.cnf
         else    
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert"
             openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
