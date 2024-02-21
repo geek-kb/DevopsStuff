@@ -2,7 +2,7 @@
 # K8s Certifications generation script
 # Script by Itai Ganot 2024
 
-server_certificates_list="kube-apiserver etcd-server kubelet"
+server_certificates_list="kube-apiserver etcd-server kubelet-server"
 client_certificates_list="kube-controller-manager kube-scheduler kube-proxy kubelet etcd-client admin apiserver-kubelet-client"
 ca_certificates_list="ca"
 certificates_list="$ca_certificates_list $server_certificates_list $client_certificates_list"
@@ -15,6 +15,7 @@ echo "The following details are required for the generation of the certificates 
 read -r -p "Enter the IP address of the kube-apiserver: " kube_apiserver_ip
 read -r -p "Enter the IP address of the pod running the kube-apiserver: " kube_apiserver_pod_ip
 read -r -p "Enter the number of days for the certificate to be valid: " cert_days
+read -r -p "Enter the names of the nodes in the cluster: " nodes
 
 function get_os_type() {
     os_type=$(uname -s)
@@ -76,6 +77,15 @@ for cert_type in $certificates_list; do
         elif [ $cert = "kube-scheduler" ]; then
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=system:kube-scheduler"
             openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        elif [ $cert = "kubelet-server" ]; then
+            if [ -z "$nodes" ]; then
+                echo "The names of the nodes in the cluster are required"
+                exit 1
+            fi
+            for node in $nodes; do
+                openssl req -new -key $cert.key -out $cert-$node.csr -subj "/CN=system:node:$node"
+                openssl x509 -req -in $cert-$node.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert-$node.crt
+            done
         elif [ $cert = "kube-controller-manager" ]; then
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=system:kube-controller-manager"
             openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
@@ -124,7 +134,6 @@ EOF
         cd ../
     done
 done
-
 
 echo "Certificates generated successfully"
 echo " "
