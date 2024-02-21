@@ -14,7 +14,7 @@ mkdir -p $cert_path && cd $cert_path
 echo "The following details are required for the generation of the certificates:"
 read -r -p "Enter the IP address of the kube-apiserver: " kube_apiserver_ip
 read -r -p "Enter the IP address of the pod running the kube-apiserver: " kube_apiserver_pod_ip
-read -r -p "Enter the number of days for the certificate to be valid: " cert_days
+read -r -p "Enter the number of days for the kube-apiserver certificate to be valid: " cert_days
 read -r -p "Enter the names of the nodes in the cluster: " nodes
 
 function get_os_type() {
