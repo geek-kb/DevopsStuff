@@ -100,7 +100,6 @@ for cert_type in $certificates_list; do
                 exit 1
             fi
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kube-apiserver"
-            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
             cat <<EOF > openssl.cnf
 [req]
 req_extensions = v3_req
