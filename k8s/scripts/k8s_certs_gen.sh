@@ -1,11 +1,13 @@
 #!/bin/bash
 # K8s Certifications generation script
 # Script by Itai Ganot 2024
+
 server_certificates_list="kube-apiserver etcd-server kubelet"
 client_certificates_list="kube-controller-manager kube-scheduler kube-proxy kubelet etcd-client admin apiserver-kubelet-client"
 ca_certificates_list="ca etcd-ca"
 certificates_list="$server_certificates_list $client_certificates_list $ca_certificates_list"
 certificate_gen_tools="openssl easyrsa cfssl"
+
 read -r -p "Enter the path to store the certificates: " cert_path
 mkdir -p $cert_path && cd $cert_path
 
@@ -78,6 +80,20 @@ function install_cfssl() {
 echo "Select the certificate generation tool to use for generating the certificates for the K8s cluster components"
 echo " "
 select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
+    which $GEN_TOOL
+    if [ $? -ne 0 ]; then
+        echo "The selected tool is not installed"
+        echo "Installing $GEN_TOOL"
+        if [ "$GEN_TOOL" = "openssl" ]; then
+            install_openssl
+        elif [ "$GEN_TOOL" = "easyrsa" ]; then
+            install_easyrsa
+        elif [ "$GEN_TOOL" = "cfssl" ]; then
+            install_cfssl
+        fi
+    else
+        echo "The selected tool is installed"
+    fi
     if [ "$GEN_TOOL" = "openssl" ]; then
         echo "You have selected $GEN_TOOL"
         echo "Generating certificates using $GEN_TOOL"    
@@ -130,4 +146,4 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
     fi
 done
 echo "Certificates generated successfully"
-exit 0
+echo " "
