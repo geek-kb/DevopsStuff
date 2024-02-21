@@ -15,15 +15,15 @@ function get_os_type() {
     os_type=$(uname -s)
     if [ "$os_type" = "Linux" ]; then
         os_dist=$(uname -n)
-        if [ "$os_dist" == "ubuntu" ]; then
+        if [ "$os_dist" = "ubuntu" ]; then
             os_distribution="ubuntu"
-        elif [ "$os_dist" == "centos" ]; then
+        elif [ "$os_dist" = "centos" ]; then
             os_distribution="centos"
         else
             echo "Unsupported Linux distribution"
             return 1
         fi
-    elif [ "$os_type" == "Darwin" ]; then
+    elif [ "$os_type" = "Darwin" ]; then
         os_distribution="darwin"
     else
         echo "Unsupported OS"
@@ -34,12 +34,12 @@ function get_os_type() {
 
 function install_openssl() {
     os_distribution=$(get_os_type)
-    if [ "$os_distribution" == "ubuntu" ]; then
+    if [ "$os_distribution" = "ubuntu" ]; then
         sudo apt-get update
         sudo apt-get install -y openssl
-    elif [ "$os_distribution" == "centos" ]; then
+    elif [ "$os_distribution" = "centos" ]; then
         sudo yum install -y openssl
-    elif [ "$os_distribution" == "darwin" ]; then
+    elif [ "$os_distribution" = "darwin" ]; then
         brew install openssl
     else
         echo "Unsupported OS"
@@ -49,12 +49,12 @@ function install_openssl() {
 
 function install_easyrsa() {
     os_distribution=$(get_os_type)
-    if [ "$os_distribution" == "ubuntu" ]; then
+    if [ "$os_distribution" = "ubuntu" ]; then
         sudo apt-get update
         sudo apt-get install -y easy-rsa
-    elif [ "$os_distribution" == "centos" ]; then
+    elif [ "$os_distribution" = "centos" ]; then
         sudo yum install -y easy-rsa
-    elif [ "$os_distribution" == "darwin" ]; then
+    elif [ "$os_distribution" = "darwin" ]; then
         brew install easy-rsa
     else
         echo "Unsupported OS"
@@ -64,12 +64,12 @@ function install_easyrsa() {
 
 function install_cfssl() {
     os_distribution=$(get_os_type)
-    if [ "$os_distribution" == "ubuntu" ]; then
+    if [ "$os_distribution" = "ubuntu" ]; then
         sudo apt-get update
         sudo apt-get install -y cfssl
-    elif [ "$os_distribution" == "centos" ]; then
+    elif [ "$os_distribution" = "centos" ]; then
         sudo yum install -y cfssl
-    elif [ "$os_distribution" == "darwin" ]; then
+    elif [ "$os_distribution" = "darwin" ]; then
         brew install cfssl
     else
         echo "Unsupported OS"
@@ -109,7 +109,11 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                     openssl x509 -req -in $cert.csr -signkey $cert.key -out $cert.crt
                 else
                     openssl genrsa -out $cert.key 2048
-                    openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert"
+                    if [ "$cert" = "admin" ]; then
+                        openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert/O=system:masters"
+                    else    
+                        openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert"
+                    fi
                     openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
                 fi
                 cd ../
