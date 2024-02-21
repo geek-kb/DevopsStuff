@@ -110,7 +110,7 @@ DNS.4 = kubernetes.default.svc.cluster.local
 IP.1 = $kube_apiserver_ip
 IP.2 = $kube_apiserver_pod_ip
 EOF
-            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -extfile openssl.cnf -extensions v3_req -out $cert.crt
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -extfile openssl.cnf -extensions v3_req -out $cert.crt -days 10000
         else    
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert"
             openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
