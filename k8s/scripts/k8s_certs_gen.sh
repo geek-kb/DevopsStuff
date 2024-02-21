@@ -47,119 +47,55 @@ function install_openssl() {
     fi
 }
 
-function install_easyrsa() {
-    os_distribution=$(get_os_type)
-    if [ "$os_distribution" = "ubuntu" ]; then
-        sudo apt-get update
-        sudo apt-get install -y easy-rsa
-    elif [ "$os_distribution" = "centos" ]; then
-        sudo yum install -y easy-rsa
-    elif [ "$os_distribution" = "darwin" ]; then
-        brew install easy-rsa
-    else
-        echo "Unsupported OS"
-        return 1
-    fi
-}
+echo "Checking if openssl is installed"
+which openssl
+if [ $? -ne 0 ]; then
+    echo "Package openssl is not installed, installing..."
+    install_openssl
+else
+    echo "Package openssl is installed"
+fi
 
-function install_cfssl() {
-    os_distribution=$(get_os_type)
-    if [ "$os_distribution" = "ubuntu" ]; then
-        sudo apt-get update
-        sudo apt-get install -y cfssl
-    elif [ "$os_distribution" = "centos" ]; then
-        sudo yum install -y cfssl
-    elif [ "$os_distribution" = "darwin" ]; then
-        brew install cfssl
-    else
-        echo "Unsupported OS"
-        return 1
-    fi
-}
-
-echo "Select the certificate generation tool to use for generating the certificates for the K8s cluster components"
-echo " "
-select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
-    which $GEN_TOOL
-    if [ $? -ne 0 ]; then
-        echo "The selected tool is not installed"
-        echo "Installing $GEN_TOOL"
-        if [ "$GEN_TOOL" = "openssl" ]; then
-            install_openssl
-        elif [ "$GEN_TOOL" = "easyrsa" ]; then
-            install_easyrsa
-        elif [ "$GEN_TOOL" = "cfssl" ]; then
-            install_cfssl
+echo "Generating certificates using openssl"    
+for cert_type in $certificates_list; do
+    mkdir -p $cert_path/$cert_type        
+    for cert in $cert_type; do
+        echo "Creating directory for $cert certificate"
+        mkdir -p $cert && cd $cert
+        echo "Generating $cert certificate"
+        openssl genrsa -out $cert.key 2048
+        if [ "$cert" = "ca" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-ca"
+            openssl x509 -req -in $cert.csr -signkey $cert.key -out $cert.crt
+        elif [ $cert = "kube-scheduler" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=system:kube-scheduler"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        elif [ $cert = "kube-controller-manager" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=system:kube-controller-manager"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        elif [ $cert = "kubelet" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=system:node:kubelet"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        elif [ $cert = "kube-proxy" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=system:node:kube-proxy"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        elif [ $cert = "etcd-server" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=etcd-server"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        elif [ $cert = "etcd-client" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=etcd-client"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path
+        elif [ "$cert" = "admin" ]; then
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-admin/O=system:masters"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+        else    
+            openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert"
+            openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
         fi
-    else
-        echo "The selected tool is installed"
-    fi
-    if [ "$GEN_TOOL" = "openssl" ]; then
-        echo "You have selected $GEN_TOOL"
-        echo "Generating certificates using $GEN_TOOL"    
-        for cert_type in $certificates_list; do
-            mkdir -p $cert_path/$cert_type        
-            for cert in $cert_type; do
-                echo "Creating directory for $cert certificate"
-                mkdir -p $cert && cd $cert
-                echo "Generating $cert certificate"
-                if [ "$cert" = "ca" ]; then
-                    openssl genrsa -out $cert.key 2048
-                    openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-ca"
-                    openssl x509 -req -in $cert.csr -signkey $cert.key -out $cert.crt
-                else
-                    openssl genrsa -out $cert.key 2048
-                    if [ "$cert" = "admin" ]; then
-                        openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert/O=system:masters"
-                    else    
-                        openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-$cert"
-                    fi
-                    openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
-                fi
-                cd ../
-            done
-        done
-    break
-    elif [ "$GEN_TOOL" = "easyrsa" ]; then
-        echo "You have selected $GEN_TOOL"
-        echo "Generating certificates using $GEN_TOOL"
-        for cert_type in $certificates_list; do
-            mkdir -p $cert_path/$cert_type
-            for cert in $cert_type; do
-                echo "Creating directory for $cert certificate"
-                mkdir -p $cert && cd $cert
-                echo "Generating $cert certificate"
-                easyrsa init-pki
-                if [ "$cert" = "ca" ]; then
-                    easyrsa build-ca nopass
-                    easyrsa build-server-full $cert nopass
-                else
-                    easyrsa build-client-full $cert nopass
-                fi
-                cd ../
-            done         
-        done
-    break
-    elif [ "$GEN_TOOL" = "cfssl" ]; then
-        echo "You have selected $GEN_TOOL"
-        echo "Generating certificates using $GEN_TOOL"
-        for cert_type in $certificates_list; do
-            mkdir -p $cert_path/$cert_type
-            for cert in $cert_type; do
-                echo "Creating directory for $cert certificate"
-                mkdir -p $cert && cd $cert
-                echo "Generating $cert certificate"
-                if [ "$cert" = "ca" ]; then
-                    cfssl gencert -initca ca-csr.json | cfssljson -bare ca
-                else
-                    cfssl gencert -ca=$ca_cert_path/ca.pem -ca-key=$ca_cert_path/ca-key.pem -config=ca-config.json -profile=server server-csr.json | cfssljson -bare server
-                    cfssl gencert -ca=$ca_cert_path/ca.pem -ca-key=$ca_cert_path/ca-key.pem -config=ca-config.json -profile=client client-csr.json | cfssljson -bare client
-                fi
-                cd ../
-            done
-        done
-    break
-    fi
+        cd ../
+    done
 done
+
+
 echo "Certificates generated successfully"
 echo " "
