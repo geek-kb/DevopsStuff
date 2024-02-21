@@ -4,8 +4,8 @@
 
 server_certificates_list="kube-apiserver etcd-server kubelet"
 client_certificates_list="kube-controller-manager kube-scheduler kube-proxy kubelet etcd-client admin apiserver-kubelet-client"
-ca_certificates_list="ca etcd-ca"
-certificates_list="$server_certificates_list $client_certificates_list $ca_certificates_list"
+ca_certificates_list="ca"
+certificates_list="$ca_certificates_list $server_certificates_list $client_certificates_list"
 certificate_gen_tools="openssl easyrsa cfssl"
 
 read -r -p "Enter the path to store the certificates: " cert_path
@@ -105,7 +105,11 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                 echo "Generating $cert certificate"
                 openssl genrsa -out $cert.key 2048
                 openssl req -new -key $cert.key -out $cert.csr -subj "/CN=$cert"
-                openssl x509 -req -in $cert.csr -signkey $cert.key -out $cert.crt
+                if [ "$cert" = "ca" ]; then
+                    openssl x509 -req -in $cert.csr -signkey $cert.key -out $cert.crt
+                else
+                    openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
+                fi
                 cd ../
             done
         done
@@ -121,8 +125,11 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                 echo "Generating $cert certificate"
                 easyrsa init-pki
                 easyrsa build-ca nopass
-                easyrsa build-server-full $cert nopass
-                easyrsa build-client-full $cert nopass
+                if [ "$cert" = "ca" ]; then
+                    easyrsa build-server-full $cert nopass
+                else
+                    easyrsa build-client-full $cert nopass
+                fi
                 cd ../
             done         
         done
@@ -137,8 +144,10 @@ select GEN_TOOL in 'openssl' 'easyrsa' 'cfssl'; do
                 mkdir -p $cert && cd $cert
                 echo "Generating $cert certificate"
                 cfssl gencert -initca ca-csr.json | cfssljson -bare ca
-                cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server-csr.json | cfssljson -bare server
-                cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client-csr.json | cfssljson -bare client
+                if [ "$cert" = "ca" ]; then
+                    cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server-csr.json | cfssljson -bare server
+                    cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client-csr.json | cfssljson -bare client
+                fi
                 cd ../
             done
         done
