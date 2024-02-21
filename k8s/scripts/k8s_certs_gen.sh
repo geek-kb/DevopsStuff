@@ -11,6 +11,11 @@ certificate_gen_tools="openssl easyrsa cfssl"
 read -r -p "Enter the path to store the certificates: " cert_path
 mkdir -p $cert_path && cd $cert_path
 
+echo "The following details are required for the generation of the certificates of the kube-apiserver:"
+read -r -p "Enter the IP address of the kube-apiserver: " kube_apiserver_ip
+read -r -p "Enter the IP address of the pod running the kube-apiserver: " kube_apiserver_pod_ip
+read -r -p "Enter the number of days for the certificate to be valid: " cert_days
+
 function get_os_type() {
     os_type=$(uname -s)
     if [ "$os_type" = "Linux" ]; then
@@ -90,9 +95,10 @@ for cert_type in $certificates_list; do
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kubernetes-admin/O=system:masters"
             openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
         elif [ "$cert" = "kube-apiserver" ]; then
-            read -r -p "Enter the IP address of the kube-apiserver: " kube_apiserver_ip
-            read -r -p "Enter the IP address of the pod running the kube-apiserver: " kube_apiserver_pod_ip
-            read -r -p "Enter the number of days for the certificate to be valid: " cert_days
+            if [ -z "$kube_apiserver_ip" ] || [ -z "$kube_apiserver_pod_ip" ] || [ -z "$cert_days" ]; then
+                echo "The kube-apiserver IP addresses and the number of days for the certificate to be valid are required"
+                exit 1
+            fi
             openssl req -new -key $cert.key -out $cert.csr -subj "/CN=kube-apiserver"
             openssl x509 -req -in $cert.csr -CA $ca_cert_path/ca.crt -CAkey $ca_cert_path/ca.key -out $cert.crt
             cat <<EOF > openssl.cnf
