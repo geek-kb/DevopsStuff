@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         app: db-server
+        role: db
     spec:
       initContainers:
         - name: fetch-sql-init
@@ -68,6 +69,8 @@ spec:
           volumeMounts:
             - name: init
               mountPath: /docker-entrypoint-initdb.d
+            - name: mysql-get-put-pv
+              mountPath: /var/lib/mysql
           resources:
             limits:
               memory: "1Gi"
@@ -75,3 +78,6 @@ spec:
       volumes:
         - name: init
           emptyDir: {}
+        - name: mysql-get-put-pv
+          persistentVolumeClaim:
+            claimName: mysql-get-put-pvc
