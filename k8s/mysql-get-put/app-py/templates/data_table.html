@@ -17,11 +17,13 @@
     <h2>MySQL Get Put - Users in database</h2>
     <table>
         <tr>
+            <th>Id</th>
             <th>First Name</th>
             <th>Last Name</th>
         </tr>
         {% for row in data %}
         <tr>
+            <td>{{ row['Id'] }}</td>
             <td>{{ row['First Name'] }}</td>
             <td>{{ row['Last Name'] }}</td>
         </tr>

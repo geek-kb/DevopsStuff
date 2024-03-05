@@ -104,7 +104,7 @@ def write_data_to_mysql(data):
 # API endpoint to fetch data from MySQL
 @app.route('/get_data', methods=['GET'])
 def fetch_data():
-    query = "SELECT fname as 'First Name',lname as 'Last Name' FROM {}".format(os.environ.get("MYSQL_TABLE_NAME"))
+    query = "SELECT id as 'Id', fname as 'First Name',lname as 'Last Name' FROM {} order by id asc".format(os.environ.get("MYSQL_TABLE_NAME"))
     data = get_data_from_mysql(query)
     return render_template('data_table.html', data=data)
     #return jsonify(data)
