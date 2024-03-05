@@ -16,6 +16,7 @@ spec:
       containers:
         - name: flask-api
           image: camelel/py-get-put:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
