@@ -1,0 +1,611 @@
+name: Nightly Scale-In QA Environments
+on:
+  schedule:
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+env:
+  qa_ACCOUNT_TYPE_1_tg_dir: terraform-live/environments/aws/aws-qa-ACCOUNT_TYPE_1
+  qa_ACCOUNT_TYPE_2_tg_dir: terraform-live/environments/aws/aws-qa-ACCOUNT_TYPE_2
+  qa_envs_region: eu-west-1
+  qa_environments: "qa-XXXXX-1 qa-XXXXX-2 qa-XXXXX-1 qa-XXXXX-2 qa-devops-1 qa-XXXXX-1 qa-XXXXX-1 qa-XXXXX-1 qa-XXXXX-1 qa-XXXXX-1 qa-XXXXX-1 qa-XXXXX-1 qa-XXXXX-2 qa-XXXXX-1 qa-XXXXX-1 qa-XXXXX-1"
+
+jobs:
+  identify-unprotected-environments:
+    name: Identify Unprotected Environments
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.identify-unprotected-envs.outputs.matrix }}
+      unprotected_envs: ${{ steps.identify-unprotected-envs.outputs.unprotected_envs }}
+      ACCOUNT_TYPE_1_qa_services: ${{ steps.ACCOUNT_TYPE_1-qa-services.outputs.ACCOUNT_TYPE_1_qa_services }}
+      ACCOUNT_TYPE_2_qa_services: ${{ steps.ACCOUNT_TYPE_2-qa-services.outputs.ACCOUNT_TYPE_2_qa_services }}
+      no_unprotected_environments: ${{ steps.identify-unprotected-envs.outputs.no_unprotected_environments }}
+    steps:
+      - name: Checkout terraform-live
+        uses: actions/checkout@v2
+        with:
+          repository: COMPANY_NAME/terraform-live
+          token: ${{ secrets.COMPANY_NAME_GITHUB_ACTIONS_WORKFLOW_TOKEN }}
+          path: terraform-live
+
+      - name: Checkout PRODUCT_NAME-deployer
+        uses: actions/checkout@v2
+        with:
+          path: PRODUCT_NAME-deployer
+          ref: dev
+
+      - name: Install required python packages
+        run: sudo pip install boto3
+
+      - name: Login AWS ops account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACTIONS_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ACTIONS_AWS_SECRET_KEY }}
+          aws-region: eu-west-1
+          mask-aws-account-id: 'no'
+          role-to-assume: arn:aws:iam::AWS_ACCOUNT_ID:role/github-actions-workflows
+          role-skip-session-tagging: true
+          role-duration-seconds: 14400
+
+      - name: Identify Unprotected Environments
+        id: identify-unprotected-envs
+        run: |
+          for env in ${{ env.qa_environments }}; do
+            cd ${{ github.workspace }}/PRODUCT_NAME-deployer/ci_tools
+            protection_status="$(python3 environments_protection_dynamodb.py -e ${env} -a check-protection)"
+            is_env_running="$(python3 environments_protection_dynamodb.py -e ${env} -a check-environment-status)"
+            if [[ ${protection_status} == *"is protected"* ]]; then
+              continue
+            elif [[ ${protection_status} == *"is not protected"* && ${is_env_running} == *"is not running"* ]]; then
+              continue
+            elif [[ ${protection_status} == *"is not protected"* && ${is_env_running} == *"is running"* ]]; then
+              UNPROTECTED_ENVS+=($env)
+            fi
+          done
+          if [[ ${#UNPROTECTED_ENVS[@]} -eq 0 ]]; then
+            echo "No unprotected and running environments found, exiting."
+            export NO_UNPROTECTED_ENVIRONMENTS="true"
+          else
+            export UNPROTECTED_ENVS=("${UNPROTECTED_ENVS[@]}")
+            echo "unprotected_envs=(${UNPROTECTED_ENVS[@]})" >> $GITHUB_OUTPUT
+            printf -v unprot_envs ' %s' "${UNPROTECTED_ENVS[@]}"
+            export UNPROT_ENVS=${unprot_envs:1}
+            export UE=$(for env in $(echo ${UNPROT_ENVS}); do echo "\"$(echo ${env} | xargs 2> /dev/null || true)\""; done)
+            export sorted=$(echo ${UE} | sort | jq 'unique' -cs)
+            echo "matrix=${sorted}" >> $GITHUB_OUTPUT
+            export NO_UNPROTECTED_ENVIRONMENTS="false"
+            echo "Found unprotected and running environments: ${UNPROTECTED_ENVS[@]}"
+          fi
+          echo "no_unprotected_environments=${NO_UNPROTECTED_ENVIRONMENTS}" >> $GITHUB_OUTPUT
+
+      - name: Gets list of existing QA services - ACCOUNT_TYPE_1
+        id: ACCOUNT_TYPE_1-qa-services
+        if: steps.identify-unprotected-envs.outputs.no_unprotected_environments != 'true'
+        run: |
+          declare -a unprotected_envs
+          unprotected_envs=${{ steps.identify-unprotected-envs.outputs.unprotected_envs }}
+          if [[ ${unprotected_envs[0]} = "" ]]; then
+            first_env=${unprotected_envs[1]}
+          else
+            first_env=${unprotected_envs[0]}
+          fi
+          cd ${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}/${first_env}/ecs-service
+          for service_name in $(ls -1); do
+            QA_SERVICES+=($service_name)
+          done
+          export PROCCESSING_QA_SERVICES=("${QA_SERVICES[@]}")
+          echo "ACCOUNT_TYPE_1_qa_services=(${PROCCESSING_QA_SERVICES[@]})" >> $GITHUB_OUTPUT
+          echo "PROCCESSING_QA_SERVICES: ${PROCCESSING_QA_SERVICES[@]}"
+
+      - name: Gets list of existing QA services - ACCOUNT_TYPE_2
+        if: steps.identify-unprotected-envs.outputs.no_unprotected_environments != 'true'
+        id: ACCOUNT_TYPE_2-qa-services
+        run: |
+          declare -a unprotected_envs
+          unprotected_envs=${{ steps.identify-unprotected-envs.outputs.unprotected_envs }}
+          if [[ ${unprotected_envs[0]} = "" ]]; then
+            first_env=${unprotected_envs[1]}
+          else
+            first_env=${unprotected_envs[0]}
+          fi
+          cd ${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region }}/${first_env}/ecs-service
+          for service_name in $(ls -1); do
+            QA_SERVICES+=($service_name)
+          done
+          export ACCOUNT_TYPE_2_QA_SERVICES=("${QA_SERVICES[@]}")
+          echo "ACCOUNT_TYPE_2_qa_services=(${ACCOUNT_TYPE_2_QA_SERVICES[@]})" >> $GITHUB_OUTPUT
+          echo "ACCOUNT_TYPE_2_QA_SERVICES: ${ACCOUNT_TYPE_2_QA_SERVICES[@]}"
+
+  update-dynamodb-table-with-desired-values:
+    name: Updates Desired Values in DynamoDB
+    runs-on: ubuntu-latest
+    if: needs.identify-unprotected-environments.outputs.no_unprotected_environments != 'true'
+    needs:
+      - identify-unprotected-environments
+    outputs:
+      ACCOUNT_TYPE_1_asgs_values: ${{ steps.get-PRODUCT_NAME-asg-values-ACCOUNT_TYPE_1.outputs.ACCOUNT_TYPE_1_asgs_values }}
+      ACCOUNT_TYPE_2_asgs_values: ${{ steps.get-PRODUCT_NAME-asg-values-ACCOUNT_TYPE_2.outputs.ACCOUNT_TYPE_2_asgs_values }}
+    steps:
+      - name: Login AWS QA-ACCOUNT_TYPE_1 account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACTIONS_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ACTIONS_AWS_SECRET_KEY }}
+          aws-region: ${{ env.qa_envs_region }}
+          mask-aws-account-id: 'no'
+          role-to-assume: arn:aws:iam::AWS_ACCOUNT_ID:role/github-actions-workflows
+          role-skip-session-tagging: true
+          role-duration-seconds: 14400
+
+      - name: Checkout terraform-live
+        uses: actions/checkout@v2
+        with:
+          repository: COMPANY_NAME/terraform-live
+          token: ${{ secrets.COMPANY_NAME_GITHUB_ACTIONS_WORKFLOW_TOKEN }}
+          path: terraform-live
+
+      - name: Gets current desired values from services - ACCOUNT_TYPE_1
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            cd ${base_dir}/${env_name}/ecs-service/
+            ls -l | grep -v swiss-knife | grep ^d | awk '{print $9}' > tmp_env_services
+            for service_name in $(cat tmp_env_services); do
+              if [[ -d ${base_dir}/${env_name}/ecs-service/${service_name} ]]; then
+                cd ${base_dir}/${env_name}/ecs-service/${service_name}
+                svc_desired_count=$(grep desired_count terragrunt.hcl | cut -d= -f2 | xargs)
+                echo $service_name=$svc_desired_count >> ${{ github.workspace }}/ACCOUNT_TYPE_1_${env_name}_services.list
+              else
+                echo "Service $service_name not found in terraform-live, skipping"
+                continue
+              fi
+            done
+          done
+          rm -f tmp_env_services
+
+      - name: Gets PRODUCT_NAME autoscaling group desired values - ACCOUNT_TYPE_1
+        id: get-PRODUCT_NAME-asg-values-ACCOUNT_TYPE_1
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a unprotected_envs
+          unprotected_envs=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${unprotected_envs[@]}; do
+            cd ${base_dir}/${env_name}/autoscaling/PRODUCT_NAME
+            desired_capacity=$(grep desired_capacity terragrunt.hcl | cut -d= -f2 | xargs)
+            PRODUCT_NAME_asg_values="${env_name}:${desired_capacity}"
+            ASGS_VALUES+=($PRODUCT_NAME_asg_values)
+          done
+          export ACCOUNT_TYPE_1_ASGS_VALUES=("${ASGS_VALUES[@]}")
+          echo "ACCOUNT_TYPE_1_asgs_values=(${ACCOUNT_TYPE_1_ASGS_VALUES[@]})" >> $GITHUB_OUTPUT
+          echo "ACCOUNT_TYPE_1_ASGS_VALUES: ${ACCOUNT_TYPE_1_ASGS_VALUES[@]}"
+
+      - name: Login AWS QA-ACCOUNT_TYPE_2 account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACTIONS_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ACTIONS_AWS_SECRET_KEY }}
+          aws-region: ${{ env.qa_envs_region }}
+          mask-aws-account-id: 'no'
+          role-to-assume: arn:aws:iam::AWS_ACCOUNT_ID:role/github-actions-workflows
+          role-skip-session-tagging: true
+          role-duration-seconds: 14400
+
+      - name: Gets current desired values from services - ACCOUNT_TYPE_2
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            cd ${base_dir}/${env_name}/ecs-service/
+            ls -l | grep ^d | awk '{print $9}' > tmp_env_services
+            for service_name in $(cat tmp_env_services); do
+              if [[ -d ${base_dir}/${env_name}/ecs-service/${service_name} ]]; then
+                cd ${base_dir}/${env_name}/ecs-service/${service_name}
+                svc_desired_count=$(grep desired_count terragrunt.hcl | cut -d= -f2 | xargs)
+                echo $service_name=$svc_desired_count >> ${{ github.workspace }}/ACCOUNT_TYPE_2_${env_name}_services.list
+              else
+                echo "Service $service_name not found in terraform-live, skipping"
+                continue
+              fi
+            done
+          done
+          rm -f tmp_env_services
+
+      - name: Gets PRODUCT_NAME autoscaling group desired values - ACCOUNT_TYPE_2
+        id: get-PRODUCT_NAME-asg-values-ACCOUNT_TYPE_2
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a unprotected_envs
+          unprotected_envs=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${unprotected_envs[@]}; do
+            cd ${base_dir}/${env_name}/autoscaling/PRODUCT_NAME
+            desired_capacity=$(grep desired_capacity terragrunt.hcl | cut -d= -f2 | xargs)
+            PRODUCT_NAME_asg_values="${env_name}:${desired_capacity}"
+            ASGS_VALUES+=($PRODUCT_NAME_asg_values)
+          done
+          export ACCOUNT_TYPE_2_ASGS_VALUES=("${ASGS_VALUES[@]}")
+          echo "ACCOUNT_TYPE_2_asgs_values=(${ACCOUNT_TYPE_2_ASGS_VALUES[@]})" >> $GITHUB_OUTPUT
+          echo "ACCOUNT_TYPE_2_ASGS_VALUES: ${ACCOUNT_TYPE_2_ASGS_VALUES[@]}"
+
+      - name: Checkout PRODUCT_NAME-deployer
+        uses: actions/checkout@v2
+        with:
+          path: PRODUCT_NAME-deployer
+          ref: dev
+
+      - name: Install required python packages
+        run: sudo pip install boto3
+
+      - name: Login AWS ops account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACTIONS_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ACTIONS_AWS_SECRET_KEY }}
+          aws-region: eu-west-1
+          mask-aws-account-id: 'no'
+          role-to-assume: arn:aws:iam::AWS_ACCOUNT_ID:role/github-actions-workflows
+          role-skip-session-tagging: true
+          role-duration-seconds: 14400
+
+      - name: Updates DynamoDB table with current services desired values - ACCOUNT_TYPE_1
+        run: |
+          aws_account_name=ACCOUNT_TYPE_1
+          declare -a unprotected_envs
+          unprotected_envs=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${unprotected_envs[@]}; do
+            echo "Updating ACCOUNT_TYPE_1 services in environment ${env_name}"
+            python3 ${{ github.workspace }}/PRODUCT_NAME-deployer/ci_tools/environments_protection_dynamodb.py -e ${env_name} -a add-issuer -i ${{ github.actor }}
+            for service in $(cat ${aws_account_name}_${env_name}_services.list); do
+              service_name=$(echo $service | cut -d= -f1)
+              service_desired_value=$(echo $service | cut -d= -f2)
+              if [[ ${service_name} = *"ec2-daemon"* || ${service_name} = *"ec2_daemon"* ]]; then
+                continue
+              fi
+              if [[ "$service_desired_value" -eq 0 ]]; then
+                echo "Service ${service_name} has zero value in terragrunt.hcl, skipping..."
+                continue
+              else
+                python3 ${{ github.workspace }}/PRODUCT_NAME-deployer/ci_tools/environments_protection_dynamodb.py -e ${env_name} -a update-service -r $service_name -d $service_desired_value
+              fi
+            done
+          done
+
+      - name: Updates DynamoDB table with current services desired values - ACCOUNT_TYPE_2
+        run: |
+          aws_account_name=ACCOUNT_TYPE_2
+          declare -a unprotected_envs
+          unprotected_envs=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${unprotected_envs[@]}; do
+            echo "Updating ACCOUNT_TYPE_2 services in environment ${env_name}"
+            for service in $(cat ${aws_account_name}_${env_name}_services.list); do
+              service_name=$(echo $service | cut -d= -f1)
+              service_desired_value=$(echo $service | cut -d= -f2)
+              if [[ ${service_name} = *"ec2-daemon"* || ${service_name} = *"ec2_daemon"* ]]; then
+                continue
+              fi
+              if [[ "$service_desired_value" -eq 0 ]]; then
+                echo "Service ${service_name} has zero value in terragrunt.hcl, skipping..."
+                continue
+              else
+                python3 ${{ github.workspace }}/PRODUCT_NAME-deployer/ci_tools/environments_protection_dynamodb.py -e ${env_name} -a update-service -r $service_name -d $service_desired_value
+              fi
+            done
+          done
+
+      - name: Updates DynamoDB table with current PRODUCT_NAME asg desired values - ACCOUNT_TYPE_1
+        run: |
+          declare -a asgs_values
+          asg_values=${{ steps.get-PRODUCT_NAME-asg-values-ACCOUNT_TYPE_1.outputs.ACCOUNT_TYPE_1_asgs_values }}
+          declare -a unprotected_envs
+          unprotected_envs=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${unprotected_envs[@]}; do
+            echo "Updating ACCOUNT_TYPE_1 autoscaling groups in environment ${env_name}"
+            for index in ${!asg_values[@]}; do
+              if [[ "$env_name" = "${unprotected_envs[$index]}" ]]; then
+                desired_capacity=$(echo ${asg_values[$index]} | cut -d: -f2)
+                python3 ${{ github.workspace }}/PRODUCT_NAME-deployer/ci_tools/environments_protection_dynamodb.py -e ${env_name} -a update-asg -r ${env_name}-ECS-PRODUCT_NAME -d ${desired_capacity} -n ACCOUNT_TYPE_1
+              fi
+            done
+          done
+
+      - name: Updates DynamoDB table with current PRODUCT_NAME asg desired values - ACCOUNT_TYPE_2
+        run: |
+          declare -a asgs_values
+          asg_values=${{ steps.get-PRODUCT_NAME-asg-values-ACCOUNT_TYPE_2.outputs.ACCOUNT_TYPE_2_asgs_values }}
+          declare -a unprotected_envs
+          unprotected_envs=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${unprotected_envs[@]}; do
+            echo "Updating ACCOUNT_TYPE_2 autoscaling groups in environment ${env_name}"
+            for index in ${!asg_values[@]}; do
+              if [[ "$env_name" = "${unprotected_envs[$index]}" ]]; then
+                desired_capacity=$(echo ${asg_values[$index]} | cut -d: -f2)
+                python3 ${{ github.workspace }}/PRODUCT_NAME-deployer/ci_tools/environments_protection_dynamodb.py -e ${env_name} -a update-asg -r ${env_name}-ECS-PRODUCT_NAME -d ${desired_capacity} -n ACCOUNT_TYPE_2
+              fi
+            done
+          done
+
+  updates-terraform-live:
+    name: Updates Terraform-Live
+    runs-on: ubuntu-latest
+    if: needs.identify-unprotected-environments.outputs.no_unprotected_environments != 'true'
+    needs:
+      - update-dynamodb-table-with-desired-values
+      - identify-unprotected-environments
+    outputs:
+      matrix: ${{ steps.git-commit.outputs.matrix }}
+    steps:
+      - name: Checkout terraform-live
+        uses: actions/checkout@v2
+        with:
+          repository: COMPANY_NAME/terraform-live
+          token: ${{ secrets.COMPANY_NAME_GITHUB_ACTIONS_WORKFLOW_TOKEN }}
+          path: terraform-live
+
+      - name: Checkout PRODUCT_NAME-deployer
+        uses: actions/checkout@v2
+        with:
+          path: PRODUCT_NAME-deployer
+
+      - name: Updates services in tf-live - ACCOUNT_TYPE_1
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a svc_arr
+          svc_arr=${{ needs.identify-unprotected-environments.outputs.ACCOUNT_TYPE_1_qa_services }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            echo "env_name: ${env_name}"
+            for service_name in ${svc_arr[@]}; do
+              fixed_service_name=$(echo $service_name | tr "_" "-")
+              if [[ -d ${base_dir}/${env_name}/ecs-service/${fixed_service_name} ]]; then
+                cd ${base_dir}/${env_name}/ecs-service/${fixed_service_name}
+                sed -i "s/desired_count.*/desired_count                      = 0/" terragrunt.hcl
+              else
+                echo "Couldn't find folder for service ${fixed_service_name} in terraform-live, skipping"
+                continue
+              fi
+            done
+          done
+          echo "Desired values of all ACCOUNT_TYPE_1 services in env ${env_name} have been updated to 0"
+
+      - name: Updates services in tf-live - ACCOUNT_TYPE_2
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a svc_arr
+          svc_arr=${{ needs.identify-unprotected-environments.outputs.ACCOUNT_TYPE_2_qa_services }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            echo "env_name: ${env_name}"
+            for service_name in ${svc_arr[@]}; do
+              fixed_service_name=$(echo $service_name | tr "_" "-")
+              if [[ -d ${base_dir}/${env_name}/ecs-service/${fixed_service_name} ]]; then
+                cd ${base_dir}/${env_name}/ecs-service/${fixed_service_name}
+                sed -i "s/desired_count.*/desired_count                      = 0/" terragrunt.hcl
+              else
+                echo "Couldn't find folder for service ${fixed_service_name} in terraform-live, skipping"
+                continue
+              fi
+            done
+          done
+          echo "Desired values of all ACCOUNT_TYPE_2 services in env ${env_name} have been updated to 0"
+
+      - name: Updates terraform-live PRODUCT_NAME asg with desired values - ACCOUNT_TYPE_1
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a asgs_values
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            asg_values=${{ needs.update-dynamodb-table-with-desired-values.outputs.ACCOUNT_TYPE_1_asgs_values }}
+            for index in ${!asg_values[@]}; do
+              cd ${base_dir}/${env_name}/autoscaling/PRODUCT_NAME
+              sed -i "s/desired_capacity.*/desired_capacity = 0/" terragrunt.hcl
+            done
+          done
+
+      - name: Updates terraform-live dl-processor asg with desired values - ACCOUNT_TYPE_1
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            cd ${base_dir}/${env_name}/autoscaling/dl-processor
+            sed -i "s/desired_capacity.*/desired_capacity = 0/" terragrunt.hcl
+          done
+
+      - name: Updates terraform-live PRODUCT_NAME asg with desired values - ACCOUNT_TYPE_2
+        run: |
+          cd ${{ github.workspace }}
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a asgs_values
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            asg_values=${{ needs.update-dynamodb-table-with-desired-values.outputs.ACCOUNT_TYPE_2_asgs_values }}
+            for index in ${!asg_values[@]}; do
+              cd ${base_dir}/${env_name}/autoscaling/PRODUCT_NAME
+              sed -i "s/desired_capacity.*/desired_capacity = 0/" terragrunt.hcl
+            done
+          done
+
+      - name: Updates terraform-live PRODUCT_NAME-web asg with desired values - ACCOUNT_TYPE_2
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            cd ${base_dir}/${env_name}/autoscaling/PRODUCT_NAME-web
+            sed -i "s/desired_capacity.*/desired_capacity = 0/" terragrunt.hcl
+          done
+
+      - name: Updates dl-processor capacity provider in tf-live
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            cd ${base_dir}/${env_name}/ecs-capacity-provider/dl-processor
+            sed -i "s/ecs_service_scale_in_desired_capacity.*/ecs_service_scale_in_desired_capacity  = 0/" terragrunt.hcl
+            sed -i "s/ecs_service_scale_out_desired_capacity.*/ecs_service_scale_out_desired_capacity  = 0/" terragrunt.hcl
+          done
+
+      - name: Updates PRODUCT_NAME-web capacity provider in tf-live
+        run: |
+          base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region }}
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            cd ${base_dir}/${env_name}/ecs-capacity-provider/PRODUCT_NAME-web
+            sed -i "s/ecs_service_scale_in_desired_capacity.*/ecs_service_scale_in_desired_capacity  = 0/" terragrunt.hcl
+            sed -i "s/ecs_service_scale_out_desired_capacity.*/ecs_service_scale_out_desired_capacity  = 0/" terragrunt.hcl
+          done
+
+      - name: Login AWS ops account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACTIONS_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ACTIONS_AWS_SECRET_KEY }}
+          aws-region: eu-west-1
+          mask-aws-account-id: 'no'
+          role-to-assume: arn:aws:iam::AWS_ACCOUNT_ID:role/github-actions-workflows
+          role-skip-session-tagging: true
+          role-duration-seconds: 14400
+
+      - name: Install required python packages
+        run: sudo pip install boto3
+
+      - name: Disable terraform-live branch protection (enforce_admins)
+        run: |
+          curl -X DELETE -u github-actions-workflows:${{ secrets.COMPANY_NAME_GITHUB_ACTIONS_WORKFLOW_TOKEN }} https://api.github.com/repos/COMPANY_NAME/terraform-live/branches/master/protection/enforce_admins
+
+      - name: Adds changes to Git
+        id: git-commit
+        run: |
+          git config --global user.name github-actions-workflows
+          git config --global user.email devops+github-actions-workflows@COMPANY_NAME.ai
+          declare -a env_arr
+          env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+          for env_name in ${env_arr[@]}; do
+            random_wait_interval=$(echo $RANDOM % 60 + 1 | bc)
+            cd ${{ github.workspace }}/terraform-live/environments/aws
+            if git status | grep -q 'nothing to commit, working tree clean'; then
+              echo "INFO | Nothing to commit."
+            else
+              cd ${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region}}/${env_name}
+              git add .
+              cd ${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_2_tg_dir }}/${{ env.qa_envs_region}}/${env_name}
+              git add .
+              git commit -m "Shutting down for the night environment ${env_name}"
+              export COMMIT_ID=$(git rev-parse HEAD)
+              GIT_COMMIT_IDS+=($COMMIT_ID)
+              sleep $random_wait_interval
+              git push
+              python3 ${{ github.workspace }}/PRODUCT_NAME-deployer/ci_tools/environments_protection_dynamodb.py -e ${env_name} -a set-environment-status -s off
+            fi
+          done
+          echo "GIT_COMMIT_IDS[@]: ${GIT_COMMIT_IDS[@]}"
+          export GIT_COMMIT_IDS=("${GIT_COMMIT_IDS[@]}")
+          printf -v g_c_ids ' %s' "${GIT_COMMIT_IDS[@]}"
+          export GCIDS=${g_c_ids:1}
+          export GC=$(for commitid in $(echo ${GCIDS}); do echo "\"$(echo ${commitid} | xargs 2> /dev/null || true)\""; done)
+          export sorted=$(echo ${GC} | sort | jq 'unique' -cs)
+          echo "matrix=${sorted}" >> $GITHUB_OUTPUT
+          echo "sorted: ${sorted}"
+
+      - name: Enable terraform-live branch protection (enforce_admins)
+        if: always()
+        run: |
+          curl -X POST -u github-actions-workflows:${{ secrets.COMPANY_NAME_GITHUB_ACTIONS_WORKFLOW_TOKEN }} https://api.github.com/repos/COMPANY_NAME/terraform-live/branches/master/protection/enforce_admins
+
+  waits-for-terraform-live:
+    name: Monitors Commits in TF-Live
+    runs-on: ubuntu-latest
+    if: needs.identify-unprotected-environments.outputs.no_unprotected_environments != 'true'
+    needs:
+      - updates-terraform-live
+      - update-dynamodb-table-with-desired-values
+      - identify-unprotected-environments
+    strategy:
+      fail-fast: false
+      matrix:
+        commit_id: ${{ fromJson(needs.updates-terraform-live.outputs.matrix) }}
+    steps:
+      - name: Monitors Commits in TF-Live
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: wait-for-tf-apply
+        with:
+          owner: COMPANY_NAME
+          repo: terraform-live
+          checkName: 'wait_for_jobs_to_end'
+          ref: ${{ matrix.commit_id }}
+          token: ${{ secrets.COMPANY_NAME_GITHUB_ACTIONS_WORKFLOW_TOKEN }}
+          timeoutSeconds: 1800
+          intervalSeconds: 20
+
+      - name: Terraform-Live Apply Success
+        if: steps.wait-for-tf-apply.outputs.conclusion == 'success'
+        run: |
+          echo "Terraform-Live Apply finished successfully"
+
+      - name: Terraform-Live Apply Failure
+        if: steps.wait-for-tf-apply.outputs.conclusion == 'failure'
+        run: |
+          echo "Terraform-Live Apply failed! "
+          exit 1
+
+  notify:
+    if: always()
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    needs:
+      - waits-for-terraform-live
+      - identify-unprotected-environments
+      - update-dynamodb-table-with-desired-values
+    steps:
+      - name: Compile Slack Message
+        id: compiles-slack-msg
+        run: |
+          if [[ "${{ needs.identify-unprotected-environments.outputs.no_unprotected_environments }}" != "true" ]]; then
+            declare -a unprotected_envs
+            unprotected_envs=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
+            printf -v unprotected_envs_a ' %s' "${unprotected_envs[@]}"
+            export UNPROTECTED_ENVS_A=${unprotected_envs_a:1}
+            export MESSAGE="The following unprotected environments have been scaled down for the night:\n${UNPROTECTED_ENVS_A}"
+          else
+            export MESSAGE="No unprotected and running environments found!"
+          fi
+          echo "slack_message=${MESSAGE}" >> $GITHUB_OUTPUT
+
+      - name: Set Slack Message
+        id: slack-notification
+        run: |
+          export DATA=$(cat << EOF
+          {
+            "message": "${{ steps.compiles-slack-msg.outputs.slack_message }}"
+          }
+          EOF
+          )
+          export PAYLOAD=$(echo $DATA | jq -c)
+          echo "payload=${PAYLOAD}" >> $GITHUB_OUTPUT
+
+      - name: Send Slack Notification - Success
+        if: ${{ !contains(needs.*.result, 'failure') }}
+        id: slack-success
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: ${{ steps.slack-notification.outputs.payload }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.NIGHTLY_SCALE_DOWN_SLACK_WEBHOOK_URL }}
+
+      - name: Send Slack Notification - Failure
+        if: ${{ contains(needs.*.result, 'failure') }}
+        id: slack-failure
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: ${{ steps.slack-notification.outputs.payload }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.NIGHTLY_SCALE_DOWN_SLACK_WEBHOOK_URL }}

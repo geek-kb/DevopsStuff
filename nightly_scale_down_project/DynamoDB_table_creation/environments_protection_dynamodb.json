@@ -1,0 +1,95 @@
+{
+  "environment_name": {
+    "S": "qa-devops-1"
+  },
+  "ACCOUNT_TYPE_1_PRODUCT_NAME_asg": {
+    "M": {
+      "context": {
+        "S": "test-context"
+      },
+      "desired_val": {
+        "N": "0"
+      },
+      "last_updated": {
+        "S": "2022-10-02 23:47:08"
+      },
+      "max_val": {
+        "N": "0"
+      },
+      "min_val": {
+        "N": "0"
+      }
+    }
+  },
+  "cp_sp_svc": {
+    "M": {
+      "context": {
+        "S": "test-context"
+      },
+      "desired": {
+        "N": "2"
+      }
+    }
+  },
+  "issuer": {
+    "S": "itaig"
+  },
+  "ACCOUNT_TYPE_2_PRODUCT_NAME_asg": {
+    "M": {
+      "context": {
+        "S": "test-context"
+      },
+      "desired_val": {
+        "N": "0"
+      },
+      "last_updated": {
+        "S": "2022-10-02 23:47:08"
+      },
+      "max_val": {
+        "N": "0"
+      },
+      "min_val": {
+        "N": "0"
+      }
+    }
+  },
+  "protected": {
+    "S": "false"
+  },
+  "services_task_count": {
+    "L": [
+      {
+        "M": {
+          "context": {
+            "S": "test-context"
+          },
+          "desired": {
+            "N": "2"
+          },
+          "last_updated": {
+            "S": "2022-09-28 19:33:07"
+          },
+          "name": {
+            "S": "SERVICE_NAME_1"
+          }
+        }
+      },
+      {
+        "M": {
+          "context": {
+            "S": "test-context"
+          },
+          "desired": {
+            "N": "2"
+          },
+          "last_updated": {
+            "S": "2022-09-28 19:33:07"
+          },
+          "name": {
+            "S": "SERVICE_NAME_2"
+          }
+        }
+      }
+    ]
+  }
+}
