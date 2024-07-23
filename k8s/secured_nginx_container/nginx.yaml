@@ -1,0 +1,28 @@
+# This nginx container is more secured since the readOnlyRootFilesystem securityContext is enabled disallowing any writes to the containers root filesystem, but since it has ephemeral volumes for required /var directories, it still allows nginx to operate successfully.
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    resources: {}
+    securityContext:
+      readOnlyRootFilesystem: true
+    volumeMounts:
+      - name: var-run
+        mountPath: /var/run
+      - name: var-cache-nginx
+        mountPath: /var/cache/nginx
+  volumes:
+    - name: var-run
+      emptyDir: {}
+    - name: var-cache-nginx
+      emptyDir: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
