@@ -8,16 +8,21 @@ export AWS_REGION=il-central-1
 export AWS_PAGER=""
 CLUSTER_NAME=kubernetes
 ETCD_VERSION=v3.5.16
-k8s_version=1.31.1
+k8s_version=v1.31.1
+containerd_version=1.7.22
+cni_plugins_version=v1.5.1
+runc_version=v1.2.0-rc.3
+number_of_controllers=3
+number_of_workers=3
 
-# VPC
+# VPC Creation
 echo "Creating VPC..."
 VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --output text --query 'Vpc.VpcId')
 aws ec2 create-tags --resources ${VPC_ID} --tags Key=Name,Value=$CLUSTER_NAME
 aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-support '{"Value": true}'
 aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-hostnames '{"Value": true}'
 
-# Subnets
+# Subnets Creation
 echo "Creating Subnets..."
 SUBNET_ID=$(aws ec2 create-subnet \
   --vpc-id ${VPC_ID} \
@@ -25,20 +30,20 @@ SUBNET_ID=$(aws ec2 create-subnet \
   --output text --query 'Subnet.SubnetId')
 aws ec2 create-tags --resources ${SUBNET_ID} --tags Key=Name,Value=$CLUSTER_NAME
 
-# Internet Gateway
+# Internet Gateway Creation
 echo "Creating Internet Gateway..."
 INTERNET_GATEWAY_ID=$(aws ec2 create-internet-gateway --output text --query 'InternetGateway.InternetGatewayId')
 aws ec2 create-tags --resources ${INTERNET_GATEWAY_ID} --tags Key=Name,Value=$CLUSTER_NAME
 aws ec2 attach-internet-gateway --internet-gateway-id ${INTERNET_GATEWAY_ID} --vpc-id ${VPC_ID}
 
-# Route Tables
+# Route Table Creation
 echo "Creating Route table..."
 ROUTE_TABLE_ID=$(aws ec2 create-route-table --vpc-id ${VPC_ID} --output text --query 'RouteTable.RouteTableId')
 aws ec2 create-tags --resources ${ROUTE_TABLE_ID} --tags Key=Name,Value=$CLUSTER_NAME
 aws ec2 associate-route-table --route-table-id ${ROUTE_TABLE_ID} --subnet-id ${SUBNET_ID}
 aws ec2 create-route --route-table-id ${ROUTE_TABLE_ID} --destination-cidr-block 0.0.0.0/0 --gateway-id ${INTERNET_GATEWAY_ID}
 
-# Security Groups
+# Security Groups Creation
 echo "Creating Security Groups..."
 SECURITY_GROUP_ID=$(aws ec2 create-security-group \
   --group-name $CLUSTER_NAME \
@@ -81,7 +86,7 @@ KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
   --output text --query 'LoadBalancers[].DNSName')
 
 # Compute instances
-## Instance Image
+## Instance Image - Ubuntu 20.04
 echo "Getting Instance Image..."
 IMAGE_ID=$(aws ec2 describe-images --owners 099720109477 \
   --output json \
@@ -91,14 +96,14 @@ IMAGE_ID=$(aws ec2 describe-images --owners 099720109477 \
   'Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*' \
   | jq -r '.Images|sort_by(.Name)[-1]|.ImageId')
 
-## SSH keypair
+## SSH Keypair Creation
 echo "Creating ssh keypair..."
 aws ec2 create-key-pair --key-name kubernetes --output text --query 'KeyMaterial' > kubernetes.id_rsa
 chmod 600 kubernetes.id_rsa
 
-## Kubernetes Controllers
+## Kubernetes Controllers Creation
 echo "Creating k8s controllers..."
-for i in 0 1 2; do
+for ((i=0;i<${number_of_controllers};i+=1)); do
   instance_id=$(aws ec2 run-instances \
     --associate-public-ip-address \
     --image-id ${IMAGE_ID} \
@@ -116,9 +121,9 @@ for i in 0 1 2; do
   echo "controller-${i} created "
 done
 
-## Kubernetes Workers
+## Kubernetes Workers Creation
 echo "Creating k8s workers..."
-for i in 0 1 2; do
+for ((i=0;i<${number_of_workers};i+=1)); do
   instance_id=$(aws ec2 run-instances \
     --associate-public-ip-address \
     --image-id ${IMAGE_ID} \
@@ -137,10 +142,11 @@ for i in 0 1 2; do
 done
 
 # Sleeping until instances are fully created
+which pv &>/dev/null || sudo apt-get install -y pv
 echo "Sleeping 2 minutes until instances are fully created..."
-sleep 120
+sleep 120 | pv -t
 
-# Certificate Authority
+# Certificate Authority - CA Certs Creation
 echo "Generating CA certs..."
 cat > ca-config.json <<EOF
 {
@@ -180,7 +186,7 @@ EOF
 cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 
 # Client and Server Certificates
-## The Admin Client Certificate
+## The Kubernetes Admin Client Cert
 echo "Generating Admin Client cert..."
 cat > admin-csr.json <<EOF
 {
@@ -210,7 +216,7 @@ cfssl gencert \
 
 # The Kubelet Client Certificates
 echo "Generating k8s client certs..."
-for i in 0 1 2; do
+for ((i=0;i<${number_of_workers};i+=1)); do
   instance="worker-${i}"
   instance_hostname="ip-10-0-1-2${i}"
   cat > ${instance}-csr.json <<EOF
@@ -307,7 +313,7 @@ cfssl gencert \
   -profile=kubernetes \
   kube-proxy-csr.json | cfssljson -bare kube-proxy
 
-## The Scheduler Client Certificate
+## The Kubernetes Scheduler Client Certificate
 echo "Generating kube-scheduler client cert..."
 cat > kube-scheduler-csr.json <<EOF
 {
@@ -394,9 +400,10 @@ cfssl gencert \
   -profile=kubernetes \
   service-account-csr.json | cfssljson -bare service-account
 
-# Distribute the Client and Server Certificates
+# Distribution of Client and Server Certificates
 echo "Distributing client and server certs..."
-for instance in worker-0 worker-1 worker-2; do
+for ((i=0;i<${number_of_workers};i+=1)); do
+  instance="worker-${i}"
   external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
@@ -405,26 +412,26 @@ for instance in worker-0 worker-1 worker-2; do
   scp -i kubernetes.id_rsa ca.pem ${instance}-key.pem ${instance}.pem ubuntu@${external_ip}:~/
 done
 
-for instance in controller-0 controller-1 controller-2; do
+for ((i=0;i<${number_of_controllers};i+=1)); do
+  instance="controller-${i}"
   external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
     --output text --query 'Reservations[].Instances[].PublicIpAddress')
 
-  scp -i kubernetes.id_rsa \
-    ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
-    service-account-key.pem service-account.pem ubuntu@${external_ip}:~/
+  scp -i kubernetes.id_rsa ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem service-account-key.pem service-account.pem ubuntu@${external_ip}:~/
 done
 
-# Client Authentication Configs
-## Kubernetes Public DNS Address
+# Kubernetes Public DNS Address
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
   --load-balancer-arns ${LOAD_BALANCER_ARN} \
   --output text --query 'LoadBalancers[0].DNSName')
 
+# Client Authentication Configs
 ## The kubelet Kubernetes Configuration File
 echo "Configuring kubelet configuration files..."
-for instance in worker-0 worker-1 worker-2; do
+for ((i=0;i<${number_of_workers};i+=1)); do
+  instance="worker-${i}"
   kubectl config set-cluster $CLUSTER_NAME \
     --certificate-authority=ca.pem \
     --embed-certs=true \
@@ -529,7 +536,8 @@ kubectl config use-context default --kubeconfig=admin.kubeconfig
 
 # Distribute the Kubernetes Configuration Files
 echo "Distributing k8s configuration files..."
-for instance in worker-0 worker-1 worker-2; do
+for ((i=0;i<${number_of_workers};i+=1)); do
+  instance="worker-${i}"
   external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
@@ -539,12 +547,13 @@ for instance in worker-0 worker-1 worker-2; do
     ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${external_ip}:~/
 done
 
-for instance in controller-0 controller-1 controller-2; do
+for ((i=0;i<${number_of_controllers};i+=1)); do
+  instance="controller-${i}"
   external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
     --output text --query 'Reservations[].Instances[].PublicIpAddress')
-  
+
   scp -i kubernetes.id_rsa \
     admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ubuntu@${external_ip}:~/
 done
@@ -569,12 +578,13 @@ resources:
       - identity: {}
 EOF
 
-for instance in controller-0 controller-1 controller-2; do
+for ((i=0;i<${number_of_controllers};i+=1)); do
+  instance="controller-${i}"
   external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
     --output text --query 'Reservations[].Instances[].PublicIpAddress')
-  
+
   scp -i kubernetes.id_rsa encryption-config.yaml ubuntu@${external_ip}:~/
 done
 
@@ -587,6 +597,8 @@ sudo mv etcd-${ETCD_VERSION}-linux-amd64/etcd* /usr/local/bin/
 sudo mkdir -p /etc/etcd /var/lib/etcd
 sudo chmod 700 /var/lib/etcd
 sudo cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd/
+sudo chmod 600 /etc/etcd/*.pem
+sudo chown root:root /etc/etcd/*.pem
 ETCD_NAME=\$(curl -s http://169.254.169.254/latest/user-data/ \
   | tr "|" "\n" | grep "^name" | cut -d"=" -f2)
 echo "\${ETCD_NAME}"
@@ -627,13 +639,14 @@ sudo systemctl enable etcd
 sudo systemctl start etcd
 EOF
 
-for instance in controller-0 controller-1 controller-2; do
-    external_ip=$(aws ec2 describe-instances --filters \
+for ((i=0;i<${number_of_controllers};i+=1)); do
+  instance="controller-${i}"
+  external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
     --output text --query 'Reservations[].Instances[].PublicIpAddress')
-    scp -i kubernetes.id_rsa etcd_conf.sh ubuntu@${external_ip}:~/
-    ssh -i kubernetes.id_rsa ubuntu@${external_ip} "chmod u+x etcd_conf.sh && ./etcd_conf.sh"
+  scp -i kubernetes.id_rsa etcd_conf.sh ubuntu@${external_ip}:~/
+  ssh -i kubernetes.id_rsa ubuntu@${external_ip} "chmod u+x etcd_conf.sh && ./etcd_conf.sh"
 done
 
 check_etcd_status() {
@@ -654,17 +667,16 @@ cat << EOF > k8s_control_plane.sh
 INTERNAL_IP=\$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 sudo mkdir -p /etc/kubernetes/config
 wget -q --show-progress --https-only --timestamping \
-  "https://storage.googleapis.com/kubernetes-release/release/v${k8s_version}/bin/linux/amd64/kube-apiserver" \
-  "https://storage.googleapis.com/kubernetes-release/release/v${k8s_version}/bin/linux/amd64/kube-controller-manager" \
-  "https://storage.googleapis.com/kubernetes-release/release/v${k8s_version}/bin/linux/amd64/kube-scheduler" \
-  "https://storage.googleapis.com/kubernetes-release/release/v${k8s_version}/bin/linux/amd64/kubectl"
+  "https://dl.k8s.io/${k8s_version}/bin/linux/amd64/kube-apiserver" \
+  "https://dl.k8s.io/${k8s_version}/bin/linux/amd64/kube-controller-manager" \
+  "https://dl.k8s.io/${k8s_version}/bin/linux/amd64/kube-scheduler" \
+  "https://dl.k8s.io/${k8s_version}/bin/linux/amd64/kubectl"
 chmod +x kube-apiserver kube-controller-manager kube-scheduler kubectl
 sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/
 sudo mkdir -p /var/lib/kubernetes/
 
-sudo mv ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
-  service-account-key.pem service-account.pem \
-  encryption-config.yaml /var/lib/kubernetes/
+sudo mv ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem service-account-key.pem service-account.pem encryption-config.yaml /var/lib/kubernetes/
+sudo chown -R root:root /var/lib/kubernetes/
 cat <<EOFAPISERVER | sudo tee /etc/systemd/system/kube-apiserver.service
 [Unit]
 Description=Kubernetes API Server
@@ -709,6 +721,7 @@ WantedBy=multi-user.target
 EOFAPISERVER
 
 sudo mv kube-controller-manager.kubeconfig /var/lib/kubernetes/
+sudo chown root:root /var/lib/kubernetes/kube-controller-manager.kubeconfig
 cat <<EOFCONTROLLER | sudo tee /etc/systemd/system/kube-controller-manager.service
 [Unit]
 Description=Kubernetes Controller Manager
@@ -745,6 +758,7 @@ leaderElection:
 EOFSCHEDULERYML
 
 sudo mv kube-scheduler.kubeconfig /var/lib/kubernetes/
+sudo chown root:root /var/lib/kubernetes/kube-scheduler.kubeconfig
 cat <<EOFSCHEDULER | sudo tee /etc/systemd/system/kube-scheduler.service
 [Unit]
 Description=Kubernetes Scheduler
@@ -773,7 +787,9 @@ cat <<EOFHOSTS | sudo tee -a /etc/hosts
 10.0.1.22 ip-10-0-1-22
 EOFHOSTS
 EOF
-for instance in controller-0 controller-1 controller-2; do
+
+for ((i=0;i<${number_of_controllers};i+=1)); do
+  instance="controller-${i}"
   external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
@@ -849,13 +865,13 @@ sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 wget -q --show-progress --https-only --timestamping \
-  https://github.com/kubernetes-sigs/cri-tools/releases/download/v${k8s_version}/crictl-v${k8s_version}-linux-amd64.tar.gz \
-  https://github.com/opencontainers/runc/releases/download/v1.0.0-rc93/runc.amd64 \
-  https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz \
-  https://github.com/containerd/containerd/releases/download/v1.4.4/containerd-1.4.4-linux-amd64.tar.gz \
-  https://storage.googleapis.com/kubernetes-release/release/v${k8s_version}/bin/linux/amd64/kubectl \
-  https://storage.googleapis.com/kubernetes-release/release/v${k8s_version}/bin/linux/amd64/kube-proxy \
-  https://storage.googleapis.com/kubernetes-release/release/v${k8s_version}/bin/linux/amd64/kubelet
+  https://github.com/kubernetes-sigs/cri-tools/releases/download/${k8s_version}/crictl-${k8s_version}-linux-amd64.tar.gz \
+  https://github.com/opencontainers/runc/releases/download/${runc_version}/runc.amd64 \
+  https://github.com/containernetworking/plugins/releases/download/${cni_plugins_version}/cni-plugins-linux-amd64-${cni_plugins_version}.tgz \
+  https://github.com/containerd/containerd/releases/download/v${containerd_version}/containerd-${containerd_version}-linux-amd64.tar.gz \
+  https://dl.k8s.io/${k8s_version}/bin/linux/amd64/kubectl \
+  https://dl.k8s.io/${k8s_version}/bin/linux/amd64/kube-proxy \
+  https://dl.k8s.io/${k8s_version}/bin/linux/amd64/kubelet
 
 sudo mkdir -p \
   /etc/cni/net.d \
@@ -866,9 +882,9 @@ sudo mkdir -p \
   /var/run/kubernetes
 
 mkdir containerd
-tar -xvf crictl-v1.21.0-linux-amd64.tar.gz
-tar -xvf containerd-1.4.4-linux-amd64.tar.gz -C containerd
-sudo tar -xvf cni-plugins-linux-amd64-v0.9.1.tgz -C /opt/cni/bin/
+tar -xvf crictl-${k8s_version}-linux-amd64.tar.gz
+tar -xvf containerd-${containerd_version}-linux-amd64.tar.gz -C containerd
+sudo tar -xvf cni-plugins-linux-amd64-${cni_plugins_version}.tgz -C /opt/cni/bin/
 sudo mv runc.amd64 runc
 chmod +x crictl kubectl kube-proxy kubelet runc 
 sudo mv crictl kubectl kube-proxy kubelet runc /usr/local/bin/
@@ -943,7 +959,9 @@ echo "\${WORKER_NAME}"
 
 sudo mv \${WORKER_NAME}-key.pem \${WORKER_NAME}.pem /var/lib/kubelet/
 sudo mv \${WORKER_NAME}.kubeconfig /var/lib/kubelet/kubeconfig
+sudo chown root:root /var/lib/kubelet/*
 sudo mv ca.pem /var/lib/kubernetes/
+sudo chown root:root /var/lib/kubernetes/*
 
 cat <<EOFKUBELET | sudo tee /var/lib/kubelet/kubelet-config.yaml
 kind: KubeletConfiguration
@@ -977,11 +995,8 @@ Requires=containerd.service
 [Service]
 ExecStart=/usr/local/bin/kubelet \\
   --config=/var/lib/kubelet/kubelet-config.yaml \\
-  --container-runtime=remote \\
   --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
-  --image-pull-progress-deadline=2m \\
   --kubeconfig=/var/lib/kubelet/kubeconfig \\
-  --network-plugin=cni \\
   --register-node=true \\
   --v=2
 Restart=on-failure
@@ -992,6 +1007,7 @@ WantedBy=multi-user.target
 EOFKUBELETSVC
 
 sudo mv kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
+sudo chown root:root /var/lib/kube-proxy/kubeconfig
 cat <<EOFKUBEPROXY | sudo tee /var/lib/kube-proxy/kube-proxy-config.yaml
 kind: KubeProxyConfiguration
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
@@ -1020,6 +1036,16 @@ sudo systemctl daemon-reload
 sudo systemctl enable containerd kubelet kube-proxy
 sudo systemctl start containerd kubelet kube-proxy
 EOF
+
+for ((i=0;i<${number_of_workers};i+=1)); do
+  instance="worker-${i}"
+  external_ip=$(aws ec2 describe-instances --filters \
+    "Name=tag:Name,Values=${instance}" \
+    "Name=instance-state-name,Values=running" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
+  scp -i kubernetes.id_rsa k8s_worker.sh ubuntu@${external_ip}:~/
+  ssh -i kubernetes.id_rsa ubuntu@${external_ip} "chmod u+x k8s_worker.sh && ./k8s_worker.sh && rm -f k8s_worker.sh"
+done
 
 # Verify the worker nodes
 external_ip=$(aws ec2 describe-instances --filters \
@@ -1058,10 +1084,12 @@ kubectl get nodes
 
 # The Routing Table and routes
 echo "Configuring the routing table and routes..."
-for instance in worker-0 worker-1 worker-2; do
+
+for ((i=0;i<${number_of_workers};i+=1)); do
+  instance="worker-${i}"
   instance_id_ip="$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${instance}" \
-    --output text --query 'Reservations[].Instances[].[InstanceId,PrivateIpAddress]')"
+    --output text --query 'Reservations[].Instances[].[InstanceId,PrivateIpAddress]'| grep -v None)"
   instance_id="$(echo "${instance_id_ip}" | cut -f1)"
   instance_ip="$(echo "${instance_id_ip}" | cut -f2)"
   pod_cidr="$(aws ec2 describe-instance-attribute \
@@ -1069,10 +1097,13 @@ for instance in worker-0 worker-1 worker-2; do
     --attribute userData \
     --output text --query 'UserData.Value' \
     | base64 --decode | tr "|" "\n" | grep "^pod-cidr" | cut -d'=' -f2)"
+  route_table_id="$(aws ec2 describe-route-tables \
+    --filters "Name=tag:Name,Values=${CLUSTER_NAME}" \
+    --output text --query 'RouteTables[].Associations[].RouteTableId')"
   echo "${instance_ip} ${pod_cidr}"
 
   aws ec2 create-route \
-    --route-table-id "${ROUTE_TABLE_ID}" \
+    --route-table-id "${route_table_id}" \
     --destination-cidr-block "${pod_cidr}" \
     --instance-id "${instance_id}"
 done
@@ -1080,5 +1111,30 @@ done
 # Validate Routes
 echo "Validating routes..."
 aws ec2 describe-route-tables \
-  --route-table-ids "${ROUTE_TABLE_ID}" \
+  --route-table-ids "${route_table_id}" \
   --query 'RouteTables[].Routes'
+
+# private user configuration
+myuser="itaig"
+echo "Configuring private user..."
+openssl genrsa -out ${myuser}.key 2048
+openssl req -new -key ${myuser}.key -out ${myuser}.csr -subj "/CN=${myuser}"
+user_cert=$(cat ${myuser}.csr | base64 | tr -d "\n")
+cat <<EOF | kubectl apply -f -
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: ${myuser}
+spec:
+  request: "${user_cert}"
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 31536000  # one year
+  usages:
+  - client auth
+EOF
+kubectl certificate approve ${myuser}
+kubectl get csr ${myuser} -o jsonpath='{.status.certificate}' | base64 --decode > ${myuser}.crt
+kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=${myuser}
+kubectl config set-credentials ${myuser} --client-key=${myuser}.key --client-certificate=${myuser}.crt --embed-certs=true
+kubectl config set-context ${myuser} --cluster=${CLUSTER_NAME} --user=${myuser}
+kubectl config use-context ${myuser}
