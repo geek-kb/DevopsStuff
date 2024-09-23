@@ -14,6 +14,7 @@ cni_plugins_version=v1.5.1
 runc_version=v1.2.0-rc.3
 number_of_controllers=3
 number_of_workers=3
+myuser="itaig"
 
 # VPC Creation
 echo "Creating VPC..."
@@ -1115,12 +1116,16 @@ aws ec2 describe-route-tables \
   --query 'RouteTables[].Routes'
 
 # private user configuration
-myuser="itaig"
-echo "Configuring private user..."
-openssl genrsa -out ${myuser}.key 2048
-openssl req -new -key ${myuser}.key -out ${myuser}.csr -subj "/CN=${myuser}"
-user_cert=$(cat ${myuser}.csr | base64 | tr -d "\n")
-cat <<EOF | kubectl apply -f -
+if [ -z "$myuser" ]; then
+  echo "No private user provided"
+  exit 0
+else
+  echo "Private user provided: ${myuser}"
+  echo "Configuring private user..."
+  openssl genrsa -out ${myuser}.key 2048
+  openssl req -new -key ${myuser}.key -out ${myuser}.csr -subj "/CN=${myuser}"
+  user_cert=$(cat ${myuser}.csr | base64 | tr -d "\n")
+  cat <<EOF | kubectl apply -f -
 apiVersion: certificates.k8s.io/v1
 kind: CertificateSigningRequest
 metadata:
@@ -1132,9 +1137,10 @@ spec:
   usages:
   - client auth
 EOF
-kubectl certificate approve ${myuser}
-kubectl get csr ${myuser} -o jsonpath='{.status.certificate}' | base64 --decode > ${myuser}.crt
-kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=${myuser}
-kubectl config set-credentials ${myuser} --client-key=${myuser}.key --client-certificate=${myuser}.crt --embed-certs=true
-kubectl config set-context ${myuser} --cluster=${CLUSTER_NAME} --user=${myuser}
-kubectl config use-context ${myuser}
+  kubectl certificate approve ${myuser}
+  kubectl get csr ${myuser} -o jsonpath='{.status.certificate}' | base64 --decode > ${myuser}.crt
+  kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=${myuser}
+  kubectl config set-credentials ${myuser} --client-key=${myuser}.key --client-certificate=${myuser}.crt --embed-certs=true
+  kubectl config set-context ${myuser} --cluster=${CLUSTER_NAME} --user=${myuser}
+  kubectl config use-context ${myuser}
+fi
