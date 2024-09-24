@@ -16,232 +16,75 @@ number_of_controllers=3
 number_of_workers=3
 controller_instance_type=t3.micro
 worker_instance_type=t3.micro
-public_subnet=true
-vpc_cidr=10.0.0.0/16
-pvt_network_cidr_1=10.0.1.0/28
-pvt_network_cidr_2=10.0.2.0/28
-pub_network_cidr_1=10.0.10.0/28
-pub_network_cidr_2=10.0.20.0/28
 
 # VPC Creation
 echo "Creating VPC..."
-VPC_ID=$(aws ec2 create-vpc --cidr-block $vpc_cidr --output text --query 'Vpc.VpcId')
+VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --output text --query 'Vpc.VpcId')
 aws ec2 create-tags --resources ${VPC_ID} --tags Key=Name,Value=$CLUSTER_NAME
 aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-support '{"Value": true}'
 aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-hostnames '{"Value": true}'
-echo "VPC created with ID: ${VPC_ID}"
 
 # Subnets Creation
 echo "Creating Subnets..."
-PRIVATE_SUBNET_ID_1=$(aws ec2 create-subnet \
---vpc-id ${VPC_ID} \
---cidr-block $pvt_network_cidr_1 \
---output text --query 'Subnet.SubnetId')
-aws ec2 create-tags --resources ${PRIVATE_SUBNET_ID_1} --tags Key=Name,Value=$CLUSTER_NAME Key=InternetFacing,Value=false
-echo "Private subnet created with ID: ${PRIVATE_SUBNET_ID_1}"
-if [ "$public_subnet" = true ]; then
-  PRIVATE_SUBNET_ID_2=$(aws ec2 create-subnet \
+SUBNET_ID=$(aws ec2 create-subnet \
   --vpc-id ${VPC_ID} \
-  --cidr-block $pvt_network_cidr_2 \
+  --cidr-block 10.0.1.0/24 \
   --output text --query 'Subnet.SubnetId')
-  aws ec2 create-tags --resources ${PRIVATE_SUBNET_ID_2} --tags Key=Name,Value=$CLUSTER_NAME Key=InternetFacing,Value=false
-  echo "Private subnet created with ID: ${PRIVATE_SUBNET_ID_2}"  
-  PUBLIC_SUBNET_ID_1=$(aws ec2 create-subnet \
-  --vpc-id ${VPC_ID} \
-  --cidr-block $pub_network_cidr_1 \
-  --availability-zone ${AWS_REGION}a \
-  --output text --query 'Subnet.SubnetId')
-  aws ec2 create-tags --resources ${PUBLIC_SUBNET_ID_1} --tags Key=Name,Value=$CLUSTER_NAME Key=InternetFacing,Value=true
-  aws ec2 modify-subnet-attribute --subnet-id ${PUBLIC_SUBNET_ID_1} --map-public-ip-on-launch
-  echo "Public subnet created with ID: ${PUBLIC_SUBNET_ID_1}"
-  PUBLIC_SUBNET_ID_2=$(aws ec2 create-subnet \
-  --vpc-id ${VPC_ID} \
-  --cidr-block $pub_network_cidr_2 \
-  --availability-zone ${AWS_REGION}b \
-  --output text --query 'Subnet.SubnetId')
-  aws ec2 create-tags --resources ${PUBLIC_SUBNET_ID_2} --tags Key=Name,Value=$CLUSTER_NAME Key=InternetFacing,Value=true
-  aws ec2 modify-subnet-attribute --subnet-id ${PUBLIC_SUBNET_ID_2} --map-public-ip-on-launch
-  echo "Public subnet created with ID: ${PUBLIC_SUBNET_ID_2}"
-fi
+aws ec2 create-tags --resources ${SUBNET_ID} --tags Key=Name,Value=$CLUSTER_NAME
 
 # Internet Gateway Creation
 echo "Creating Internet Gateway..."
 INTERNET_GATEWAY_ID=$(aws ec2 create-internet-gateway --output text --query 'InternetGateway.InternetGatewayId')
 aws ec2 create-tags --resources ${INTERNET_GATEWAY_ID} --tags Key=Name,Value=$CLUSTER_NAME
 aws ec2 attach-internet-gateway --internet-gateway-id ${INTERNET_GATEWAY_ID} --vpc-id ${VPC_ID}
-echo "Internet Gateway created with ID: ${INTERNET_GATEWAY_ID}"
 
-# NAT Gateway Creation
-if [ "$public_subnet" = !true ]; then
-  echo "Creating NAT Gateway..."
-  EIP_ID=$(aws ec2 allocate-address --domain vpc --output text --query 'AllocationId')
-  NAT_GATEWAY_ID=$(aws ec2 create-nat-gateway \
-    --subnet-id ${PRIVATE_SUBNET_ID_1} \
-    --allocation-id ${EIP_ID} \
-    --output text --query 'NatGateway.NatGatewayId')
-  aws ec2 create-tags --resources ${NAT_GATEWAY_ID} --tags Key=Name,Value=$CLUSTER_NAME
-  sleep 60 | pv -t
-  echo "NAT Gateway created with ID: ${NAT_GATEWAY_ID}"
-else
-  echo "Creating NAT Gateway..."
-  EIP_ID_1=$(aws ec2 allocate-address --domain vpc --output text --query 'AllocationId')
-  NAT_GATEWAY_ID_1=$(aws ec2 create-nat-gateway \
-    --subnet-id ${PRIVATE_SUBNET_ID_1} \
-    --allocation-id ${EIP_ID_1} \
-    --output text --query 'NatGateway.NatGatewayId')
-  aws ec2 create-tags --resources ${NAT_GATEWAY_ID_1} --tags Key=Name,Value=$CLUSTER_NAME
-  echo "NAT Gateway created with ID: ${NAT_GATEWAY_ID_1}"
-  EIP_ID_2=$(aws ec2 allocate-address --domain vpc --output text --query 'AllocationId')
-  NAT_GATEWAY_ID_2=$(aws ec2 create-nat-gateway \
-    --subnet-id ${PRIVATE_SUBNET_ID_2} \
-    --allocation-id ${EIP_ID_2} \
-    --output text --query 'NatGateway.NatGatewayId')
-  aws ec2 create-tags --resources ${NAT_GATEWAY_ID_2} --tags Key=Name,Value=$CLUSTER_NAME
-  sleep 60 | pv -t
-  echo "NAT Gateway created with ID: ${NAT_GATEWAY_ID_2}"
-fi
-# Route Tables Creation
-echo "Creating Route tables..."
-PVT_ROUTE_TABLE_ID_1=$(aws ec2 create-route-table --vpc-id ${VPC_ID} --output text --query 'RouteTable.RouteTableId')
-aws ec2 create-tags --resources ${PVT_ROUTE_TABLE_ID_1} --tags Key=Name,Value=$CLUSTER_NAME Key=Name,Value=private_rtb_1
-aws ec2 associate-route-table --route-table-id ${PVT_ROUTE_TABLE_ID_1} --subnet-id ${PRIVATE_SUBNET_ID_1}
-aws ec2 create-route --route-table-id ${PVT_ROUTE_TABLE_ID_1} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${NAT_GATEWAY_ID_1}
-echo "Private route table created with ID: ${PVT_ROUTE_TABLE_ID_1}"
-if [ "$public_subnet" = true ]; then
-  PVT_ROUTE_TABLE_ID_2=$(aws ec2 create-route-table --vpc-id ${VPC_ID} --output text --query 'RouteTable.RouteTableId')
-  aws ec2 create-tags --resources ${PVT_ROUTE_TABLE_ID_2} --tags Key=Name,Value=$CLUSTER_NAME Key=Name,Value=private_rtb_2
-  aws ec2 associate-route-table --route-table-id ${PVT_ROUTE_TABLE_ID_2} --subnet-id ${PRIVATE_SUBNET_ID_2}
-  aws ec2 create-route --route-table-id ${PVT_ROUTE_TABLE_ID_2} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${NAT_GATEWAY_ID_2}
-  echo "Private route table created with ID: ${PVT_ROUTE_TABLE_ID_2}"
-
-  PUB_ROUTE_TABLE_ID_1=$(aws ec2 create-route-table --vpc-id ${VPC_ID} --output text --query 'RouteTable.RouteTableId')
-  aws ec2 create-tags --resources ${PUB_ROUTE_TABLE_ID_1} --tags Key=Name,Value=$CLUSTER_NAME Key=Name,Value=pub_rtb_1
-  aws ec2 associate-route-table --route-table-id ${PUB_ROUTE_TABLE_ID_1} --subnet-id ${PUBLIC_SUBNET_ID_1}
-  aws ec2 create-route --route-table-id ${PUB_ROUTE_TABLE_ID_1} --destination-cidr-block 0.0.0.0/0 --gateway-id ${INTERNET_GATEWAY_ID}
-  
-  PUB_ROUTE_TABLE_ID_2=$(aws ec2 create-route-table --vpc-id ${VPC_ID} --output text --query 'RouteTable.RouteTableId')
-  aws ec2 create-tags --resources ${PUB_ROUTE_TABLE_ID_2} --tags Key=Name,Value=$CLUSTER_NAME Key=Name,Value=pub_rtb_2
-  aws ec2 associate-route-table --route-table-id ${PUB_ROUTE_TABLE_ID_2} --subnet-id ${PUBLIC_SUBNET_ID_2}
-  aws ec2 create-route --route-table-id ${PUB_ROUTE_TABLE_ID_2} --destination-cidr-block 0.0.0.0/0 --gateway-id ${INTERNET_GATEWAY_ID}
-  echo "Public route tables created with IDs: ${PUB_ROUTE_TABLE_ID_1} ${PUB_ROUTE_TABLE_ID_2}"
-fi
+# Route Table Creation
+echo "Creating Route table..."
+ROUTE_TABLE_ID=$(aws ec2 create-route-table --vpc-id ${VPC_ID} --output text --query 'RouteTable.RouteTableId')
+aws ec2 create-tags --resources ${ROUTE_TABLE_ID} --tags Key=Name,Value=$CLUSTER_NAME
+aws ec2 associate-route-table --route-table-id ${ROUTE_TABLE_ID} --subnet-id ${SUBNET_ID}
+aws ec2 create-route --route-table-id ${ROUTE_TABLE_ID} --destination-cidr-block 0.0.0.0/0 --gateway-id ${INTERNET_GATEWAY_ID}
 
 # Security Groups Creation
 echo "Creating Security Groups..."
-EC2_SECURITY_GROUP_ID=$(aws ec2 create-security-group \
-  --group-name ${CLUSTER_NAME}_ec2 \
-  --description "$CLUSTER_NAME EC2 security group" \
+SECURITY_GROUP_ID=$(aws ec2 create-security-group \
+  --group-name $CLUSTER_NAME \
+  --description "$CLUSTER_NAME security group" \
   --vpc-id ${VPC_ID} \
   --output text --query 'GroupId')
-aws ec2 create-tags --resources ${EC2_SECURITY_GROUP_ID} --tags Key=Name,Value=$CLUSTER_NAME
-aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol all --cidr $vpc_cidr
-aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol all --cidr 10.200.0.0/16
-aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol tcp --port 22 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol tcp --port 6443 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol tcp --port 443 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol icmp --port -1 --cidr 0.0.0.0/0
-echo "EC2 security group created with ID: ${EC2_SECURITY_GROUP_ID}"
-if [ "$public_subnet" = true ]; then
-  ALB_SECURITY_GROUP_ID=$(aws ec2 create-security-group \
-    --group-name ${CLUSTER_NAME}_alb \
-    --description "$CLUSTER_NAME ALB security group" \
-    --vpc-id ${VPC_ID} \
-    --output text --query 'GroupId')
-  aws ec2 create-tags --resources ${ALB_SECURITY_GROUP_ID} --tags Key=Name,Value=$CLUSTER_NAME
-  aws ec2 authorize-security-group-ingress --group-id ${ALB_SECURITY_GROUP_ID} --protocol tcp --port 80 --cidr 0.0.0.0/0
-  aws ec2 authorize-security-group-ingress --group-id ${ALB_SECURITY_GROUP_ID} --protocol tcp --port 443 --cidr 0.0.0.0/0
-  echo "ALB security group created with ID: ${ALB_SECURITY_GROUP_ID}"
+aws ec2 create-tags --resources ${SECURITY_GROUP_ID} --tags Key=Name,Value=$CLUSTER_NAME
+aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol all --cidr 10.0.0.0/16
+aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol all --cidr 10.200.0.0/16
+aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol tcp --port 22 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol tcp --port 6443 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol tcp --port 443 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol icmp --port -1 --cidr 0.0.0.0/0
 
-  NLB_SECURITY_GROUP_ID=$(aws ec2 create-security-group \
-    --group-name ${CLUSTER_NAME}_nlb \
-    --description "$CLUSTER_NAME NLB security group" \
-    --vpc-id ${VPC_ID} \
-    --output text --query 'GroupId')
-  aws ec2 create-tags --resources ${NLB_SECURITY_GROUP_ID} --tags Key=Name,Value=$CLUSTER_NAME
-  aws ec2 authorize-security-group-ingress --group-id ${NLB_SECURITY_GROUP_ID} --protocol tcp --port 80 --source-group ${ALB_SECURITY_GROUP_ID}
-  aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol tcp --port 80 --source-group ${NLB_SECURITY_GROUP_ID}
-  aws ec2 authorize-security-group-ingress --group-id ${EC2_SECURITY_GROUP_ID} --protocol tcp --port 443 --source-group ${NLB_SECURITY_GROUP_ID}  
-  echo "NLB security group created with ID: ${NLB_SECURITY_GROUP_ID}"
-fi
-# Kubernetes Public Access - Create Load Balancers
-if [ "$public_subnet" != true ]; then
-  echo "Creating NLB..."
-  NLB_ARN=$(aws elbv2 create-load-balancer \
-  --name $CLUSTER_NAME \
-  --subnets ${PRIVATE_SUBNET_ID} \
-  --scheme internet-facing \
-  --type network \
-  --output text --query 'LoadBalancers[].LoadBalancerArn')
-  echo "NLB created with ARN: ${NLB_ARN}"
-  NLB_TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
-  --name $CLUSTER_NAME \
-  --protocol TCP \
-  --port 6443 \
-  --vpc-id ${VPC_ID} \
-  --target-type ip \
-  --output text --query 'TargetGroups[].TargetGroupArn')
-  echo "NLB target group created with ARN: ${NLB_TARGET_GROUP_ARN}"
-  aws elbv2 register-targets --target-group-arn ${NLB_TARGET_GROUP_ARN} --targets Id=10.0.1.1{0,1,2}
-  aws elbv2 create-listener \
-  --load-balancer-arn ${NLB_ARN} \
-  --protocol TCP \
-  --port 443 \
-  --default-actions Type=forward,TargetGroupArn=${NLB_TARGET_GROUP_ARN} \
-  --output text --query 'Listeners[].ListenerArn'
-  echo "NLB listener created"
+# Kubernetes Public Access - Create a Network Load Balancer
+echo "Creating NLB..."
+LOAD_BALANCER_ARN=$(aws elbv2 create-load-balancer \
+--name $CLUSTER_NAME \
+--subnets ${SUBNET_ID} \
+--scheme internet-facing \
+--type network \
+--output text --query 'LoadBalancers[].LoadBalancerArn')
+TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
+--name $CLUSTER_NAME \
+--protocol TCP \
+--port 6443 \
+--vpc-id ${VPC_ID} \
+--target-type ip \
+--output text --query 'TargetGroups[].TargetGroupArn')
+aws elbv2 register-targets --target-group-arn ${TARGET_GROUP_ARN} --targets Id=10.0.1.1{0,1,2}
+aws elbv2 create-listener \
+--load-balancer-arn ${LOAD_BALANCER_ARN} \
+--protocol TCP \
+--port 443 \
+--default-actions Type=forward,TargetGroupArn=${TARGET_GROUP_ARN} \
+--output text --query 'Listeners[].ListenerArn'
 
-  KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
-  --load-balancer-arns ${NLB_ARN} \
-  --output text --query 'LoadBalancers[].DNSName')
-else
-  echo "Creating NLB..."
-  NLB_ARN=$(aws elbv2 create-load-balancer \
-  --name $CLUSTER_NAME \
-  --subnets ${PRIVATE_SUBNET_ID} \
-  --scheme internal \
-  --output text --query 'LoadBalancers[].LoadBalancerArn')
-  echo "NLB created with ARN: ${NLB_ARN}"
-  NLB_TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
-  --name ${CLUSTER_NAME}-nlb-to-ec2 \
-  --protocol TCP \
-  --port 80 \
-  --vpc-id ${VPC_ID} \
-  --target-type instance \
-  --output text --query 'TargetGroups[].TargetGroupArn')
-  echo "NLB target group created with ARN: ${NLB_TARGET_GROUP_ARN}"
-  aws elbv2 register-targets --target-group-arn ${NLB_TARGET_GROUP_ARN} --targets Id=10.0.1.1{0,1}
-  aws elbv2 create-listener \
-  --load-balancer-arn ${NLB_ARN} \
-  --protocol TCP \
-  --port 443 \
-  --default-actions Type=forward,TargetGroupArn=${NLB_TARGET_GROUP_ARN} \
-  --output text --query 'Listeners[].ListenerArn'
-  echo "NLB listener created"
-
-  echo "Creating ALB..."
-  ALB_ARN=$(aws elbv2 create-load-balancer \
-  --name $CLUSTER_NAME \
-  --subnets $PUBLIC_SUBNET_ID_1 $PUBLIC_SUBNET_ID_2 \
-  --security-groups $SECURITY_GROUP_ID)
-  echo "ALB created with ARN: ${ALB_ARN}"
-  ALB_TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
-  --name ${CLUSTER_NAME}-alb-to-nlb \
-  --protocol TCP \
-  --port 80 \
-  --vpc-id ${VPC_ID} \
-  --default-actions Type=forward,TargetGroupArn=${NLB_TARGET_GROUP_ARN} \
-  --output text --query 'LoadBalancers[].LoadBalancerArn')
-  echo "ALB target group created with ARN: ${ALB_TARGET_GROUP_ARN}"
-  aws elbv2 register-targets --target-group-arn ${ALB_TARGET_GROUP_ARN} --targets Id=10.0.1.2
-  # aws elbv2 create-listener \
-  # --load-balancer-arn ${NLB_ARN} \
-  # --protocol TCP \
-  # --port 80 \
-  # --default-actions Type=forward,TargetGroupArn=${NLB_TARGET_GROUP_ARN} \
-  # --output text --query 'Listeners[].ListenerArn'  
-fi
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
-  --load-balancer-arns ${NLB_ARN} \
+  --load-balancer-arns ${LOAD_BALANCER_ARN} \
   --output text --query 'LoadBalancers[].DNSName')
 
 # Compute instances
@@ -272,7 +115,7 @@ for ((i=0;i<${number_of_controllers};i+=1)); do
     --instance-type ${controller_instance_type} \
     --private-ip-address 10.0.1.1${i} \
     --user-data "name=controller-${i}" \
-    --subnet-id ${PRIVATE_SUBNET_ID} \
+    --subnet-id ${SUBNET_ID} \
     --block-device-mappings='{"DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": 50 }, "NoDevice": "" }' \
     --output text --query 'Instances[].InstanceId')
   aws ec2 modify-instance-attribute --instance-id ${instance_id} --no-source-dest-check
@@ -292,7 +135,7 @@ for ((i=0;i<${number_of_workers};i+=1)); do
     --instance-type ${worker_instance_type} \
     --private-ip-address 10.0.1.2${i} \
     --user-data "name=worker-${i}|pod-cidr=10.200.${i}.0/24" \
-    --subnet-id ${PRIVATE_SUBNET_ID} \
+    --subnet-id ${SUBNET_ID} \
     --block-device-mappings='{"DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": 50 }, "NoDevice": "" }' \
     --output text --query 'Instances[].InstanceId')
   aws ec2 modify-instance-attribute --instance-id ${instance_id} --no-source-dest-check
@@ -1278,32 +1121,34 @@ kubectl config use-context ${CLUSTER_NAME}
 
 
 # Cleanup
-cwd=$(pwd)
-aws ec2 terminate-instances --instance-ids $(aws ec2 describe-instances --filters "Name=key-name,Values=kubernetes" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].{InstanceId:InstanceId}" --output text | xargs)
-sleep 120 | pv -t
-aws ec2 delete-key-pair --key-name kubernetes
-rm -f $cwd/*
-lbarn=$(aws elbv2 describe-load-balancers | jq -r '.LoadBalancers[] | select(.LoadBalancerName | contains("kubernetes")) .LoadBalancerArn')
-aws elbv2 delete-load-balancer --load-balancer-arn $lbarn
-tgarn=$(aws elbv2 describe-target-groups | jq -r '.TargetGroups[] | select(.TargetGroupName | contains("kubernetes")) .TargetGroupArn')
-aws elbv2 delete-target-group --target-group-arn $tgarn
-sleep 60 | pv -t
-VPC_ID=$(aws ec2 describe-vpcs | jq -r '.Vpcs[] | select(.Tags[]?.Value | contains("kubernetes")) .VpcId')
-IGWS=$(aws ec2 describe-internet-gateways --filter "Name=attachment.vpc-id,Values=$VPC_ID" --query "InternetGateways[*].InternetGatewayId" --output text)
-for igw in $IGWS; do
-  aws ec2 detach-internet-gateway --internet-gateway-id $igw --vpc-id $VPC_ID
-  aws ec2 delete-internet-gateway --internet-gateway-id $igw
-done
-ROUTE_TABLES=$(aws ec2 describe-route-tables --filter "Name=vpc-id,Values=$VPC_ID" --query "RouteTables[?Associations[?Main!=true]].RouteTableId" --output text)
-for rt in $ROUTE_TABLES; do
-  aws ec2 delete-route-table --route-table-id $rt
-done
-SUBNETS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[*].SubnetId" --output text)
-for subnet in $SUBNETS; do
-  aws ec2 delete-subnet --subnet-id $subnet
-done
-SECURITY_GROUPS=$(aws ec2 describe-security-groups --filter "Name=vpc-id,Values=$VPC_ID" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text)
-for sg in $SECURITY_GROUPS; do
-  aws ec2 delete-security-group --group-id $sg
-done
-aws ec2 delete-vpc --vpc-id $VPC_ID
+# cwd=$(pwd)
+# aws ec2 terminate-instances --instance-ids $(aws ec2 describe-instances --filters "Name=key-name,Values=kubernetes" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].{InstanceId:InstanceId}" --output text | xargs)
+# sleep 120 | pv -t
+# aws ec2 delete-key-pair --key-name kubernetes
+# rm -f $cwd/*
+# lbarn=$(aws elbv2 describe-load-balancers | jq -r '.LoadBalancers[] | select(.LoadBalancerName | contains("kubernetes")) .LoadBalancerArn')
+# aws elbv2 delete-load-balancer --load-balancer-arn $lbarn
+# tgarn=$(aws elbv2 describe-target-groups | jq -r '.TargetGroups[] | select(.TargetGroupName | contains("kubernetes")) .TargetGroupArn')
+# aws elbv2 delete-target-group --target-group-arn $tgarn
+# VPC_ID=$(aws ec2 describe-vpcs | jq -r '.Vpcs[] | select(.Tags[]?.Value | contains("kubernetes")) .VpcId')
+# IGWS=$(aws ec2 describe-internet-gateways --filter "Name=attachment.vpc-id,Values=$VPC_ID" --query "InternetGateways[*].InternetGatewayId" --output text)
+# for igw in $IGWS; do
+#   aws ec2 detach-internet-gateway --internet-gateway-id $igw --vpc-id $VPC_ID
+#   aws ec2 delete-internet-gateway --internet-gateway-id $igw
+# done
+# ROUTE_TABLES=$(aws ec2 describe-route-tables --filter "Name=vpc-id,Values=$VPC_ID" --query "RouteTables[?Associations[?Main!=true]].RouteTableId" --output text)
+# for rt in $ROUTE_TABLES; do
+#   aws ec2 delete-route-table --route-table-id $rt
+# done
+# SUBNETS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[*].SubnetId" --output text)
+# for subnet in $SUBNETS; do
+#   aws ec2 delete-subnet --subnet-id $subnet
+# done
+# SECURITY_GROUPS=$(aws ec2 describe-security-groups --filter "Name=vpc-id,Values=$VPC_ID" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text)
+# for sg in $SECURITY_GROUPS; do
+#   aws ec2 delete-security-group --group-id $sg
+# done
+# aws ec2 delete-vpc --vpc-id $VPC_ID
+
+
+Settings
