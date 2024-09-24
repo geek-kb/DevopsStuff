@@ -14,7 +14,8 @@ cni_plugins_version=v1.5.1
 runc_version=v1.2.0-rc.3
 number_of_controllers=3
 number_of_workers=3
-myuser="itaig"
+controller_instance_type=t3.micro
+worker_instance_type=t3.micro
 
 # VPC Creation
 echo "Creating VPC..."
@@ -111,14 +112,14 @@ for ((i=0;i<${number_of_controllers};i+=1)); do
     --count 1 \
     --key-name kubernetes \
     --security-group-ids ${SECURITY_GROUP_ID} \
-    --instance-type t3.micro \
+    --instance-type ${controller_instance_type} \
     --private-ip-address 10.0.1.1${i} \
     --user-data "name=controller-${i}" \
     --subnet-id ${SUBNET_ID} \
     --block-device-mappings='{"DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": 50 }, "NoDevice": "" }' \
     --output text --query 'Instances[].InstanceId')
   aws ec2 modify-instance-attribute --instance-id ${instance_id} --no-source-dest-check
-  aws ec2 create-tags --resources ${instance_id} --tags "Key=Name,Value=controller-${i}"
+  aws ec2 create-tags --resources ${instance_id} --tags Key=Name,Value=controller-${i} Key=ClusterName,Value=${CLUSTER_NAME}
   echo "controller-${i} created "
 done
 
@@ -131,14 +132,14 @@ for ((i=0;i<${number_of_workers};i+=1)); do
     --count 1 \
     --key-name kubernetes \
     --security-group-ids ${SECURITY_GROUP_ID} \
-    --instance-type t3.micro \
+    --instance-type ${worker_instance_type} \
     --private-ip-address 10.0.1.2${i} \
     --user-data "name=worker-${i}|pod-cidr=10.200.${i}.0/24" \
     --subnet-id ${SUBNET_ID} \
     --block-device-mappings='{"DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": 50 }, "NoDevice": "" }' \
     --output text --query 'Instances[].InstanceId')
   aws ec2 modify-instance-attribute --instance-id ${instance_id} --no-source-dest-check
-  aws ec2 create-tags --resources ${instance_id} --tags "Key=Name,Value=worker-${i}"
+  aws ec2 create-tags --resources ${instance_id} --tags Key=Name,Value=worker-${i} Key=ClusterName,Value=${CLUSTER_NAME}
   echo "worker-${i} created"
 done
 
@@ -1116,31 +1117,35 @@ aws ec2 describe-route-tables \
   --query 'RouteTables[].Routes'
 
 # private user configuration
-if [ -z "$myuser" ]; then
-  echo "No private user provided"
-  exit 0
-else
-  echo "Private user provided: ${myuser}"
-  echo "Configuring private user..."
-  openssl genrsa -out ${myuser}.key 2048
-  openssl req -new -key ${myuser}.key -out ${myuser}.csr -subj "/CN=${myuser}"
-  user_cert=$(cat ${myuser}.csr | base64 | tr -d "\n")
-  cat <<EOF | kubectl apply -f -
-apiVersion: certificates.k8s.io/v1
-kind: CertificateSigningRequest
-metadata:
-  name: ${myuser}
-spec:
-  request: "${user_cert}"
-  signerName: kubernetes.io/kube-apiserver-client
-  expirationSeconds: 31536000  # one year
-  usages:
-  - client auth
-EOF
-  kubectl certificate approve ${myuser}
-  kubectl get csr ${myuser} -o jsonpath='{.status.certificate}' | base64 --decode > ${myuser}.crt
-  kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=${myuser}
-  kubectl config set-credentials ${myuser} --client-key=${myuser}.key --client-certificate=${myuser}.crt --embed-certs=true
-  kubectl config set-context ${myuser} --cluster=${CLUSTER_NAME} --user=${myuser}
-  kubectl config use-context ${myuser}
-fi
+kubectl config use-context ${CLUSTER_NAME}
+
+
+# Cleanup
+# cwd=$(pwd)
+# aws ec2 terminate-instances --instance-ids $(aws ec2 describe-instances --filters "Name=key-name,Values=kubernetes" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].{InstanceId:InstanceId}" --output text | xargs)
+# sleep 120 | pv -t
+# aws ec2 delete-key-pair --key-name kubernetes
+# rm -f $cwd/*
+# lbarn=$(aws elbv2 describe-load-balancers | jq -r '.LoadBalancers[] | select(.LoadBalancerName | contains("kubernetes")) .LoadBalancerArn')
+# aws elbv2 delete-load-balancer --load-balancer-arn $lbarn
+# tgarn=$(aws elbv2 describe-target-groups | jq -r '.TargetGroups[] | select(.TargetGroupName | contains("kubernetes")) .TargetGroupArn')
+# aws elbv2 delete-target-group --target-group-arn $tgarn
+# VPC_ID=$(aws ec2 describe-vpcs | jq -r '.Vpcs[] | select(.Tags[]?.Value | contains("kubernetes")) .VpcId')
+# IGWS=$(aws ec2 describe-internet-gateways --filter "Name=attachment.vpc-id,Values=$VPC_ID" --query "InternetGateways[*].InternetGatewayId" --output text)
+# for igw in $IGWS; do
+#   aws ec2 detach-internet-gateway --internet-gateway-id $igw --vpc-id $VPC_ID
+#   aws ec2 delete-internet-gateway --internet-gateway-id $igw
+# done
+# ROUTE_TABLES=$(aws ec2 describe-route-tables --filter "Name=vpc-id,Values=$VPC_ID" --query "RouteTables[?Associations[?Main!=true]].RouteTableId" --output text)
+# for rt in $ROUTE_TABLES; do
+#   aws ec2 delete-route-table --route-table-id $rt
+# done
+# SUBNETS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[*].SubnetId" --output text)
+# for subnet in $SUBNETS; do
+#   aws ec2 delete-subnet --subnet-id $subnet
+# done
+# SECURITY_GROUPS=$(aws ec2 describe-security-groups --filter "Name=vpc-id,Values=$VPC_ID" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text)
+# for sg in $SECURITY_GROUPS; do
+#   aws ec2 delete-security-group --group-id $sg
+# done
+# aws ec2 delete-vpc --vpc-id $VPC_ID
