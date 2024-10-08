@@ -13,7 +13,7 @@ containerd_version=1.7.22
 cni_plugins_version=v1.5.1
 runc_version=v1.2.0-rc.3
 number_of_controllers=3
-number_of_workers=3
+number_of_workers=2
 controller_instance_type=t3.micro
 worker_instance_type=t3.micro
 
@@ -1149,6 +1149,3 @@ kubectl config use-context ${CLUSTER_NAME}
 #   aws ec2 delete-security-group --group-id $sg
 # done
 # aws ec2 delete-vpc --vpc-id $VPC_ID
-
-
-Settings
