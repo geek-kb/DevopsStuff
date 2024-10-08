@@ -1,3 +1,6 @@
+#!/bin/bash
+# This script generates required certificates for a new k8s admin user and configures kubeconfig to use that user.
+
 USER=itaig
 openssl genrsa -out ${USER}.key 2048
 openssl req -new -key ${USER}.key -out ${USER}.csr -subj "/CN=${USER}"
