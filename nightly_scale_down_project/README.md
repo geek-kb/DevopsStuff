@@ -9,8 +9,8 @@ Based on usage of Terragrunt
 
 ## Structure
 ### environment_protection job:
-Is ran manually by a user intending to protect an environment he's user and requires the user to select an environment name from a list and provide a protection end date.
-Once the job is started, it updates a dynamodb table, setting the environment and it end protection date in the table.
+Is ran manually by a user intending to protect an environment he's using and requires the user to select an environment name from a list and provide a protection end date.
+Once the job is started, it updates a dynamodb table, setting the environment as protected and its end protection date in the table.
 
 ### nightly_scale_down_qa_envs job:
 Runs automatically every evening at 20:00.
@@ -20,8 +20,8 @@ There are 3 different options to this check:
 2. If an environment is set as not protected and running.
 3. If an environment is set as not protected and is not running.
 Only if the 3rd rule applies, then the environment is marked for shutting down, otherwise it is ignored.
-Since the customer where this project was applied is using two different AWS accounts, the logic is running on any of these accounts.
-In order to make sure all relevant (per environment) services are considered, even when new ones are created (without adding any of them manually), the services repository is checked out and the logic gets the most updated list of services based on each service's directory.
+Since the customer where this project was applied to is using two different AWS accounts, the logic is running on any of these accounts.
+In order to make sure all relevant (per environment) micro services are considered, even when new ones are created (without adding any of them manually), the services repository is checked out and the logic gets the most updated list of services based on each micro service's directory.
 It then:
 1. Gets current ECS desired values from all services terragrunt.hcl files and updates the dynamodb table.
 2. Gets current AutoScaling Groups desired values from all services terragrunt.hcl files and updates the dynamodb table.
@@ -32,7 +32,7 @@ It then:
 7. Commits each environments updated files, sleeps a random time interval (to avoid race conditions), pushes the updated files, creates a matrix from the commit ids and marks each environment as off (also updating the dynamodb table).
 8. Re-enables repository branch protection.
 9. Then the workflow monitors the commits matrix, waiting for all environments terragrunt runs to complete.
-10. Once all terragrunt runs complete, a relevant notification is sent to a relevant slack channel - showing which environment have been taken down and whether they completed successfully or not.
+10. Once all terragrunt runs complete, a relevant notification is sent to a relevant slack channel - showing which environments have been taken down and whether they completed successfully or not.
 
 The images can show some of the progress, so feel free to check them.
 
