@@ -407,13 +407,13 @@ jobs:
             done
           done
 
-      - name: Updates terraform-live dl-processor asg with desired values - ACCOUNT_TYPE_1
+      - name: Updates terraform-live SPECIAL_SERVICE asg with desired values - ACCOUNT_TYPE_1
         run: |
           base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
           declare -a env_arr
           env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
           for env_name in ${env_arr[@]}; do
-            cd ${base_dir}/${env_name}/autoscaling/dl-processor
+            cd ${base_dir}/${env_name}/autoscaling/SPECIAL_SERVICE
             sed -i "s/desired_capacity.*/desired_capacity = 0/" terragrunt.hcl
           done
 
@@ -442,13 +442,13 @@ jobs:
             sed -i "s/desired_capacity.*/desired_capacity = 0/" terragrunt.hcl
           done
 
-      - name: Updates dl-processor capacity provider in tf-live
+      - name: Updates SPECIAL_SERVICE capacity provider in tf-live
         run: |
           base_dir=${{ github.workspace }}/${{ env.qa_ACCOUNT_TYPE_1_tg_dir }}/${{ env.qa_envs_region }}
           declare -a env_arr
           env_arr=${{ needs.identify-unprotected-environments.outputs.unprotected_envs }}
           for env_name in ${env_arr[@]}; do
-            cd ${base_dir}/${env_name}/ecs-capacity-provider/dl-processor
+            cd ${base_dir}/${env_name}/ecs-capacity-provider/SPECIAL_SERVICE
             sed -i "s/ecs_service_scale_in_desired_capacity.*/ecs_service_scale_in_desired_capacity  = 0/" terragrunt.hcl
             sed -i "s/ecs_service_scale_out_desired_capacity.*/ecs_service_scale_out_desired_capacity  = 0/" terragrunt.hcl
           done
