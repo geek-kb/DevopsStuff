@@ -1,1 +1,5 @@
 .idea
+k8s/certs
+.terraform/
+.test/
+.terraform.lock.hcl
