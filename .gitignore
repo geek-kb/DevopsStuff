@@ -3,3 +3,4 @@ k8s/certs
 .terraform/
 .test/
 .terraform.lock.hcl
+.DS_Store
