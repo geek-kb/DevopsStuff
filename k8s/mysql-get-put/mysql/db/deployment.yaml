@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-get-put
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: e-commerce-app
+  template:
+    metadata:
+      labels:
+        app: e-commerce-app
+        role: db
+    spec:
+      initContainers:
+        - name: fetch-sql-init
+          image: andriykalashnykov/wget:1.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              wget --no-check-certificate "https://raw.githubusercontent.com/geek-kb/DevopsStuff/master/k8s/mysql-get-put/mysql/init.sql" -O /docker-entrypoint-initdb.d/init.sql
+              sed -i 's/${TEMP_MYSQL_USER}/$(MYSQL_APP_USER)/g' /docker-entrypoint-initdb.d/init.sql
+              sed -i 's/${TEMP_MYSQL_PASSWORD}/$(MYSQL_APP_PASSWORD)/g' /docker-entrypoint-initdb.d/init.sql
+              sed -i 's/${TEMP_MYSQL_DATABASE}/$(MYSQL_DATABASE)/g' /docker-entrypoint-initdb.d/init.sql
+          env:
+            - name: MYSQL_APP_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config-map
+                  key: MYSQL_APP_USER
+            - name: MYSQL_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-app-user-pass
+                  key: db_app_password.txt
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: MYSQL_DATABASE
+                  name: db-config-map
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d
+              name: init
+      containers:
+        - name: mysql-get-put
+          image: camelel/mysql-get-put:latest
+          env:
+            - name: MYSQL_ROOT_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config-map
+                  key: MYSQL_ROOT_USER
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-root-user-pass
+                  key: db_root_password.txt
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: MYSQL_DATABASE
+                  name: db-config-map
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+            - name: mysql-get-put-pv
+              mountPath: /var/lib/mysql
+          resources:
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      volumes:
+        - name: init
+          emptyDir: {}
+        - name: mysql-get-put-pv
+          persistentVolumeClaim:
+            claimName: mysql-get-put-pvc
