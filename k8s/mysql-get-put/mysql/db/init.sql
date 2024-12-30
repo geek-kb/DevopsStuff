@@ -4,6 +4,10 @@ CREATE DATABASE IF NOT EXISTS product_db;
 -- Use the newly created database
 USE product_db;
 
+-- Create a new user
+CREATE USER '${TEMP_MYSQL_USER}'@'%' IDENTIFIED BY '${TEMP_MYSQL_PASSWORD}';
+ALTER USER '${TEMP_MYSQL_USER}'@'%' IDENTIFIED WITH mysql_native_password BY '${TEMP_MYSQL_PASSWORD}';
+
 -- Create the `products` table
 CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -19,7 +23,7 @@ INSERT INTO products (name, price) VALUES
 ('Product C', 39.99);
 
 -- Grant permissions to a specific MySQL user
-GRANT ALL PRIVILEGES ON product_db.* TO 'your_db_user'@'%' IDENTIFIED BY 'your_db_password';
+GRANT ALL PRIVILEGES ON product_db.* TO '${TEMP_MYSQL_USER}'@'%';
 
 -- Apply the permissions
 FLUSH PRIVILEGES;
