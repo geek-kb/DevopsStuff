@@ -1,0 +1,36 @@
+FROM --platform=amd64 python:3.9-slim as build
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Set working directory
+WORKDIR /app
+
+RUN groupadd -r app && useradd -m -d /app --no-log-init -r -g app app \
+  && chown -R app:app /app \
+  && chmod -R 755 /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+USER app
+# Install Python dependencies
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY ./app.py /app/app.py
+
+# Expose port
+EXPOSE 8080
+
+# Run the application
+CMD ["waitress-serve", "--host=0.0.0.0", "--port=8080", "app:app"]
+
