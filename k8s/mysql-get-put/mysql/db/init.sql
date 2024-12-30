@@ -1,9 +1,6 @@
 -- Create the database
 CREATE DATABASE IF NOT EXISTS product_db;
 
--- Use the newly created database
-USE product_db;
-
 -- Create a new user
 CREATE USER '${TEMP_MYSQL_USER}'@'%' IDENTIFIED BY '${TEMP_MYSQL_PASSWORD}';
 ALTER USER '${TEMP_MYSQL_USER}'@'%' IDENTIFIED WITH mysql_native_password BY '${TEMP_MYSQL_PASSWORD}';
@@ -28,3 +25,5 @@ GRANT ALL PRIVILEGES ON product_db.* TO '${TEMP_MYSQL_USER}'@'%';
 -- Apply the permissions
 FLUSH PRIVILEGES;
 
+-- Use the newly created database
+USE product_db;
