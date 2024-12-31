@@ -22,15 +22,49 @@ spec:
             - /bin/sh
             - -c
             - |
-              wget --no-check-certificate "https://raw.githubusercontent.com/geek-kb/DevopsStuff/master/k8s/mysql-get-put/mysql/init.sql" -O /docker-entrypoint-initdb.d/init.sql
+              wget --no-check-certificate "https://raw.githubusercontent.com/geek-kb/DevopsStuff/refs/heads/master/e-commerce_app/db/init.sql" -O /docker-entrypoint-initdb.d/init.sql
               sed -i 's/${TEMP_MYSQL_USER}/$(MYSQL_APP_USER)/g' /docker-entrypoint-initdb.d/init.sql
               sed -i 's/${TEMP_MYSQL_PASSWORD}/$(MYSQL_APP_PASSWORD)/g' /docker-entrypoint-initdb.d/init.sql
               sed -i 's/${TEMP_MYSQL_DATABASE}/$(MYSQL_DATABASE)/g' /docker-entrypoint-initdb.d/init.sql
-
+              sed -i 's/${TEMP_MYSQL_DB_NAME}/$(MYSQL_DATABASE)/g' /docker-entrypoint-initdb.d/init.sql
+              sed -i 's/${TEMP_MYSQL_DB_TABLE}/$(DB_TABLE)/g' /docker-entrypoint-initdb.d/init.sql
+              rm -rf /var/lib/mysql/* && echo "Deleted all files in /var/lib/mysql"
+              chown -R 999:999 /docker-entrypoint-initdb.d
+          env:
+            - name: MYSQL_APP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-appuser-creds
+                  key: DB_USER
+            - name: MYSQL_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-appuser-creds
+                  key: DB_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_NAME
+                  name: db-config-map
+            - name: DB_TABLE
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_TABLE
+                  name: db-config-map
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d
+              name: init
+            - mountPath: /var/lib/mysql
+              name: mysql-data
       containers:
         - name: db
-          image: mysql:5.7
+          image: camelel/e-commerce-db:latest
           env:
+            - name: MYSQL_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-root-creds
+                  key: DB_ROOT_USER
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -42,11 +76,22 @@ spec:
                   name: db-config-map
                   key: DB_NAME
           volumeMounts:
-            - mountPath: "/var/lib/mysql"
+            - mountPath: /var/lib/mysql
               name: mysql-data
+            - mountPath: /docker-entrypoint-initdb.d
+              name: init
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
           ports:
             - containerPort: 3306
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
             claimName: mysql-pvc
+        - name: init
+          emptyDir: {}
