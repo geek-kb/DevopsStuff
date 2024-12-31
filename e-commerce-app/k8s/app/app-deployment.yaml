@@ -45,12 +45,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: db-appuser-creds
-                  key: API_KEY
-            - name: REDIS_URL
-              valueFrom:
-                configMapKeyRef:
-                  key: REDIS_URL
-                  name: db-config-map                 
+                  key: API_KEY              
           resources:
             requests:
               cpu: 100m
