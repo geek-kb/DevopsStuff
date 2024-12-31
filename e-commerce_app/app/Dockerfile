@@ -7,9 +7,9 @@ ENV PYTHONUNBUFFERED 1
 # Set working directory
 WORKDIR /app
 
-RUN groupadd -r app && useradd -m -d /app --no-log-init -r -g app app \
-  && chown -R app:app /app \
-  && chmod -R 755 /app
+# RUN groupadd -r app && useradd -m -d /app --no-log-init -r -g app app \
+#   && chown -R app:app /app \
+#   && chmod -R 755 /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -18,15 +18,17 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     default-libmysqlclient-dev \
     pkg-config \
+    python3-waitress \
     && rm -rf /var/lib/apt/lists/*
 
-USER app
+# USER app
 # Install Python dependencies
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy application code
 COPY ./app.py /app/app.py
+COPY ./templates /app/templates
 
 # Expose port
 EXPOSE 8080

@@ -1,15 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
-    app: db
-  name: db
+    app: db-server
+  name: db-server
 spec:
   ports:
-  - port: 3306
-    protocol: TCP
-    targetPort: 3306
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
   selector:
     app: db
 status:
