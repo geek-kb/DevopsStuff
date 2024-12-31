@@ -1,4 +1,3 @@
-# this is the deployment file for the app
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,36 +16,6 @@ spec:
         app: app
     spec:
       containers:
-        # - name: db-test
-        #   image: mysql:5.7
-        #   env:
-        #     - name: MYSQL_ROOT_PASSWORD
-        #       value: "test"
-        #     - name: MYSQL_USER
-        #       valueFrom:
-        #         secretKeyRef:
-        #           name: db-appuser-creds
-        #           key: DB_USER
-        #     - name: MYSQL_PASSWORD
-        #       valueFrom:
-        #         secretKeyRef:
-        #           name: db-appuser-creds
-        #           key: DB_PASSWORD
-        #     - name: MYSQL_DB
-        #       valueFrom:
-        #         configMapKeyRef:
-        #           key: DB_NAME
-        #           name: db-config-map
-        #     - name: MYSQL_HOST
-        #       valueFrom:
-        #         configMapKeyRef:
-        #           key: DB_HOST
-        #           name: db-config-map
-        #     - name: API_KEY
-        #       valueFrom:
-        #         secretKeyRef:
-        #           name: db-appuser-creds
-        #           key: API_KEY
         - name: app
           image: camelel/e-commerce-app:latest
           ports:
