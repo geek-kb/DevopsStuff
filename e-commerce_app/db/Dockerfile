@@ -1,13 +1,17 @@
 FROM --platform=amd64 mysql:latest as build
 
-RUN GENERATED_MYSQL_ROOT_PASSWORD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 15) && \
-  mkdir -p /docker-entrypoint-initdb.d \
-  mkdir -p /var/lib/data \
-  chmod -R 755 /var/lib/data 
-
-ENV MYSQL_ROOT_PASSWORD=$GENERATED_MYSQL_ROOT_PASSWORD
-
-RUN mkdir /var/lib/data -p
-RUN chmod -R 755 /var/lib/data
+RUN mkdir -p /docker-entrypoint-initdb.d
 
 COPY init.sql /docker-entrypoint-initdb.d/
+
+RUN chmod -R 644 /docker-entrypoint-initdb.d && \
+  chmod -R 755 /var/lib/mysql /var/lib/mysql-files /docker-entrypoint-initdb.d && \
+  chown -R 999:999 /var/lib/mysql /var/lib/mysql-files /docker-entrypoint-initdb.d && \
+  rm -rf /var/lib/mysql/*
+
+# RUN echo <<EOT >> /etc/mysql/my.cnf
+# default_authentication_plugin=caching_sha2_password
+# plugin-load-add=auth_native_password.so
+# EOT
+
+ENV MYSQL_ROOT_PASSWORD=
