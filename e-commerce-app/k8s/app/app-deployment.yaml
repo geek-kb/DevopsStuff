@@ -1,0 +1,91 @@
+# this is the deployment file for the app
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: e-commerce
+  labels:
+    app: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        # - name: db-test
+        #   image: mysql:5.7
+        #   env:
+        #     - name: MYSQL_ROOT_PASSWORD
+        #       value: "test"
+        #     - name: MYSQL_USER
+        #       valueFrom:
+        #         secretKeyRef:
+        #           name: db-appuser-creds
+        #           key: DB_USER
+        #     - name: MYSQL_PASSWORD
+        #       valueFrom:
+        #         secretKeyRef:
+        #           name: db-appuser-creds
+        #           key: DB_PASSWORD
+        #     - name: MYSQL_DB
+        #       valueFrom:
+        #         configMapKeyRef:
+        #           key: DB_NAME
+        #           name: db-config-map
+        #     - name: MYSQL_HOST
+        #       valueFrom:
+        #         configMapKeyRef:
+        #           key: DB_HOST
+        #           name: db-config-map
+        #     - name: API_KEY
+        #       valueFrom:
+        #         secretKeyRef:
+        #           name: db-appuser-creds
+        #           key: API_KEY
+        - name: app
+          image: camelel/e-commerce-app:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-appuser-creds
+                  key: DB_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-appuser-creds
+                  key: DB_PASSWORD
+            - name: MYSQL_DB
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_NAME
+                  name: db-config-map
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_HOST
+                  name: db-config-map
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: db-appuser-creds
+                  key: API_KEY
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: REDIS_URL
+                  name: db-config-map                 
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
