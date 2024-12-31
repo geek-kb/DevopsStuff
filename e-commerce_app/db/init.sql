@@ -1,4 +1,6 @@
 -- Step 1: Create the database
+DROP DATABASE IF EXISTS product_db;
+DROP DATABASE IF EXISTS products;
 CREATE DATABASE IF NOT EXISTS product_db;
 
 -- Step 2: Use the database
