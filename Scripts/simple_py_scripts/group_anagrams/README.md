@@ -4,13 +4,13 @@
 
 Write a Python function group_anagrams(words) that takes a list of strings and returns a list of lists, where each inner list contains words that are anagrams of each other.
 
-Example:
+### Example
 
 ```python
 input_list = ["eat", "tea", "tan", "ate", "nat", "bat"]
 ```
 
-Possible output:
+### Possible output
 
 ```
 [
@@ -20,9 +20,9 @@ Possible output:
 ]
 ```
 
-Note: The order of the groups and the order of the words within each group does not matter.
+**The order of the groups and the order of the words within each group does not matter.**
 
-Hints:
+### Hints
 
 Consider using a dictionary to map a sorted version of the word (as a tuple or string) to all its anagrams.
 Think about the time complexity of sorting each word, and whether this approach is efficient for larger inputs.
