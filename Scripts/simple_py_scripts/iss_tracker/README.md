@@ -48,7 +48,7 @@ Inspect the JSON structure from the API endpoints to confirm which keys to extra
 
 ## Expected Output (sample)
 
-````
+```
 The ISS is currently at latitude: 47.6062, longitude: -122.3321.
 
 There are 7 people in space:
