@@ -11,7 +11,7 @@ def fetch_astronauts(astros_api_url):
         data = astros_reponse.json()
 
         astros_num = data.get('number')
-        print(f"Number of astronauts: {astros_num}")
+        print(f"There are {astros_num} people in space: ")
 
         astros_data = data.get('people')
         for astro in astros_data:
