@@ -30,27 +30,4 @@ Remember that decorators are functions that take a function as an argument and r
 A simple way to cache results is to create an empty dictionary at the time of decoration.
 Python’s built-in functools.lru_cache provides similar functionality, but implementing your own will deepen your understanding of decorators and caching.
 
-### Example Skeleton
-
-```python
-def memoize(func):
-    cache = {}
-    def wrapper(*args, **kwargs):
-        # Create a key from the function arguments
-        key = args + tuple(sorted(kwargs.items()))
-        if key not in cache:
-            cache[key] = func(*args, **kwargs)
-        return cache[key]
-    return wrapper
-
-@memoize
-def fib(n):
-    if n <= 1:
-        return n
-    return fib(n-1) + fib(n-2)
-
-# Test the memoized Fibonacci function
-print(fib(35))
-```
-
 This exercise will help you practice using decorators, understanding closures, and applying caching to optimize recursive functions.
