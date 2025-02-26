@@ -1,11 +1,13 @@
 ---
 repos:
   - repo: https://github.com/geek-kb/python_copilot_docs_hook
-    rev: v0.1.0
+    rev: v0.1.3
     hooks:
       - id: python-copilot-docs
         verbose: true
         types: [python]
+        environment:
+          GITHUB_COPILOT_TOKEN: ${GITHUB_COPILOT_TOKEN}
 
   - repo: https://github.com/geek-kb/python_docs_hook
     rev: v0.1.13
