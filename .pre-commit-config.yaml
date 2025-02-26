@@ -5,7 +5,7 @@ repos:
     hooks:
       - id: python-docs
         args: ["--doc-paths", "Scripts/simple_py_scripts"]
-        verbose: true
+        verbose: false
         types: [python] # Only run on Python files
         stages: [commit] # Run during commit stage
   - repo: https://github.com/geek-kb/python_copilot_docs_hook
