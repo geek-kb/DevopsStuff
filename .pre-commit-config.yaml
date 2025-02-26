@@ -6,8 +6,6 @@ repos:
       - id: python-copilot-docs
         verbose: true
         types: [python]
-        environment:
-          GITHUB_COPILOT_TOKEN: ${GITHUB_COPILOT_TOKEN}
 
   - repo: https://github.com/geek-kb/python_docs_hook
     rev: v0.1.13
