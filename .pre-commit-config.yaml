@@ -6,6 +6,7 @@ repos:
       - id: python-copilot-docs
         additional_dependencies: ["openai>=1.0.0"]
         verbose: true
+        args: ["--openai-key", "${OPENAI_API_KEY}"]
 
   - repo: https://github.com/geek-kb/python_docs_hook
     rev: v0.1.13
