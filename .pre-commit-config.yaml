@@ -1,11 +1,10 @@
 ---
 repos:
   - repo: https://github.com/geek-kb/python_copilot_docs_hook
-    rev: v0.1.15
+    rev: v0.1.12
     hooks:
       - id: python-copilot-docs
-        verbose: true
-        types: [python]
+        additional_dependencies: ["openai>=1.0.0"]
 
   - repo: https://github.com/geek-kb/python_docs_hook
     rev: v0.1.13
