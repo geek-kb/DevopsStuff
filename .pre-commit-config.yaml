@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/geek-kb/python_copilot_docs_hook
-    rev: v0.1.6
+    rev: v0.1.7
     hooks:
       - id: python-copilot-docs
         verbose: true
