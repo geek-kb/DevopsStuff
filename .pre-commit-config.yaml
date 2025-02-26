@@ -1,7 +1,8 @@
 ---
 repos:
   - repo: https://github.com/geek-kb/python_docs_hook
-    rev: v0.1.8
+    rev: v0.1.8 # Use your latest version
     hooks:
       - id: python-docs
         args: ["--doc-paths", "Scripts/simple_py_scripts"]
+        verbose: true # Enable debug logging
