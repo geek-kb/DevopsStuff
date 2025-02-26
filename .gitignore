@@ -8,3 +8,4 @@ e-commerce-app/app/api_key
 e-commerce-app/k8s/db/db-appuser-creds.yaml
 e-commerce-app/k8s/db/db-root-creds.yaml
 e-commerce-app/e-commerce-app
+*venv*
