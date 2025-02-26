@@ -5,7 +5,7 @@ repos:
     hooks:
       - id: python-copilot-docs
         additional_dependencies: ["openai>=1.0.0"]
-        verbose: true
+        verbose: false
         args: ["--openai-key", "${OPENAI_API_KEY}"]
 
   - repo: https://github.com/geek-kb/python_docs_hook
