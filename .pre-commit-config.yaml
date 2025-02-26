@@ -8,3 +8,9 @@ repos:
         verbose: true
         types: [python] # Only run on Python files
         stages: [commit] # Run during commit stage
+  - repo: https://github.com/geek-kb/python_copilot_docs_hook
+    rev: v0.1.0 # Now using the tag
+    hooks:
+      - id: python-copilot-docs
+        verbose: true
+        types: [python]
