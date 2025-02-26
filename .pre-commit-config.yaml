@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/geek-kb/python_docs_hook
-    rev: v0.1.7 # Updated version
+    rev: v0.1.8
     hooks:
       - id: python-docs
         args: ["--doc-paths", "Scripts/simple_py_scripts"]
