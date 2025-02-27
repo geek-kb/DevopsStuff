@@ -1,0 +1,20 @@
+[
+  {
+    "first_name": "Alice",
+    "last_name": "Smith",
+    "age": 30,
+    "email": "alice@example.com"
+  },
+  {
+    "first_name": "Bob",
+    "last_name": "Brown",
+    "age": 22,
+    "email": "bob@example.com"
+  },
+  {
+    "first_name": "Charlie",
+    "last_name": "Davis",
+    "age": 35,
+    "email": "charlie@example.com"
+  }
+]
