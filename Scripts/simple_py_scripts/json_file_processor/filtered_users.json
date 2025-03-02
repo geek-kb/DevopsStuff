@@ -1,0 +1,10 @@
+{
+  "Alice_Smith": {
+    "age": 30,
+    "email": "alice@example.com"
+  },
+  "Charlie_Davis": {
+    "age": 35,
+    "email": "charlie@example.com"
+  }
+}
