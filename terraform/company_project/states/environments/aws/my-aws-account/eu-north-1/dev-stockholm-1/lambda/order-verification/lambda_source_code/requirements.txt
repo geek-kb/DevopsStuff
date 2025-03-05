@@ -1,0 +1,2 @@
+boto3==1.28.54  # AWS SDK for Python (pre-installed in Lambda but include for compatibility)
+botocore==1.31.54  # AWS Core SDK (version should align with boto3)

@@ -1,0 +1,19 @@
+/dev-stockholm-1/lambda/order-retrieval/api_key: ENC[AES256_GCM,data:TNjmTYBxCiogkojzTf1+9GY2IkkCRvOdq49+x5fcEtU=,iv:AlBCbXjsYs5yhU69T8vIb2n42L1unhLWFjaVM/y9SCQ=,tag:iGOjHe2UO33UJ1WKX4+xNA==,type:str]
+/dev-stockholm-1/sqs/order-processor/queue_url_unencrypted: https://sqs.eu-north-1.amazonaws.com/912466608750/order-processor
+/dev-stockholm-1/kms/sops_alias_unencrypted: /bootstrap/kms/sops-key
+sops:
+    kms:
+        - arn: arn:aws:kms:eu-north-1:912466608750:key/00fc7f10-cd91-461e-84d3-0c679e709f53
+          role: arn:aws:iam::912466608750:role/aidoc-devops2-ex-sops
+          created_at: "2025-01-20T14:52:14Z"
+          enc: AQICAHihpRdeMSSb0UkZ8o1yMc58uMG9DkfK02aUkRYq3I2jDQH4dsv0N7YETd6ayLWtGgvwAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMaopmjsPEhwCxoQiXAgEQgDuAmzeYzETNihJY9y6ZKHqJSVjBJ4U7CTh4KoDctuxIhsuMGgTrJ74TErvmgW9YErdPIJJDiC7Q9M6rXQ==
+          aws_profile: ""
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age: []
+    lastmodified: "2025-01-21T02:12:37Z"
+    mac: ENC[AES256_GCM,data:z41abOC6UFi8AtZ4+B7UHc6tYaqD0/gk26qjxfXfUUU+duxEaqm8OXgcCmZhu8sG4Ak9BcAmBktndWc1PIJGnrDEI34/R2EMNRCr0ta2TT/hm9alumRqHKYp3Dy0aCroPyYRPLuAudYw9bXZGJRgwp353l8dxQH0Gaj1+mCA58E=,iv:eI2aly3JdZsqR0puqQcvMA8zD2owrI/CgMaB6kVsqxo=,tag:ODpI5ulUg2Kp+I8Ddo8tXw==,type:str]
+    pgp: []
+    unencrypted_suffix: _unencrypted
+    version: 3.9.3

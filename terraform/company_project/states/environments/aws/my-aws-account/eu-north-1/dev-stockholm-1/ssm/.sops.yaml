@@ -1,0 +1,4 @@
+creation_rules:
+  - path_regex: \.ya?ml$
+    kms: "arn:aws:kms:eu-north-1:912466608750:key/00fc7f10-cd91-461e-84d3-0c679e709f53+arn:aws:iam::912466608750:role/aidoc-devops2-ex-sops"
+    unencrypted_suffix: "_unencrypted"
