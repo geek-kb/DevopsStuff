@@ -1,7 +1,8 @@
-import mysql.connector
 import logging
 import os
-from flask import Flask, request, jsonify, render_template
+
+import mysql.connector
+from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 
@@ -17,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 # Function to get data from MySQL database
 def get_data_from_mysql(query):
+    connection = None
+    cursor = None
     try:
         # Retrieve database connection details from environment variables
         host = os.environ.get("MYSQL_HOST")
@@ -46,15 +49,19 @@ def get_data_from_mysql(query):
     except mysql.connector.Error as error:
         logger.error("An error occurred: {}".format(error))
         print("Error:", error)
+        return None
 
     finally:
         # Close the cursor and the connection
-        if 'connection' in locals() and connection.is_connected():
+        if cursor:
             cursor.close()
+        if connection and connection.is_connected():
             connection.close()
-
 # Function to write data to MySQL database
+
 def write_data_to_mysql(data):
+    connection = None
+    cursor = None
     try:
         # Retrieve database connection details from environment variables
         host = os.environ.get("MYSQL_HOST")
@@ -97,10 +104,10 @@ def write_data_to_mysql(data):
 
     finally:
         # Close the cursor and the connection
-        if 'connection' in locals() and connection.is_connected():
+        if cursor:
             cursor.close()
+        if connection and connection.is_connected():
             connection.close()
-
 # API endpoint to fetch data from MySQL
 @app.route('/get_data', methods=['GET'])
 def fetch_data():
