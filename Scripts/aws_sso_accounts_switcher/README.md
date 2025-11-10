@@ -143,8 +143,6 @@ sso() {
     return 1
   fi
 
-  # Temporarily unset this function to prevent recursion
-  unset -f sso
   source "$script"
 }
 ```
