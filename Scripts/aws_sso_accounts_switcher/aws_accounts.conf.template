@@ -1,0 +1,20 @@
+# AWS Account Configuration Template
+# Copy this file to aws_accounts.conf and fill in your actual account details
+# Format: "label|profile|account_id|k8s_context"
+
+# Example entries - replace with your actual account information:
+# my-dev-account (123456789012)|my-dev-profile|123456789012|my-dev-k8s-context
+# my-prod-account (987654321098)|my-prod-profile|987654321098|my-prod-k8s-context
+# my-staging-account (555666777888)|my-staging-profile|555666777888|
+
+# Notes:
+# - label: Human-readable name shown in the menu (include account ID for reference)
+# - profile: AWS CLI profile name (should match your ~/.aws/config)
+# - account_id: AWS account ID (12-digit number)
+# - k8s_context: Kubernetes context name (leave empty if not using k8s or separate with |)
+#
+# Examples with different configurations:
+# Development Account|dev-profile|123456789012|dev-k8s-context
+# Production Account|prod-profile|987654321098|prod-k8s-context
+# Staging Account|staging-profile|555666777888|
+# Management Account|mgmt-profile|444555666777|mgmt-k8s-context
