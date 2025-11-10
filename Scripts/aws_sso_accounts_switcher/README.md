@@ -53,6 +53,33 @@ cp aws_accounts.conf.template aws_accounts.conf
 vim aws_accounts.conf
 ```
 
+#### Custom Configuration File Location
+
+By default, the script looks for `aws_accounts.conf` in the same directory as the script. You can customize this by modifying the `AWS_ACCOUNTS_CONF_FILE` variable at the beginning of the script:
+
+```bash
+# Edit the script to point to a different config file location
+vim aws_sso_switcher.sh
+
+# Example configurations:
+# For a different filename in the same directory:
+AWS_ACCOUNTS_CONF_FILE="my_aws_accounts.conf"
+
+# For an absolute path:
+AWS_ACCOUNTS_CONF_FILE="/home/user/.config/aws_accounts.conf"
+
+# For a relative path:
+AWS_ACCOUNTS_CONF_FILE="../configs/aws_accounts.conf"
+```
+
+Alternatively, you can set the path via environment variable:
+
+```bash
+# Set via environment variable (overrides script default)
+export AWS_ACCOUNTS_CONF_FILE="/path/to/your/config.conf"
+source ./aws_sso_switcher.sh
+```
+
 ### 3. Account Configuration Format
 
 Edit `aws_accounts.conf` with your AWS accounts:
@@ -178,6 +205,8 @@ To use this in other terminals:
 
 - Copy `aws_accounts.conf.template` to `aws_accounts.conf`
 - Add your account configurations
+- If using a custom config file path, ensure the `AWS_ACCOUNTS_CONF_FILE` variable points to the correct location
+- Verify the config file exists and has proper read permissions
 
 ### Error: "SSO login failed"
 

@@ -4,6 +4,13 @@
 # to prevent breaking `aws sso login`.
 
 # -----------------------------
+# CONFIGURATION
+# -----------------------------
+# Path to the AWS accounts configuration file
+# You can modify this path to point to your aws_accounts.conf file location
+AWS_ACCOUNTS_CONF_FILE="${AWS_ACCOUNTS_CONF_FILE:-aws_accounts.conf}"
+
+# -----------------------------
 # SAFETY & SHELL COMPATIBILITY
 # -----------------------------
 # If your shell has a *global* alias named "sso", it will corrupt the command `aws sso login`.
@@ -57,7 +64,14 @@ command -v kubectl >/dev/null 2>&1 || echo "Note: 'kubectl' not found; Kubernete
 
 # Load account mappings from config file
 _script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_config_file="$_script_dir/aws_accounts.conf"
+# Use the configurable path, defaulting to script directory if it's just a filename
+if [[ "$AWS_ACCOUNTS_CONF_FILE" == */* ]]; then
+  # Absolute or relative path provided
+  _config_file="$AWS_ACCOUNTS_CONF_FILE"
+else
+  # Just filename provided, use script directory
+  _config_file="$_script_dir/$AWS_ACCOUNTS_CONF_FILE"
+fi
 _template_file="$_script_dir/aws_accounts.conf.template"
 
 if [[ ! -f "$_config_file" ]]; then
