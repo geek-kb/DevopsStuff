@@ -6,6 +6,10 @@ The goal of this collection is to provide working, real-world DevOps artifacts t
 
 ---
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/geek-kb/DevopsStuff)
+
+---
+
 ## Contents Overview
 
 ### Infrastructure as Code
