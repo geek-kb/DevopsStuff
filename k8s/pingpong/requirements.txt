@@ -2,7 +2,7 @@ Flask==1.1.1
 Flask-Caching==1.8.0
 Flask-Debug==0.4.3
 itsdangerous==1.1.0
-Jinja2==2.10.3
+Jinja2==2.11.3
 MarkupSafe==1.1.1
 python-dotenv==0.10.3
 redis==3.3.11
